@@ -1,6 +1,11 @@
+import createNextTranspileModules from 'next-transpile-modules';
+
+const withTM = createNextTranspileModules(['three']);
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  transpilePackages: ["three"],
+  reactStrictMode: true,
+  swcMinify: true,
 };
 
 export default nextConfig;
