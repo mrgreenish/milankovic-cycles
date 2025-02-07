@@ -56,8 +56,8 @@ body {
   width: 100vw;
   height: 100vh;
   overflow: hidden;
-  background: #000;
-  color: white;
+  background: white;
+  color: black;
 }
 
 #root {
@@ -93,7 +93,7 @@ button {
 
 /* Slider styles */
 [role="slider"] {
-  @apply relative flex h-5 w-5 rounded-full border-2 border-primary bg-background ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50;
+  @apply relative flex h-4 w-4 rounded-full border-2 border-black bg-black ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:scale-110;
 }
 
 [data-orientation="horizontal"] {
@@ -105,9 +105,58 @@ button {
 }
 
 [data-orientation="horizontal"] > span:first-child {
-  @apply relative h-2 w-full grow overflow-hidden rounded-full bg-secondary;
+  @apply relative h-2 w-full grow overflow-hidden rounded-full bg-gray-200;
 }
 
 [data-orientation="horizontal"] > span:first-child > span {
-  @apply absolute h-full bg-primary transition-all;
+  @apply absolute h-full bg-black transition-all;
+}
+
+.narrative-overlay {
+  min-height: 6rem;
+  transition: opacity 0.3s ease-out;
+}
+
+.narrative-text {
+  text-wrap: balance;
+  transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+}
+
+.narrative-text.changing {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.narrative-text.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Add these styles to your globals.css file */
+.slider-track {
+  height: 3px;
+  background-color: #e5e5e5;
+  position: relative;
+  border-radius: 9999px;
+}
+
+.slider-range {
+  height: 100%;
+  background-color: #000000;
+  border-radius: 9999px;
+}
+
+.slider-thumb {
+  width: 16px;
+  height: 16px;
+  background-color: #000000;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  cursor: pointer;
+  display: block;
+  transition: transform 0.2s;
+}
+
+.slider-thumb:hover {
+  transform: scale(1.1);
 }
