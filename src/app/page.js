@@ -53,23 +53,23 @@ function AxisIndicators({ axialTilt, precession }) {
           new THREE.ArrowHelper(
             new THREE.Vector3(0, 1, 0),
             new THREE.Vector3(0, 0, 0),
-            3,
-            0x00ffcc, // Neon cyan for high visual contrast
-            0.5,
-            0.3
+            5,
+            0x333333,
+            0.8,
+            0.5
           )
         }
         ref={arrowRef}
       />
-      <Html position={[0, 3.2, 0]} center>
+      <Html position={[0, 5.2, 0]} center>
         <div
           style={{
-            color: "white",
-            background: "rgba(0, 0, 0, 0.7)",
+            color: "#333333",
+            background: "rgba(255, 255, 255, 0.8)",
             padding: "4px 8px",
             borderRadius: "4px",
             fontSize: "12px",
-            fontFamily: "'Courier New', Courier, monospace", // Retro typewriter feel
+            fontFamily: "'Courier New', Courier, monospace",
           }}
         >
           Rotation Axis
@@ -84,6 +84,7 @@ function AxisIndicators({ axialTilt, precession }) {
 // ------------------------------------------------------------------
 const vertexShader = `
   uniform vec3 sunDirection;
+  uniform float displacementScale;
   
   varying vec2 vUv;
   varying vec3 vNormal;
@@ -92,10 +93,11 @@ const vertexShader = `
   
   void main() {
     vUv = uv;
-    vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+    vec3 displacedPosition = position + normal * (sin(10.0 * uv.x) * cos(10.0 * uv.y) * displacementScale);
+    vec4 worldPosition = modelMatrix * vec4(displacedPosition, 1.0);
     vWorldPosition = worldPosition.xyz;
     
-    vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+    vec4 mvPosition = modelViewMatrix * vec4(displacedPosition, 1.0);
     vViewPosition = -mvPosition.xyz;
     
     vNormal = normalMatrix * normal;
@@ -115,6 +117,7 @@ const fragmentShader = `
   uniform vec3 directionalLightDirection;
   uniform float temperature;
   uniform float precession; // Used to dynamically adjust lighting
+  uniform float iceFactor;
   
   varying vec2 vUv;
   varying vec3 vNormal;
@@ -145,20 +148,241 @@ const fragmentShader = `
     vec3 lighting = ambientLightColor + directionalLightColor * diff;
     color.rgb *= lighting;
     
-    // Amplify tint based on temperature:
-    // Cooler temperatures lean toward blue, warmer toward red.
-    vec3 tint = mix(vec3(0.0, 0.0, 1.0), vec3(1.0, 0.0, 0.0), temperature);
-    color.rgb = mix(color.rgb, tint, 0.4);
-    
-    // Dynamic contrast adjustment based on precession:
-    float exponent = 1.0 + (precession / 360.0) * 2.0; // Exponent ranges from 1 to 3
-    float dynamicContrast = pow(max(sunInfluence, 0.0), exponent);
-    vec3 differentialGradient = mix(vec3(0.0), vec3(1.0, 1.0, 0.0), dynamicContrast);
-    color.rgb = mix(color.rgb, differentialGradient, 0.3);
-    
+    vec3 gray = vec3(dot(color.rgb, vec3(0.299, 0.587, 0.114)));
+    color.rgb = mix(gray, color.rgb, iceFactor);
     gl_FragColor = color;
   }
 `;
+
+// New Sun shaders with noise, displacement, and brightness mapping
+
+// Vertex shader – displaces vertices using a simplex noise function.
+
+
+//////////////////////
+// VERTEX SHADER
+//////////////////////
+const sunVertexShader = `
+uniform float time;
+uniform float displacementStrength;
+varying vec2 vUv;
+varying vec3 vWorldNormal;
+varying vec3 vViewPos;
+
+// Simplex noise (Ashima)
+vec3 mod289(vec3 x) {
+  return x - floor(x * (1.0 / 289.0)) * 289.0;
+}
+vec4 mod289(vec4 x) {
+  return x - floor(x * (1.0 / 289.0)) * 289.0;
+}
+vec4 permute(vec4 x) {
+  return mod289(((x * 34.0) + 1.0) * x);
+}
+vec4 taylorInvSqrt(vec4 r) {
+  return 1.79284291400159 - 0.85373472095314 * r;
+}
+float snoise(vec3 v) {
+  const vec2  C = vec2(1.0/6.0, 1.0/3.0);
+  const vec4  D = vec4(0.0, 0.5, 1.0, 2.0);
+  vec3 i = floor(v + dot(v, C.yyy));
+  vec3 x0 = v - i + dot(i, C.xxx);
+  vec3 g = step(x0.yzx, x0.xyz);
+  vec3 l = 1.0 - g;
+  vec3 i1 = min(g, l.zxy);
+  vec3 i2 = max(g, l.zxy);
+  vec3 x1 = x0 - i1 + C.xxx;
+  vec3 x2 = x0 - i2 + 2.0 * C.xxx;
+  vec3 x3 = x0 - 1.0 + 3.0 * C.xxx;
+  i = mod289(i);
+  vec4 p = permute( permute( permute(
+               i.z + vec4(0.0, i1.z, i2.z, 1.0))
+             + i.y + vec4(0.0, i1.y, i2.y, 1.0))
+             + i.x + vec4(0.0, i1.x, i2.x, 1.0));
+  float n_ = 1.0/7.0;
+  vec3 ns = n_ * D.wyz - D.xzx;
+  vec4 j = p - 49.0*floor(p*ns.z*ns.z);
+  vec4 x_ = floor(j*ns.z);
+  vec4 y_ = floor(j - 7.0*x_);
+  vec4 x = x_*ns.x + ns.yyyy;
+  vec4 y = y_*ns.x + ns.yyyy;
+  vec4 h = 1.0 - abs(x) - abs(y);
+  vec4 b0 = vec4(x.xy, y.xy);
+  vec4 b1 = vec4(x.zw, y.zw);
+  vec4 s0 = floor(b0)*2.0 + 1.0;
+  vec4 s1 = floor(b1)*2.0 + 1.0;
+  vec4 sh = -step(h, vec4(0.0));
+  vec4 a0 = b0.xzyw + s0.xzyw*sh.xxyy;
+  vec4 a1 = b1.xzyw + s1.xzyw*sh.zzww;
+  vec3 g0 = vec3(a0.xy,h.x);
+  vec3 g1 = vec3(a0.zw,h.y);
+  vec3 g2 = vec3(a1.xy,h.z);
+  vec3 g3 = vec3(a1.zw,h.w);
+  vec4 norm = taylorInvSqrt(vec4(dot(g0,g0), dot(g1,g1), 
+                                 dot(g2,g2), dot(g3,g3)));
+  g0 *= norm.x;
+  g1 *= norm.y;
+  g2 *= norm.z;
+  g3 *= norm.w;
+  vec4 m = max(0.6 - vec4(dot(x0,x0), dot(x1,x1),
+                          dot(x2,x2), dot(x3,x3)), 0.0);
+  m = m * m;
+  return 42.0 * dot( m*m, vec4( dot(g0,x0), dot(g1,x1),
+                                dot(g2,x2), dot(g3,x3) ) );
+}
+
+void main() {
+  vUv = uv;
+  vWorldNormal = normalize(normalMatrix * normal);
+
+  // Displace vertices by noise for a wavy surface
+  float noiseVal = snoise(position * 3.0 + time * 0.2);
+  vec3 displaced = position + normal * noiseVal * displacementStrength;
+
+  // Calculate camera-space position for limb darkening
+  vec4 mvPosition = modelViewMatrix * vec4(displaced, 1.0);
+  vViewPos = -mvPosition.xyz; // camera-space view vector
+
+  gl_Position = projectionMatrix * mvPosition;
+}
+`;
+
+//////////////////////
+// FRAGMENT SHADER
+//////////////////////
+
+const sunFragmentShader = `
+uniform float time;
+varying vec2 vUv;
+varying vec3 vWorldNormal;
+varying vec3 vViewPos;
+
+// Reuse the same simplex noise & fBm as before
+vec3 mod289(vec3 x) {
+  return x - floor(x * (1.0 / 289.0)) * 289.0;
+}
+vec4 mod289(vec4 x) {
+  return x - floor(x * (1.0 / 289.0)) * 289.0;
+}
+vec4 permute(vec4 x) {
+  return mod289(((x * 34.0) + 1.0) * x);
+}
+vec4 taylorInvSqrt(vec4 r) {
+  return 1.79284291400159 - 0.85373472095314 * r;
+}
+float snoise(vec3 v) {
+  // ... same as in vertex
+  const vec2  C = vec2(1.0/6.0, 1.0/3.0);
+  const vec4  D = vec4(0.0, 0.5, 1.0, 2.0);
+
+  vec3 i = floor(v + dot(v, C.yyy));
+  vec3 x0 = v - i + dot(i, C.xxx);
+  vec3 g = step(x0.yzx, x0.xyz);
+  vec3 l = 1.0 - g;
+  vec3 i1 = min(g, l.zxy);
+  vec3 i2 = max(g, l.zxy);
+  vec3 x1 = x0 - i1 + C.xxx;
+  vec3 x2 = x0 - i2 + 2.0*C.xxx;
+  vec3 x3 = x0 - 1.0 + 3.0*C.xxx;
+  i = mod289(i);
+  vec4 p = permute( permute( permute(
+               i.z + vec4(0.0, i1.z, i2.z, 1.0))
+             + i.y + vec4(0.0, i1.y, i2.y, 1.0))
+             + i.x + vec4(0.0, i1.x, i2.x, 1.0));
+  float n_ = 1.0/7.0;
+  vec3 ns = n_ * D.wyz - D.xzx;
+  vec4 j = p - 49.0*floor(p*ns.z*ns.z);
+  vec4 x_ = floor(j*ns.z);
+  vec4 y_ = floor(j - 7.0*x_);
+  vec4 x = x_*ns.x + ns.yyyy;
+  vec4 y = y_*ns.x + ns.yyyy;
+  vec4 h = 1.0 - abs(x) - abs(y);
+  vec4 b0 = vec4(x.xy, y.xy);
+  vec4 b1 = vec4(x.zw, y.zw);
+  vec4 s0 = floor(b0)*2.0 + 1.0;
+  vec4 s1 = floor(b1)*2.0 + 1.0;
+  vec4 sh = -step(h, vec4(0.0));
+  vec4 a0 = b0.xzyw + s0.xzyw*sh.xxyy;
+  vec4 a1 = b1.xzyw + s1.xzyw*sh.zzww;
+  vec3 g0 = vec3(a0.xy,h.x);
+  vec3 g1 = vec3(a0.zw,h.y);
+  vec3 g2 = vec3(a1.xy,h.z);
+  vec3 g3 = vec3(a1.zw,h.w);
+  vec4 norm = taylorInvSqrt(vec4(dot(g0,g0), dot(g1,g1), 
+                                 dot(g2,g2), dot(g3,g3)));
+  g0 *= norm.x;
+  g1 *= norm.y;
+  g2 *= norm.z;
+  g3 *= norm.w;
+  vec4 m = max(0.6 - vec4(dot(x0,x0), dot(x1,x1),
+                          dot(x2,x2), dot(x3,x3)), 0.0);
+  m = m * m;
+  return 42.0 * dot( m*m, vec4( dot(g0,x0), dot(g1,x1),
+                                dot(g2,x2), dot(g3,x3) ) );
+}
+
+float fbm(vec3 pos) {
+  float total = 0.0;
+  float amp   = 0.5;
+  float freq  = 1.0;
+  for (int i = 0; i < 5; i++) {
+    total += amp * snoise(pos * freq);
+    freq  *= 2.0;
+    amp   *= 0.5;
+  }
+  return total;
+}
+
+// Domain-warping helper for swirling
+vec2 swirlUV(vec2 uv, float angle, vec2 center) {
+  vec2 offset = uv - center;
+  float r = length(offset);
+  float phi = atan(offset.y, offset.x) + angle * (1.0 - r);
+  return center + vec2(cos(phi), sin(phi)) * r;
+}
+
+void main() {
+  // Basic radial gradient for brightness
+  float dist = distance(vUv, vec2(0.5));
+  // Start with more pronounced falloff
+  float radial = 1.0 - smoothstep(0.2, 0.65, dist);
+
+  // Warp the UVs to create swirling patterns
+  vec2 warpedUV = swirlUV(vUv, time * 0.3, vec2(0.5));
+
+  // Sample fBm with the warped UV
+  float noiseVal = fbm(vec3(warpedUV * 10.0, time * 0.2));
+
+  // Combine radial + noise for base brightness
+  float brightness = radial + noiseVal * 0.2;
+
+  // Mild limb darkening based on the angle between view direction and normal
+  vec3 N = normalize(vWorldNormal);
+  vec3 V = normalize(vViewPos);
+  float NdotV = dot(N, V); 
+  // Shift the exponent or multiplier to taste
+  float limb = pow(clamp(1.0 - NdotV, 0.0, 1.0), 0.6);
+
+  // Combine everything:
+  // - Baseline color from orange to yellow
+  // - Subtle dimming from limbDarkening
+  // - Optionally clamp brightness to avoid saturating whites
+  vec3 baseColor = mix(vec3(1.0, 0.5, 0.0), vec3(1.0, 1.0, 0.0), brightness);
+  baseColor *= (1.0 - 0.4 * limb);
+
+  // Slightly darken random "sunspot" patches
+  // if noiseVal < some threshold, we blend in a darker brown
+  if (noiseVal < 0.0) {
+    baseColor = mix(baseColor, vec3(0.3, 0.2, 0.05), 0.4);
+  }
+
+  // Final output
+  gl_FragColor = vec4(baseColor, 1.0);
+}
+`;
+
+
+
 
 // ------------------------------------------------------------------
 // COMPONENT: Earth (with axis indicator overlay and clouds)
@@ -224,8 +448,10 @@ const Earth = React.forwardRef(
         },
         temperature: { value: temperature },
         precession: { value: precession },
+        displacementScale: { value: 0.01 },
+        iceFactor: { value: iceFactor },
       };
-    }, [texturesLoaded, textures, temperature, precession]);
+    }, [texturesLoaded, textures, temperature, precession, iceFactor]);
 
     // Update sun direction relative to the Earth's current world position.
     useFrame(({ clock }) => {
@@ -251,15 +477,23 @@ const Earth = React.forwardRef(
       return null;
     }
 
+    // Create a quaternion for the axial tilt
+    const tiltQuaternion = new THREE.Quaternion().setFromAxisAngle(
+      new THREE.Vector3(0, 0, 1),
+      THREE.MathUtils.degToRad(axialTilt)
+    );
+
+    // Create a quaternion for the precession
+    const precessionQuaternion = new THREE.Quaternion().setFromAxisAngle(
+      new THREE.Vector3(0, 1, 0),
+      THREE.MathUtils.degToRad(precession)
+    );
+
+    // Combine the rotations
+    const combinedQuaternion = tiltQuaternion.multiply(precessionQuaternion);
+
     return (
-      <group
-        // Rotate the Earth to reflect its axial tilt and precession.
-        rotation={[
-          THREE.MathUtils.degToRad(axialTilt),
-          THREE.MathUtils.degToRad(precession),
-          0,
-        ]}
-      >
+      <group quaternion={combinedQuaternion}>
         {/* Earth surface */}
         <mesh ref={ref} castShadow receiveShadow>
           <sphereGeometry args={[1, 64, 64]} />
@@ -287,9 +521,9 @@ const Earth = React.forwardRef(
         <mesh scale={1.03}>
           <sphereGeometry args={[1, 64, 64]} />
           <meshBasicMaterial
-            color="white"
+            color="#a8d0e6"
             transparent={true}
-            opacity={iceFactor * 0.8}
+            opacity={iceFactor * 0.5}
             depthWrite={false}
           />
         </mesh>
@@ -446,6 +680,7 @@ function NarrativeOverlay({
   eccentricity,
   axialTilt,
   precession,
+  formatNumber,
 }) {
   const eccentricityMessage =
     eccentricity > 0.0167
@@ -474,13 +709,13 @@ function NarrativeOverlay({
     "Cause and Effect: Variations in eccentricity, axial tilt, and precession alter the amount and timing of sunlight (insolation), driving seasonal temperature differences. Feedbacks, such as ice formation, can amplify these changes.";
 
   return (
-    <Card className="fixed bottom-28 left-[5%] max-w-[500px] h-[500px] bg-white border border-gray-300">
+    <Card className="bg-white border border-gray-300 pt-[250px]">
       <CardHeader>
         <CardTitle className="text-black text-lg">
-          Current Cycle States (Year {simulatedYear.toFixed(1)})
+          Current Cycle States ({formatNumber(simulatedYear)})
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-2 text-sm">
+      <CardContent className="space-y-2 text-sm max-h-[300px] overflow-y-auto">
         <p className="text-gray-800">{eccentricityMessage}</p>
         <p className="text-gray-800">{axialTiltMessage}</p>
         <p className="text-gray-800">{precessionMessage}</p>
@@ -511,6 +746,8 @@ function GlobalTemperatureGraph({
   iceFactor,
   co2Level,
   simulatedYear,
+  style,
+  formatNumber,
 }) {
   const canvasRef = useRef();
   const [temperatureHistory, setTemperatureHistory] = useState([]);
@@ -669,8 +906,8 @@ function GlobalTemperatureGraph({
       [0, 0.25, 0.5, 0.75, 1].forEach((fraction) => {
         const x = margin.left + fraction * graphWidth;
         const index = Math.floor(fraction * (temperatureHistory.length - 1));
-        const year = temperatureHistory[index]?.year.toFixed(1) || "0.0";
-        ctx.fillText(`Year ${year}`, x, height - margin.bottom + 20);
+        const year = temperatureHistory[index]?.year || 0;
+        ctx.fillText(formatNumber(year), x, height - margin.bottom + 20);
       });
 
       // Title and axis labels
@@ -702,22 +939,25 @@ function GlobalTemperatureGraph({
     precession,
     co2Level,
     iceFactor,
+    formatNumber,
   ]);
 
   return (
     <canvas
       ref={canvasRef}
-      width={500}
-      height={300}
+      width={400}
+      height={250}
       style={{
-        position: "absolute",
+        position: 'fixed',
         bottom: 20,
         left: 20,
+        transform: 'none',
+        zIndex: 10,
         backgroundColor: "white",
         borderRadius: "5px",
-        border: "1px solid black",
         padding: "10px",
-        background: "linear-gradient(135deg, #1a1a2e, #16213e)",
+        boxShadow: "0 2px 10px rgba(0, 0, 0, 0.1)",
+        ...style
       }}
     />
   );
@@ -799,7 +1039,7 @@ function CycleComparisonPanel({
 // ------------------------------------------------------------------
 // COMPONENT: SeasonalInsolationGraph
 // ------------------------------------------------------------------
-function SeasonalInsolationGraph({ axialTilt, eccentricity, precession }) {
+function SeasonalInsolationGraph({ axialTilt, eccentricity, precession, style }) {
   const canvasRef = useRef();
 
   useEffect(() => {
@@ -949,19 +1189,21 @@ function SeasonalInsolationGraph({ axialTilt, eccentricity, precession }) {
 
   return (
     <div style={{
-      position: 'absolute',
+      position: 'fixed',
       bottom: 20,
-      right: 20,
+      left: 440,
+      transform: 'none',
       zIndex: 10,
       background: 'white',
       padding: '10px',
       borderRadius: '8px',
       boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
+      ...style
     }}>
       <canvas
         ref={canvasRef}
         width={400}
-        height={300}
+        height={250}
         style={{
           borderRadius: '5px',
         }}
@@ -1042,6 +1284,18 @@ export default function Home() {
 
   // Smooth the displayed temperature.
   const [displayedTemp, setDisplayedTemp] = useState(realisticAmsterdamTemp);
+
+  // Format number with k/m suffix and 3 significant digits
+  const formatNumber = (num) => {
+    if (num >= 1000000000) {
+      return `${(num / 1000000000).toFixed(2)}b years`;
+    } else if (num >= 1000000) {
+      return `${(num / 1000000).toFixed(2)}m years`;
+    } else if (num >= 1000) {
+      return `${(num / 1000).toFixed(2)}k years`;
+    }
+    return `${num.toFixed(1)} years`;
+  };
 
   // Main simulation loop.
   useEffect(() => {
@@ -1178,7 +1432,7 @@ export default function Home() {
         <Canvas
           shadows
           camera={{ position: [0, 15, 25], fov: 50 }}
-          background={new THREE.Color(0, 0, 0)}
+          background={new THREE.Color(0x000022)}
         >
           <ambientLight intensity={0.2} />
           <directionalLight
@@ -1204,122 +1458,129 @@ export default function Home() {
         </Canvas>
       </div>
 
-      <CycleComparisonPanel
-        eccentricity={eccentricity}
-        axialTilt={axialTilt}
-        precession={precession}
-        baselineEccentricity={baselineEccentricity}
-        baselineAxialTilt={baselineAxialTilt}
-        baselinePrecession={baselinePrecession}
-        onEccentricityChange={(value) => {
-          setEccentricity(value);
-          setAutoAnimate(false);
-        }}
-        onAxialTiltChange={(value) => {
-          setAxialTilt(value);
-          setAutoAnimate(false);
-        }}
-        onPrecessionChange={(value) => {
-          setPrecession(value);
-          setAutoAnimate(false);
-        }}
-      />
+      {/* Left Panel Group */}
+      <div className="fixed left-5 top-5 space-y-4 w-[300px]">
+        <CycleComparisonPanel
+          eccentricity={eccentricity}
+          axialTilt={axialTilt}
+          precession={precession}
+          baselineEccentricity={baselineEccentricity}
+          baselineAxialTilt={baselineAxialTilt}
+          baselinePrecession={baselinePrecession}
+          onEccentricityChange={(value) => {
+            setEccentricity(value);
+            setAutoAnimate(false);
+          }}
+          onAxialTiltChange={(value) => {
+            setAxialTilt(value);
+            setAutoAnimate(false);
+          }}
+          onPrecessionChange={(value) => {
+            setPrecession(value);
+            setAutoAnimate(false);
+          }}
+        />
 
-      {/* Time Control Panel */}
-      <Card className="fixed top-5 right-5 w-[300px] bg-white border border-gray-300">
-        <CardHeader>
-          <CardTitle className="text-black">Time Controls</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <button
-            onClick={() => setIsPaused((prev) => !prev)}
-            className="w-full px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-md transition-colors"
-          >
-            {isPaused ? "Play" : "Pause"}
-          </button>
-          <div className="space-y-3">
-            <div className="flex justify-between">
-              <span className="text-sm text-gray-800">Speed</span>
-              <span className="text-sm text-gray-400">
-                {timeScale.toFixed(3)}
-              </span>
-            </div>
-            <Slider
-              defaultValue={[timeScale]}
-              value={[timeScale]}
-              min={0.001}
-              max={5000000}
-              step={1}
-              onValueChange={([value]) => setTimeScale(value)}
-            />
-          </div>
-          <div className="space-y-3">
-            <label className="text-sm text-gray-800">Preset Scenarios</label>
-            <select
-              value={preset}
-              onChange={(e) => {
-                setPreset(e.target.value);
-                if (presets[e.target.value]) {
-                  const { eccentricity, axialTilt, precession } =
-                    presets[e.target.value];
-                  setEccentricity(eccentricity);
-                  setAxialTilt(axialTilt);
-                  setPrecession(precession);
-                  setAutoAnimate(false);
-                }
-              }}
-              className="w-full bg-white text-black border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-primary focus:border-primary"
+        <NarrativeOverlay
+          simulatedYear={simulatedYear}
+          temperature={displayedTemp}
+          iceFactor={f_ice}
+          eccentricity={eccentricity}
+          axialTilt={axialTilt}
+          precession={precession}
+          formatNumber={formatNumber}
+        />
+      </div>
+
+      {/* Right Panel Group */}
+      <div className="fixed right-5 top-5 space-y-4 w-[300px]">
+        {/* Time Control Panel */}
+        <Card className="bg-white border border-gray-300">
+          <CardHeader>
+            <CardTitle className="text-black">Time Controls</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <button
+              onClick={() => setIsPaused((prev) => !prev)}
+              className="w-full px-4 py-2 bg-black hover:bg-black/90 text-white rounded-md transition-colors"
             >
-              <option value="">None</option>
-              {Object.keys(presets).map((key) => (
-                <option key={key} value={key}>
-                  {key}
-                </option>
-              ))}
-            </select>
-            {preset && presets[preset]?.description && (
-              <div className="text-sm text-gray-300 mt-2">
-                {presets[preset].description}
+              {isPaused ? "Play" : "Pause"}
+            </button>
+            <div className="space-y-3">
+              <div className="flex justify-between">
+                <span className="text-sm text-gray-800">Speed</span>
+                <span className="text-sm text-gray-400">
+                  {formatNumber(timeScale)}
+                </span>
               </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Additional Controls Panel */}
-      <Card className="fixed top-[350px] right-5 w-[300px] bg-white border border-gray-300">
-        <CardHeader>
-          <CardTitle className="text-black">Additional Controls</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="space-y-3">
-            <div className="flex justify-between">
-              <span className="text-sm text-gray-800">CO₂ Level (ppm)</span>
-              <span className="text-sm text-gray-400">{co2Level}</span>
+              <Slider
+                defaultValue={[timeScale]}
+                value={[timeScale]}
+                min={0.001}
+                max={500000000}
+                step={1}
+                onValueChange={([value]) => setTimeScale(value)}
+              />
             </div>
-            <Slider
-              defaultValue={[co2Level]}
-              value={[co2Level]}
-              min={250}
-              max={500}
-              step={1}
-              onValueChange={([value]) => {
-                setCo2Level(value);
-                setAutoAnimate(false);
-              }}
-            />
-          </div>
-        </CardContent>
-      </Card>
+            <div className="space-y-3">
+              <label className="text-sm text-gray-800">Preset Scenarios</label>
+              <select
+                value={preset}
+                onChange={(e) => {
+                  setPreset(e.target.value);
+                  if (presets[e.target.value]) {
+                    const { eccentricity, axialTilt, precession } =
+                      presets[e.target.value];
+                    setEccentricity(eccentricity);
+                    setAxialTilt(axialTilt);
+                    setPrecession(precession);
+                    setAutoAnimate(false);
+                  }
+                }}
+                className="w-full bg-black text-white border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-black focus:border-black hover:bg-black/90 transition-colors"
+              >
+                <option value="">None</option>
+                {Object.keys(presets).map((key) => (
+                  <option key={key} value={key}>
+                    {key}
+                  </option>
+                ))}
+              </select>
+              {preset && presets[preset]?.description && (
+                <div className="text-sm text-gray-300 mt-2">
+                  {presets[preset].description}
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
 
-      <NarrativeOverlay
-        simulatedYear={simulatedYear}
-        temperature={displayedTemp}
-        iceFactor={f_ice}
-        eccentricity={eccentricity}
-        axialTilt={axialTilt}
-        precession={precession}
-      />
+        {/* Additional Controls Panel */}
+        <Card className="bg-white border border-gray-300">
+          <CardHeader>
+            <CardTitle className="text-black">Additional Controls</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="space-y-3">
+              <div className="flex justify-between">
+                <span className="text-sm text-gray-800">CO₂ Level (ppm)</span>
+                <span className="text-sm text-gray-400">{co2Level}</span>
+              </div>
+              <Slider
+                defaultValue={[co2Level]}
+                value={[co2Level]}
+                min={250}
+                max={500}
+                step={1}
+                onValueChange={([value]) => {
+                  setCo2Level(value);
+                  setAutoAnimate(false);
+                }}
+              />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
       <GlobalTemperatureGraph
         axialTilt={axialTilt}
@@ -1329,12 +1590,31 @@ export default function Home() {
         iceFactor={f_ice}
         co2Level={co2Level}
         simulatedYear={simulatedYear}
+        formatNumber={formatNumber}
+        style={{
+          position: 'fixed',
+          bottom: 20,
+          left: 20,
+          transform: 'none',
+          zIndex: 10,
+          width: '400px',
+          height: '250px'
+        }}
       />
 
       <SeasonalInsolationGraph
         axialTilt={axialTilt}
         eccentricity={eccentricity}
         precession={precession}
+        style={{
+          position: 'fixed',
+          bottom: 20,
+          left: 440,
+          transform: 'none',
+          zIndex: 10,
+          width: '400px',
+          height: '250px'
+        }}
       />
     </div>
   );
@@ -1343,14 +1623,28 @@ export default function Home() {
 // ------------------------------------------------------------------
 // COMPONENT: Sun
 // ------------------------------------------------------------------
+// Updated Sun component using the new shaders.
 function Sun() {
+  const materialRef = useRef();
+
+  useFrame(({ clock }) => {
+    if (materialRef.current) {
+      materialRef.current.uniforms.time.value = clock.getElapsedTime();
+    }
+  });
+
   return (
     <mesh position={[0, 0, 0]}>
-      <sphereGeometry args={[2, 32, 32]} />
-      <meshStandardMaterial
-        emissive={new THREE.Color(1, 0.5, 0)}
-        emissiveIntensity={10}
-        color={new THREE.Color(1, 0.5, 0)}
+      {/* Higher geometry detail for better displacement fidelity */}
+      <sphereGeometry args={[2, 128, 128]} />
+      <shaderMaterial
+        ref={materialRef}
+        uniforms={{
+          time: { value: 0 },
+          displacementStrength: { value: 0.02 }, // Increase or decrease for more or less "bubbling"
+        }}
+        vertexShader={sunVertexShader}
+        fragmentShader={sunFragmentShader}
       />
     </mesh>
   );
