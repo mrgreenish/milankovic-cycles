@@ -13,8 +13,8 @@ import "./globals.css";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
 import { cn } from "@/lib/utils";
-import { Poppins } from 'next/font/google';
-const poppins = Poppins({ subsets: ['latin'], weight: ['400', '600'] });
+import { Poppins } from "next/font/google";
+const poppins = Poppins({ subsets: ["latin"], weight: ["400", "600"] });
 
 //
 // CREATE A INTRO PAGE WITH INTRODUCTION AND A BUTTON TO GO TO THE SIMULATION
@@ -679,6 +679,19 @@ function NarrativeOverlay({
   precession,
   formatNumber,
 }) {
+  // Add state for smoothed year display
+  const [displayYear, setDisplayYear] = useState(0);
+  
+  // Update the display year less frequently
+  useEffect(() => {
+    const updateInterval = 500; // Update every 500ms
+    const timeoutId = setTimeout(() => {
+      setDisplayYear(simulatedYear);
+    }, updateInterval);
+    
+    return () => clearTimeout(timeoutId);
+  }, [simulatedYear]);
+
   const eccentricityMessage =
     eccentricity > 0.0167
       ? "High eccentricity: The orbit is more elliptical, which can cause stronger seasonal contrasts."
@@ -709,7 +722,7 @@ function NarrativeOverlay({
     <Card className="bg-white border border-gray-300 pt-[250px]">
       <CardHeader>
         <CardTitle className="text-black text-lg">
-          Current Cycle States ({formatNumber(simulatedYear)})
+          Current Cycle States ({formatNumber(Math.floor(displayYear))})
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-2 text-sm max-h-[300px] overflow-y-auto">
@@ -942,8 +955,8 @@ function GlobalTemperatureGraph({
   return (
     <canvas
       ref={canvasRef}
-      width={400}
-      height={250}
+      width={600}
+      height={150}
       style={{
         position: "fixed",
         bottom: 20,
@@ -1220,8 +1233,8 @@ function SeasonalInsolationGraph({
     >
       <canvas
         ref={canvasRef}
-        width={400}
-        height={250}
+        width={600}
+        height={150}
         style={{
           borderRadius: "5px",
         }}
@@ -1307,13 +1320,16 @@ export default function Home() {
   // Format number with k/m suffix and 3 significant digits
   const formatNumber = (num) => {
     if (num >= 1000000000) {
-      return `${(num / 1000000000).toFixed(2)}b years`;
+      const billions = num / 1000000000;
+      return `${Math.round(billions)} billion years`;
     } else if (num >= 1000000) {
-      return `${(num / 1000000).toFixed(2)}m years`;
+      const millions = num / 1000000;
+      return `${millions.toFixed(1)} million years`;
     } else if (num >= 1000) {
-      return `${(num / 1000).toFixed(2)}k years`;
+      const thousands = num / 1000;
+      return `${Math.round(thousands)}k years`;
     }
-    return `${num.toFixed(1)} years`;
+    return `${Math.round(num)} years`;
   };
 
   // Main simulation loop.
@@ -1451,7 +1467,7 @@ export default function Home() {
       <div className="canvas-container">
         <Canvas
           shadows
-          camera={{ position: [0, 15, 25], fov: 50 }}
+          camera={{ position: [0, 25, 45], fov: 50 }}
           background={new THREE.Color(0x000022)}
         >
           <ambientLight intensity={0.2} />
@@ -1601,41 +1617,34 @@ export default function Home() {
           </CardContent>
         </Card>
       </div>
+      <div className="fixed flex justify-center items-center">
+        <GlobalTemperatureGraph
+          axialTilt={axialTilt}
+          eccentricity={eccentricity}
+          precession={precession}
+          temperature={displayedTemp}
+          iceFactor={f_ice}
+          co2Level={co2Level}
+          simulatedYear={simulatedYear}
+          formatNumber={formatNumber}
+          style={{
+            zIndex: 10,
+            width: "600px",
+            height: "150px",
+          }}
+        />
 
-      <GlobalTemperatureGraph
-        axialTilt={axialTilt}
-        eccentricity={eccentricity}
-        precession={precession}
-        temperature={displayedTemp}
-        iceFactor={f_ice}
-        co2Level={co2Level}
-        simulatedYear={simulatedYear}
-        formatNumber={formatNumber}
-        style={{
-          position: "fixed",
-          bottom: 20,
-          left: 20,
-          transform: "none",
-          zIndex: 10,
-          width: "400px",
-          height: "250px",
-        }}
-      />
-
-      <SeasonalInsolationGraph
-        axialTilt={axialTilt}
-        eccentricity={eccentricity}
-        precession={precession}
-        style={{
-          position: "fixed",
-          bottom: 20,
-          left: 440,
-          transform: "none",
-          zIndex: 10,
-          width: "400px",
-          height: "250px",
-        }}
-      />
+        <SeasonalInsolationGraph
+          axialTilt={axialTilt}
+          eccentricity={eccentricity}
+          precession={precession}
+          style={{
+            zIndex: 10,
+            width: "600px",
+            height: "150px",
+          }}
+        />
+      </div>
     </div>
   );
 }
@@ -1694,17 +1703,28 @@ function SceneEffects() {
 /* Updated IntroOverlay component */
 function IntroOverlay({ onStart }) {
   return (
-    <div className={`${poppins.className} fixed inset-0 bg-black bg-opacity-85 backdrop-blur-sm flex flex-col justify-center items-center text-white p-5 text-center z-50`}>
+    <div
+      className={`${poppins.className} fixed inset-0 bg-black bg-opacity-85 backdrop-blur-sm flex flex-col justify-center items-center text-white p-5 text-center z-50`}
+    >
       <h1 className="text-4xl font-bold mb-5">
         Introduction to Milanković Cycles
       </h1>
       <p className="text-lg max-w-xl mb-5">
-        Milanković cycles refer to the long-term variations in Earth's orbit that affect climate patterns on our planet. These cycles are driven by changes in Earth's eccentricity, axial tilt, and precession, which influence the amount of sunlight Earth receives over thousands of years.
+        Milanković cycles refer to the long-term variations in Earth's orbit
+        that affect climate patterns on our planet. These cycles are driven by
+        changes in Earth's eccentricity, axial tilt, and precession, which
+        influence the amount of sunlight Earth receives over thousands of years.
       </p>
       <p className="text-lg max-w-xl mb-5">
-        Milutin Milanković was a renowned Serbian mathematician and astronomer who developed theories that explain how these orbital changes have shaped our climate throughout history.
+        Milutin Milanković was a renowned Serbian mathematician and astronomer
+        who developed theories that explain how these orbital changes have
+        shaped our climate throughout history.
       </p>
-      <img src="/miltin-milankovic.png" alt="Milutin Milanković" className="w-48 h-auto rounded-lg mb-5" />
+      <img
+        src="/miltin-milankovic.png"
+        alt="Milutin Milanković"
+        className="w-48 h-auto rounded-lg mb-5"
+      />
       <button
         onClick={onStart}
         className="px-5 py-2 text-lg bg-white text-black rounded hover:bg-gray-200 cursor-pointer"
