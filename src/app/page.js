@@ -13,6 +13,11 @@ import "./globals.css";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
 import { cn } from "@/lib/utils";
+import { Poppins } from 'next/font/google';
+const poppins = Poppins({ subsets: ['latin'], weight: ['400', '600'] });
+
+//
+// CREATE A INTRO PAGE WITH INTRODUCTION AND A BUTTON TO GO TO THE SIMULATION
 
 /*
   This simulation illustrates key ideas behind Milankovitch cycles:
@@ -157,7 +162,6 @@ const fragmentShader = `
 // New Sun shaders with noise, displacement, and brightness mapping
 
 // Vertex shader – displaces vertices using a simplex noise function.
-
 
 //////////////////////
 // VERTEX SHADER
@@ -381,9 +385,6 @@ void main() {
 }
 `;
 
-
-
-
 // ------------------------------------------------------------------
 // COMPONENT: Earth (with axis indicator overlay and clouds)
 // ------------------------------------------------------------------
@@ -569,11 +570,7 @@ function OrbitPath({ eccentricity }) {
   return (
     <group>
       {/* Baseline orbit (dashed or thin line) */}
-      <Line
-        points={baselinePoints}
-        color="rgba(0,0,0,0.8)"
-        lineWidth={0.5}
-      />
+      <Line points={baselinePoints} color="rgba(0,0,0,0.8)" lineWidth={0.5} />
       {/* Current orbit */}
       <Line points={points} color="black" lineWidth={2} />
 
@@ -948,16 +945,16 @@ function GlobalTemperatureGraph({
       width={400}
       height={250}
       style={{
-        position: 'fixed',
+        position: "fixed",
         bottom: 20,
         left: 20,
-        transform: 'none',
+        transform: "none",
         zIndex: 10,
         backgroundColor: "white",
         borderRadius: "5px",
         padding: "10px",
         boxShadow: "0 2px 10px rgba(0, 0, 0, 0.1)",
-        ...style
+        ...style,
       }}
     />
   );
@@ -1039,20 +1036,25 @@ function CycleComparisonPanel({
 // ------------------------------------------------------------------
 // COMPONENT: SeasonalInsolationGraph
 // ------------------------------------------------------------------
-function SeasonalInsolationGraph({ axialTilt, eccentricity, precession, style }) {
+function SeasonalInsolationGraph({
+  axialTilt,
+  eccentricity,
+  precession,
+  style,
+}) {
   const canvasRef = useRef();
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext("2d");
     const width = canvas.width;
     const height = canvas.height;
 
     // Clear canvas with a gradient background
     const bgGradient = ctx.createLinearGradient(0, 0, width, height);
-    bgGradient.addColorStop(0, '#ffffff');
-    bgGradient.addColorStop(1, '#f0f0f0');
+    bgGradient.addColorStop(0, "#ffffff");
+    bgGradient.addColorStop(1, "#f0f0f0");
     ctx.fillStyle = bgGradient;
     ctx.fillRect(0, 0, width, height);
 
@@ -1070,25 +1072,29 @@ function SeasonalInsolationGraph({ axialTilt, eccentricity, precession, style })
     let maxInsolation = 0;
     let minInsolation = Infinity;
 
-    latitudes.forEach(lat => {
+    latitudes.forEach((lat) => {
       const latRad = THREE.MathUtils.degToRad(lat);
       const row = [];
 
-      seasons.forEach(season => {
+      seasons.forEach((season) => {
         const seasonRad = THREE.MathUtils.degToRad(season);
         const tiltRad = THREE.MathUtils.degToRad(axialTilt);
 
         // Enhanced insolation calculation
-        let insolation = Math.cos(latRad) * Math.cos(seasonRad) +
-                        Math.sin(latRad) * Math.sin(tiltRad) * Math.cos(seasonRad);
-        
+        let insolation =
+          Math.cos(latRad) * Math.cos(seasonRad) +
+          Math.sin(latRad) * Math.sin(tiltRad) * Math.cos(seasonRad);
+
         // Orbital effects
-        const distanceFactor = 1 - eccentricity * Math.cos(seasonRad + THREE.MathUtils.degToRad(precession));
+        const distanceFactor =
+          1 -
+          eccentricity *
+            Math.cos(seasonRad + THREE.MathUtils.degToRad(precession));
         insolation *= 1 / (distanceFactor * distanceFactor);
 
         // Add small random variation for visual interest
-        insolation *= (1 + Math.random() * 0.05);
-        
+        insolation *= 1 + Math.random() * 0.05;
+
         insolation = Math.max(0, insolation);
         maxInsolation = Math.max(maxInsolation, insolation);
         minInsolation = Math.min(minInsolation, insolation);
@@ -1105,10 +1111,11 @@ function SeasonalInsolationGraph({ axialTilt, eccentricity, precession, style })
       row.forEach((value, seasonIndex) => {
         const x = margin.left + seasonIndex * cellWidth;
         const y = margin.top + latIndex * cellHeight;
-        
+
         // Normalize value between 0 and 1
-        const normalizedValue = (value - minInsolation) / (maxInsolation - minInsolation);
-        
+        const normalizedValue =
+          (value - minInsolation) / (maxInsolation - minInsolation);
+
         // Create a more sophisticated color gradient
         const h = (1 - normalizedValue) * 240; // Hue: blue (240) to red (0)
         const s = 80 + normalizedValue * 20; // Saturation: 80-100%
@@ -1119,9 +1126,9 @@ function SeasonalInsolationGraph({ axialTilt, eccentricity, precession, style })
     });
 
     // Draw grid lines
-    ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+    ctx.strokeStyle = "rgba(255,255,255,0.3)";
     ctx.lineWidth = 0.5;
-    
+
     // Vertical lines (seasons)
     for (let i = 0; i <= 4; i++) {
       const x = margin.left + (i * graphWidth) / 4;
@@ -1130,7 +1137,7 @@ function SeasonalInsolationGraph({ axialTilt, eccentricity, precession, style })
       ctx.lineTo(x, height - margin.bottom);
       ctx.stroke();
     }
-    
+
     // Horizontal lines (latitudes)
     for (let i = 0; i <= 6; i++) {
       const y = margin.top + (i * graphHeight) / 6;
@@ -1141,71 +1148,82 @@ function SeasonalInsolationGraph({ axialTilt, eccentricity, precession, style })
     }
 
     // Draw axes and labels
-    ctx.fillStyle = 'black';
-    ctx.strokeStyle = 'black';
+    ctx.fillStyle = "black";
+    ctx.strokeStyle = "black";
     ctx.lineWidth = 1;
-    ctx.font = '10px Arial';
+    ctx.font = "10px Arial";
 
     // Season labels with months
-    const seasonLabels = ['Dec (Winter)', 'Mar (Spring)', 'Jun (Summer)', 'Sep (Fall)'];
+    const seasonLabels = [
+      "Dec (Winter)",
+      "Mar (Spring)",
+      "Jun (Summer)",
+      "Sep (Fall)",
+    ];
     seasonLabels.forEach((label, i) => {
       const x = margin.left + (i * graphWidth) / 3;
       ctx.fillText(label, x, height - margin.bottom + 15);
     });
 
     // Latitude labels
-    [-90, -60, -30, 0, 30, 60, 90].forEach(lat => {
+    [-90, -60, -30, 0, 30, 60, 90].forEach((lat) => {
       const y = margin.top + ((lat + 90) / 180) * graphHeight;
-      ctx.textAlign = 'right';
+      ctx.textAlign = "right";
       ctx.fillText(`${lat}°`, margin.left - 5, y + 4);
     });
 
     // Title and legend
-    ctx.font = 'bold 12px Arial';
-    ctx.textAlign = 'center';
-    ctx.fillText('Solar Insolation by Latitude and Season', width / 2, 15);
-    
+    ctx.font = "bold 12px Arial";
+    ctx.textAlign = "center";
+    ctx.fillText("Solar Insolation by Latitude and Season", width / 2, 15);
+
     // Add color scale legend
     const legendWidth = 20;
     const legendHeight = graphHeight / 2;
     const legendX = width - margin.right + 20;
     const legendY = margin.top + graphHeight / 4;
 
-    const legendGradient = ctx.createLinearGradient(0, legendY + legendHeight, 0, legendY);
-    legendGradient.addColorStop(0, 'hsl(240, 80%, 20%)'); // Low insolation (blue)
-    legendGradient.addColorStop(1, 'hsl(0, 100%, 50%)');  // High insolation (red)
-    
+    const legendGradient = ctx.createLinearGradient(
+      0,
+      legendY + legendHeight,
+      0,
+      legendY
+    );
+    legendGradient.addColorStop(0, "hsl(240, 80%, 20%)"); // Low insolation (blue)
+    legendGradient.addColorStop(1, "hsl(0, 100%, 50%)"); // High insolation (red)
+
     ctx.fillStyle = legendGradient;
     ctx.fillRect(legendX, legendY, legendWidth, legendHeight);
-    
-    // Legend labels
-    ctx.font = '10px Arial';
-    ctx.textAlign = 'left';
-    ctx.fillStyle = 'black';
-    ctx.fillText('High', legendX + legendWidth + 5, legendY + 10);
-    ctx.fillText('Low', legendX + legendWidth + 5, legendY + legendHeight - 5);
 
+    // Legend labels
+    ctx.font = "10px Arial";
+    ctx.textAlign = "left";
+    ctx.fillStyle = "black";
+    ctx.fillText("High", legendX + legendWidth + 5, legendY + 10);
+    ctx.fillText("Low", legendX + legendWidth + 5, legendY + legendHeight - 5);
   }, [axialTilt, eccentricity, precession]);
 
   return (
-    <div style={{
-      position: 'fixed',
-      bottom: 20,
-      left: 440,
-      transform: 'none',
-      zIndex: 10,
-      background: 'white',
-      padding: '10px',
-      borderRadius: '8px',
-      boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
-      ...style
-    }}>
+    <div
+      style={{
+        position: "fixed",
+        bottom: 20,
+        left: 440,
+        transform: "none",
+        zIndex: 10,
+        background: "white",
+        padding: "10px",
+        borderRadius: "8px",
+        boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
+        ...style,
+      }}
+    >
       <canvas
         ref={canvasRef}
         width={400}
         height={250}
         style={{
-          borderRadius: '5px',
+          borderRadius: "5px",
         }}
       />
     </div>
@@ -1281,6 +1299,7 @@ export default function Home() {
 
   // Additional greenhouse gas slider.
   const [co2Level, setCo2Level] = useState(280);
+  const [showIntro, setShowIntro] = useState(true);
 
   // Smooth the displayed temperature.
   const [displayedTemp, setDisplayedTemp] = useState(realisticAmsterdamTemp);
@@ -1427,6 +1446,7 @@ export default function Home() {
 
   return (
     <div className="fixed inset-0 w-screen h-screen overflow-hidden">
+      {showIntro && <IntroOverlay onStart={() => setShowIntro(false)} />}
       {/* 3D Scene */}
       <div className="canvas-container">
         <Canvas
@@ -1592,13 +1612,13 @@ export default function Home() {
         simulatedYear={simulatedYear}
         formatNumber={formatNumber}
         style={{
-          position: 'fixed',
+          position: "fixed",
           bottom: 20,
           left: 20,
-          transform: 'none',
+          transform: "none",
           zIndex: 10,
-          width: '400px',
-          height: '250px'
+          width: "400px",
+          height: "250px",
         }}
       />
 
@@ -1607,13 +1627,13 @@ export default function Home() {
         eccentricity={eccentricity}
         precession={precession}
         style={{
-          position: 'fixed',
+          position: "fixed",
           bottom: 20,
           left: 440,
-          transform: 'none',
+          transform: "none",
           zIndex: 10,
-          width: '400px',
-          height: '250px'
+          width: "400px",
+          height: "250px",
         }}
       />
     </div>
@@ -1668,5 +1688,29 @@ function SceneEffects() {
         offset={[0.002, 0.002]}
       /> */}
     </EffectComposer>
+  );
+}
+
+/* Updated IntroOverlay component */
+function IntroOverlay({ onStart }) {
+  return (
+    <div className={`${poppins.className} fixed inset-0 bg-black bg-opacity-85 backdrop-blur-sm flex flex-col justify-center items-center text-white p-5 text-center z-50`}>
+      <h1 className="text-4xl font-bold mb-5">
+        Introduction to Milanković Cycles
+      </h1>
+      <p className="text-lg max-w-xl mb-5">
+        Milanković cycles refer to the long-term variations in Earth's orbit that affect climate patterns on our planet. These cycles are driven by changes in Earth's eccentricity, axial tilt, and precession, which influence the amount of sunlight Earth receives over thousands of years.
+      </p>
+      <p className="text-lg max-w-xl mb-5">
+        Milutin Milanković was a renowned Serbian mathematician and astronomer who developed theories that explain how these orbital changes have shaped our climate throughout history.
+      </p>
+      <img src="/miltin-milankovic.png" alt="Milutin Milanković" className="w-48 h-auto rounded-lg mb-5" />
+      <button
+        onClick={onStart}
+        className="px-5 py-2 text-lg bg-white text-black rounded hover:bg-gray-200 cursor-pointer"
+      >
+        Start Simulation
+      </button>
+    </div>
   );
 }
