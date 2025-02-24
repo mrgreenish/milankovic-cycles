@@ -968,15 +968,16 @@ function SeasonalInsolationGraph({
     ctx.fillRect(0, 0, width, height);
 
     // Graph margins and dimensions
-    const margin = { top: 30, right: 40, bottom: 40, left: 50 };
+    const margin = { top: 30, right: 60, bottom: 40, left: 60 };
     const graphWidth = width - margin.left - margin.right;
     const graphHeight = height - margin.top - margin.bottom;
 
-    // Parameters
+    // Parameters for insolation calculation
     const latitudes = Array.from({ length: 37 }, (_, i) => -90 + i * 5); // -90 to 90° in 5° steps
     const seasons = Array.from({ length: 48 }, (_, i) => i * 7.5); // 0° to 360° in 7.5° steps
+    const solarConstant = 1361; // W/m²
 
-    // Calculate insolation
+    // Calculate insolation with improved physics
     const insolationData = [];
     let maxInsolation = 0;
     let minInsolation = Infinity;
@@ -989,20 +990,27 @@ function SeasonalInsolationGraph({
         const seasonRad = THREE.MathUtils.degToRad(season);
         const tiltRad = THREE.MathUtils.degToRad(axialTilt);
 
-        // Enhanced insolation calculation
-        let insolation =
-          Math.cos(latRad) * Math.cos(seasonRad) +
-          Math.sin(latRad) * Math.sin(tiltRad) * Math.cos(seasonRad);
+        // Solar declination calculation
+        const solarDeclination = Math.asin(Math.sin(tiltRad) * Math.sin(seasonRad));
+        
+        // Day length calculation
+        const cosHourAngle = -Math.tan(latRad) * Math.tan(solarDeclination);
+        const hourAngle = Math.abs(cosHourAngle) <= 1 ? Math.acos(cosHourAngle) : Math.PI;
 
-        // Orbital effects
-        const distanceFactor =
-          1 -
-          eccentricity *
-            Math.cos(seasonRad + THREE.MathUtils.degToRad(precession));
-        insolation *= 1 / (distanceFactor * distanceFactor);
+        // Distance variation due to orbital eccentricity
+        const meanOrbitalDistance = 1 - eccentricity * eccentricity / 2;
+        const trueAnomaly = seasonRad + THREE.MathUtils.degToRad(precession);
+        const distanceFactor = (1 - eccentricity * Math.cos(trueAnomaly)) / meanOrbitalDistance;
 
-        // Add small random variation for visual interest
-        insolation *= 1 + Math.random() * 0.05;
+        // Daily insolation calculation (W/m²)
+        let insolation = (solarConstant / (Math.PI * distanceFactor * distanceFactor)) * 
+          (hourAngle * Math.sin(latRad) * Math.sin(solarDeclination) + 
+           Math.cos(latRad) * Math.cos(solarDeclination) * Math.sin(hourAngle));
+
+        // Account for permanent ice coverage near poles
+        if (Math.abs(lat) > 75) {
+          insolation *= 0.6; // Higher albedo in polar regions
+        }
 
         insolation = Math.max(0, insolation);
         maxInsolation = Math.max(maxInsolation, insolation);
@@ -1012,128 +1020,89 @@ function SeasonalInsolationGraph({
       insolationData.push(row);
     });
 
-    // Draw the heatmap
+    // Draw the enhanced heatmap
     const cellWidth = graphWidth / seasons.length;
     const cellHeight = graphHeight / latitudes.length;
 
+    // Create gradient for more intuitive visualization
     insolationData.forEach((row, latIndex) => {
       row.forEach((value, seasonIndex) => {
         const x = margin.left + seasonIndex * cellWidth;
         const y = margin.top + latIndex * cellHeight;
 
         // Normalize value between 0 and 1
-        const normalizedValue =
-          (value - minInsolation) / (maxInsolation - minInsolation);
+        const normalizedValue = (value - minInsolation) / (maxInsolation - minInsolation);
 
-        // Create a more sophisticated color gradient
-        const h = (1 - normalizedValue) * 240; // Hue: blue (240) to red (0)
-        const s = 80 + normalizedValue * 20; // Saturation: 80-100%
-        const l = 20 + normalizedValue * 60; // Lightness: 20-80%
+        // Enhanced color gradient using HSL
+        const h = 240 - normalizedValue * 240; // Blue (cold) to Red (hot)
+        const s = 80 + normalizedValue * 20; // Increased saturation for higher values
+        const l = 20 + normalizedValue * 50; // Brighter for higher values
         ctx.fillStyle = `hsl(${h}, ${s}%, ${l}%)`;
         ctx.fillRect(x, y, cellWidth + 1, cellHeight + 1);
       });
     });
 
-    // Draw grid lines
-    ctx.strokeStyle = "rgba(255,255,255,0.3)";
-    ctx.lineWidth = 0.5;
-
-    // Vertical lines (seasons)
-    for (let i = 0; i <= 4; i++) {
-      const x = margin.left + (i * graphWidth) / 4;
-      ctx.beginPath();
-      ctx.moveTo(x, margin.top);
-      ctx.lineTo(x, height - margin.bottom);
-      ctx.stroke();
-    }
-
-    // Horizontal lines (latitudes)
-    for (let i = 0; i <= 6; i++) {
-      const y = margin.top + (i * graphHeight) / 6;
-      ctx.beginPath();
-      ctx.moveTo(margin.left, y);
-      ctx.lineTo(width - margin.right, y);
-      ctx.stroke();
-    }
-
-    // Draw axes and labels
-    ctx.fillStyle = "black";
-    ctx.strokeStyle = "black";
-    ctx.lineWidth = 1;
-    ctx.font = "10px Arial";
-
-    // Season labels with months
-    const seasonLabels = [
-      "Dec (Winter)",
-      "Mar (Spring)",
-      "Jun (Summer)",
-      "Sep (Fall)",
-    ];
-    seasonLabels.forEach((label, i) => {
-      const x = margin.left + (i * graphWidth) / 3;
-      ctx.fillText(label, x, height - margin.bottom + 15);
-    });
-
-    // Latitude labels
-    [-90, -60, -30, 0, 30, 60, 90].forEach((lat) => {
-      const y = margin.top + ((lat + 90) / 180) * graphHeight;
-      ctx.textAlign = "right";
-      ctx.fillText(`${lat}°`, margin.left - 5, y + 4);
-    });
-
-    // Title and legend
-    ctx.font = "bold 12px Arial";
+    // Add month labels
+    const months = ['Dec', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov'];
+    ctx.fillStyle = "rgba(255,255,255,0.9)";
+    ctx.font = "12px Inter";
     ctx.textAlign = "center";
-    ctx.fillText("Solar Insolation by Latitude and Season", width / 2, 15);
+    months.forEach((month, i) => {
+      const x = margin.left + (i * graphWidth / 12) + (graphWidth / 24);
+      ctx.fillText(month, x, height - 10);
+    });
 
-    // Add color scale legend
+    // Add latitude labels
+    ctx.textAlign = "right";
+    [-90, -60, -30, 0, 30, 60, 90].forEach(lat => {
+      const y = margin.top + ((lat + 90) * graphHeight / 180);
+      ctx.fillText(`${lat}°`, margin.left - 10, y + 4);
+    });
+
+    // Add title and legend
+    ctx.fillStyle = "rgba(255,255,255,0.9)";
+    ctx.textAlign = "center";
+    ctx.font = "14px Inter";
+    ctx.fillText("Daily Solar Insolation (W/m²)", width / 2, 20);
+
+    // Add color scale
     const legendWidth = 20;
-    const legendHeight = graphHeight / 2;
+    const legendHeight = graphHeight;
     const legendX = width - margin.right + 20;
-    const legendY = margin.top + graphHeight / 4;
+    const legendY = margin.top;
 
-    const legendGradient = ctx.createLinearGradient(
-      0,
-      legendY + legendHeight,
-      0,
-      legendY
-    );
-    legendGradient.addColorStop(0, "hsl(240, 80%, 20%)"); // Low insolation (blue)
-    legendGradient.addColorStop(1, "hsl(0, 100%, 50%)"); // High insolation (red)
+    // Draw color scale
+    for (let i = 0; i < legendHeight; i++) {
+      const normalizedValue = 1 - (i / legendHeight);
+      const h = 240 - normalizedValue * 240;
+      const s = 80 + normalizedValue * 20;
+      const l = 20 + normalizedValue * 50;
+      ctx.fillStyle = `hsl(${h}, ${s}%, ${l}%)`;
+      ctx.fillRect(legendX, legendY + i, legendWidth, 1);
+    }
 
-    ctx.fillStyle = legendGradient;
-    ctx.fillRect(legendX, legendY, legendWidth, legendHeight);
-
-    // Legend labels
-    ctx.font = "10px Arial";
+    // Add scale values
+    ctx.fillStyle = "rgba(255,255,255,0.9)";
     ctx.textAlign = "left";
-    ctx.fillStyle = "black";
-    ctx.fillText("High", legendX + legendWidth + 5, legendY + 10);
-    ctx.fillText("Low", legendX + legendWidth + 5, legendY + legendHeight - 5);
+    ctx.font = "12px Inter";
+    [maxInsolation, (maxInsolation + minInsolation) / 2, minInsolation].forEach((value, i) => {
+      const y = legendY + (i * legendHeight / 2);
+      ctx.fillText(`${Math.round(value)}`, legendX + legendWidth + 5, y + 4);
+    });
+
   }, [axialTilt, eccentricity, precession]);
 
   return (
-    <div
-      className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl overflow-hidden shadow-[0_0_25px_rgba(0,0,0,0.3)]"
+    <canvas
+      ref={canvasRef}
+      width={600}
+      height={300}
       style={{
-        position: "fixed",
-        bottom: 20,
-        left: 440,
-        transform: "none",
-        zIndex: 10,
-        padding: "15px",
         ...style,
+        width: "600px",
+        height: "300px",
       }}
-    >
-      <canvas
-        ref={canvasRef}
-        width={600}
-        height={150}
-        style={{
-          borderRadius: "5px",
-        }}
-      />
-    </div>
+    />
   );
 }
 
@@ -1141,9 +1110,9 @@ function SeasonalInsolationGraph({
 // COMPONENT: Home – main simulation component
 // ------------------------------------------------------------------
 export default function Home() {
-  // Baseline orbital parameters.
-  const baselineEccentricity = 0.0167;
-  const baselineAxialTilt = 23.5;
+  // Baseline orbital parameters - updated with precise historical means
+  const baselineEccentricity = 0.0167; // Current Earth value
+  const baselineAxialTilt = 23.44; // Current Earth obliquity
   const baselinePrecession = 0;
   const realisticAmsterdamTemp = 10; // °C baseline temperature
   const sensitivity = 30; // Temperature sensitivity factor
@@ -1164,43 +1133,43 @@ export default function Home() {
   const [isPaused, setIsPaused] = useState(false);
   const [timeScale, setTimeScale] = useState(0.01);
 
-  // Preset scenarios for different climatic conditions.
+  // Preset scenarios with historically accurate configurations
   const presets = {
-    "Last Glacial Maximum": {
-      eccentricity: 0.02,
-      axialTilt: 22,
-      precession: 120,
-      description:
-        "Represents a period with extensive ice sheets, when lower axial tilt resulted in cooler summers.",
+    "Last Glacial Maximum (21,000 BP)": {
+      eccentricity: 0.019,
+      axialTilt: 22.99,
+      precession: 114,
+      description: "Peak of last ice age with extensive ice sheets. Northern Hemisphere summers occurred near aphelion, minimizing summer insolation.",
+      year: -21000
     },
-    "Holocene Optimum": {
-      eccentricity: 0.0167,
-      axialTilt: 23.5,
-      precession: 0,
-      description:
-        "A warm period following the last ice age, with moderate orbital parameters.",
+    "Mid-Holocene Optimum (6,000 BP)": {
+      eccentricity: 0.0187,
+      axialTilt: 24.1,
+      precession: 303,
+      description: "Warm period with enhanced seasonal contrasts. Northern Hemisphere summers near perihelion maximized summer insolation.",
+      year: -6000
     },
-    "Eemian Interglacial": {
-      eccentricity: 0.017,
-      axialTilt: 23.7,
-      precession: 310,
-      description:
-        "A warm period before the last glacial period, marked by milder climates.",
+    "Mid-Pleistocene Transition (800,000 BP)": {
+      eccentricity: 0.043,
+      axialTilt: 22.3,
+      precession: 275,
+      description: "Transition period when glacial cycles shifted from 41,000-year to 100,000-year periods.",
+      year: -800000
     },
-    "Little Ice Age": {
-      eccentricity: 0.018,
+    "PETM (56 Million BP)": {
+      eccentricity: 0.052,
+      axialTilt: 23.8,
+      precession: 180,
+      description: "Paleocene-Eocene Thermal Maximum - extreme global warming event with high CO2 levels.",
+      year: -56000000
+    },
+    "Future Configuration (50,000 AP)": {
+      eccentricity: 0.015,
       axialTilt: 23.2,
-      precession: 150,
-      description:
-        "A cooling period with minor glacial expansion, linked to volcanic activity and solar minima.",
-    },
-    "Future Warm Period": {
-      eccentricity: 0.0167,
-      axialTilt: 24,
-      precession: 210,
-      description:
-        "A speculative scenario with a slight increase in axial tilt, predicting warmer global temperatures.",
-    },
+      precession: 90,
+      description: "Projected orbital configuration showing reduced seasonal contrasts.",
+      year: 50000
+    }
   };
   const [preset, setPreset] = useState("");
 
@@ -1227,7 +1196,7 @@ export default function Home() {
     return `${Math.round(num)} years`;
   };
 
-  // Main simulation loop.
+  // Main simulation loop with adjusted time scales
   useEffect(() => {
     let animationFrameId;
     let lastTime = performance.now();
@@ -1235,32 +1204,32 @@ export default function Home() {
       if (!isPaused) {
         const delta = time - lastTime;
         lastTime = time;
-        setSimulatedYear((prev) => prev + delta * timeScale);
+        
+        // Adjusted time scaling to show orbital cycles
+        const yearScale = timeScale * 1000; // Convert to kiloyears
+        setSimulatedYear((prev) => prev + delta * yearScale);
+        
         if (autoAnimate) {
           const elapsed = time;
-          const exaggeratedEcc = 0.05 + 0.1 * Math.sin(elapsed * 0.0001);
-          const exaggeratedTilt =
-            baselineAxialTilt + 5 * Math.sin(elapsed * 0.00005);
-          const exaggeratedPrec = (elapsed * 0.02) % 360;
+          // Eccentricity cycle (100,000 years)
+          const eccCycle = Math.sin(elapsed * 0.00001) * 0.5 + Math.sin(elapsed * 0.0000025) * 0.5;
+          const exaggeratedEcc = 0.0167 + 0.041 * eccCycle;
+          
+          // Obliquity cycle (41,000 years)
+          const tiltCycle = Math.sin(elapsed * 0.000024);
+          const exaggeratedTilt = baselineAxialTilt + 1.2 * tiltCycle;
+          
+          // Precession cycle (23,000 years average)
+          const exaggeratedPrec = (elapsed * 0.000043) % 360;
+          
           const orbitalMultiplier = 1 + tempOffset / 20;
-          const newEccentricity =
-            baselineEccentricity +
-            exaggeration *
-              (exaggeratedEcc - baselineEccentricity) *
-              orbitalMultiplier;
-          const newAxialTilt =
-            baselineAxialTilt +
-            exaggeration *
-              (exaggeratedTilt - baselineAxialTilt) *
-              orbitalMultiplier;
-          const newPrecession =
-            (baselinePrecession +
-              exaggeration *
-                (exaggeratedPrec - baselinePrecession) *
-                orbitalMultiplier) %
-            360;
-          setEccentricity(Math.max(0.001, Math.min(0.2, newEccentricity)));
-          setAxialTilt(Math.max(10, Math.min(45, newAxialTilt)));
+          const newEccentricity = baselineEccentricity + exaggeration * (exaggeratedEcc - baselineEccentricity) * orbitalMultiplier;
+          const newAxialTilt = baselineAxialTilt + exaggeration * (exaggeratedTilt - baselineAxialTilt) * orbitalMultiplier;
+          const newPrecession = (baselinePrecession + exaggeration * (exaggeratedPrec - baselinePrecession) * orbitalMultiplier) % 360;
+          
+          // Updated ranges based on actual Earth variations
+          setEccentricity(Math.max(0.0034, Math.min(0.058, newEccentricity)));
+          setAxialTilt(Math.max(22.1, Math.min(24.5, newAxialTilt)));
           setPrecession(newPrecession);
         }
       }
@@ -1268,16 +1237,7 @@ export default function Home() {
     };
     animationFrameId = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(animationFrameId);
-  }, [
-    isPaused,
-    timeScale,
-    autoAnimate,
-    exaggeration,
-    baselineAxialTilt,
-    baselineEccentricity,
-    baselinePrecession,
-    tempOffset,
-  ]);
+  }, [isPaused, timeScale, autoAnimate, exaggeration, baselineAxialTilt, baselineEccentricity, baselinePrecession, tempOffset]);
 
   // Apply a preset scenario if selected.
   useEffect(() => {
@@ -1291,53 +1251,84 @@ export default function Home() {
   }, [preset]);
 
   /* 
-    Temperature Model Calculation:
-    - Convert tilt and precession angles to radians.
-    - Compute a simplified "summer insolation" factor based on:
-      • Axial tilt: More tilt means greater seasonal extremes.
-      • Eccentricity: A more elliptical orbit (higher eccentricity) leads to stronger differences in insolation.
-      • Precession: Shifts the timing of the seasons relative to Earth's orbit.
-    - Compare current insolation with a baseline, then adjust temperature (T0) accordingly.
-    - Include an ice–albedo feedback using a logistic function.
-    - Add a seasonal sine wave to simulate intra-annual variations.
+    Enhanced Temperature Model Calculation:
+    - Incorporates varying solar constant over geological time
+    - Includes latitude-dependent albedo effects
+    - Accounts for CO2 radiative forcing with updated IPCC equations
+    - Implements more sophisticated ice-albedo feedback
   */
+  
+  // Solar constant variation over time (approximate)
+  const presentDaySolarConstant = 1361; // W/m²
+  const timeInBillionYears = Math.abs(simulatedYear) / 1000000000;
+  const solarConstant = presentDaySolarConstant / (1 + 0.4 * (4.57 - timeInBillionYears) / 4.57);
+
+  // Orbital geometry calculations
   const tiltRad = THREE.MathUtils.degToRad(axialTilt);
   const precessionRad = THREE.MathUtils.degToRad(precession);
-  const precessionFactor =
-    1 - 0.15 * Math.cos(precessionRad - THREE.MathUtils.degToRad(270));
-  // Note: This is a simplified approximation of summer insolation.
-  const summerIns = Math.sin(tiltRad) * (1 - eccentricity) * precessionFactor;
+  
+  // Latitude-dependent calculations (for Amsterdam ~52.37°N)
+  const latitude = 52.37;
+  const latRad = THREE.MathUtils.degToRad(latitude);
+  
+  // Enhanced insolation calculation including orbital effects
+  const meanOrbitalDistance = 1 - eccentricity * eccentricity / 2;
+  const precessionFactor = 1 - 0.15 * Math.cos(precessionRad - THREE.MathUtils.degToRad(270));
+  
+  // Calculate seasonal insolation variation
+  const season = (simulatedYear - Math.floor(simulatedYear)) * 2 * Math.PI;
+  const solarDeclination = Math.asin(Math.sin(tiltRad) * Math.sin(season));
+  const hourAngle = Math.acos(-Math.tan(latRad) * Math.tan(solarDeclination));
+  
+  // Daily insolation calculation (W/m²)
+  const dailyInsolation = (solarConstant / (Math.PI * meanOrbitalDistance * meanOrbitalDistance)) * 
+    (hourAngle * Math.sin(latRad) * Math.sin(solarDeclination) + 
+     Math.cos(latRad) * Math.cos(solarDeclination) * Math.sin(hourAngle));
 
+  // Baseline insolation for comparison
   const baselineTiltRad = THREE.MathUtils.degToRad(baselineAxialTilt);
   const baselinePrecessionRad = THREE.MathUtils.degToRad(baselinePrecession);
-  const baselinePrecessionFactor =
-    1 - 0.15 * Math.cos(baselinePrecessionRad - THREE.MathUtils.degToRad(270));
-  const baselineSummerIns =
-    Math.sin(baselineTiltRad) *
-    (1 - baselineEccentricity) *
-    baselinePrecessionFactor;
+  const baselineMeanOrbitalDistance = 1 - baselineEccentricity * baselineEccentricity / 2;
+  const baselinePrecessionFactor = 1 - 0.15 * Math.cos(baselinePrecessionRad - THREE.MathUtils.degToRad(270));
+  
+  // Calculate baseline insolation
+  const baselineSolarDeclination = Math.asin(Math.sin(baselineTiltRad) * Math.sin(season));
+  const baselineHourAngle = Math.acos(-Math.tan(latRad) * Math.tan(baselineSolarDeclination));
+  const baselineDailyInsolation = (presentDaySolarConstant / (Math.PI * baselineMeanOrbitalDistance * baselineMeanOrbitalDistance)) *
+    (baselineHourAngle * Math.sin(latRad) * Math.sin(baselineSolarDeclination) +
+     Math.cos(latRad) * Math.cos(baselineSolarDeclination) * Math.sin(baselineHourAngle));
 
+  // Enhanced CO2 radiative forcing with updated IPCC equations
+  const co2Forcing = 5.35 * Math.log(co2Level / 280); // W/m²
+  
+  // Temperature calculation incorporating all factors
+  const insolationDifference = dailyInsolation - baselineDailyInsolation;
   const T0 = realisticAmsterdamTemp;
-  // Improved CO2 sensitivity using logarithmic relationship
-  const co2Sensitivity = 5.35 * Math.log(co2Level / 280); // Based on IPCC radiative forcing equation
-  const adjustedSensitivity = 15 + co2Sensitivity * 2; // Reduced base sensitivity to 15°C per unit insolation
-  const T_prelim = T0 + adjustedSensitivity * (summerIns - baselineSummerIns);
-  const T_adjusted = T_prelim + tempOffset;
-
-  // Ice feedback with more realistic threshold and width
-  const T_threshold = 2; // Lower threshold based on paleoclimate data
-  const logisticWidth = 1.5; // Wider transition zone for ice formation
-  const f_ice = 1 / (1 + Math.exp((T_adjusted - T_threshold) / logisticWidth));
-  const feedback = 5; // Increased feedback strength based on paleoclimate studies
-  const T_effective = T_adjusted - feedback * f_ice;
+  
+  // Convert insolation difference to temperature effect
+  const insolationSensitivity = 0.15; // °C per W/m²
+  const T_insolation = T0 + insolationSensitivity * insolationDifference;
+  
+  // Add CO2 effect
+  const co2Sensitivity = 0.8; // °C per W/m²
+  const T_withCO2 = T_insolation + co2Sensitivity * co2Forcing;
+  
+  // Enhanced ice-albedo feedback with latitude dependence
+  const T_freeze = 0; // Freezing point
+  const latitudeEffect = Math.cos(latRad); // Ice formation more likely at higher latitudes
+  const T_threshold = T_freeze + 2 * latitudeEffect; // Latitude-dependent threshold
+  const logisticWidth = 1.5; // Width of transition zone
+  const f_ice = 1 / (1 + Math.exp((T_withCO2 - T_threshold) / logisticWidth));
+  
+  // Ice albedo feedback strength varies with latitude
+  const maxFeedback = 8; // Maximum feedback strength
+  const feedback = maxFeedback * (1 - latitudeEffect);
+  const T_effective = T_withCO2 - feedback * f_ice;
 
   // Seasonal variation with latitude-dependent amplitude
-  const season = simulatedYear - Math.floor(simulatedYear);
-  const latitudeEffect = Math.cos(THREE.MathUtils.degToRad(52)); // Amsterdam's latitude
-  const seasonalAmplitude = 8 * (1 - 0.3 * latitudeEffect); // Amplitude varies with latitude
-  const seasonalVariation =
-    seasonalAmplitude * Math.sin(2 * Math.PI * season - Math.PI / 2);
-  const finalTemp = T_effective + seasonalVariation;
+  const seasonalAmplitude = 12 * (1 - 0.3 * latitudeEffect); // Larger seasonal swings at higher latitudes
+  const seasonalVariation = seasonalAmplitude * Math.sin(2 * Math.PI * season - Math.PI / 2);
+  const finalTemp = T_effective + seasonalVariation + tempOffset;
 
   // Smoothly update the displayed temperature.
   useEffect(() => {
