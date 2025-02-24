@@ -776,27 +776,70 @@ function NarrativeOverlay({
     "Cause and Effect: Variations in eccentricity, axial tilt, and precession alter the amount and timing of sunlight (insolation), driving seasonal temperature differences. Feedbacks, such as ice formation, can amplify these changes.";
 
   return (
-    <Card className="bg-white/10 backdrop-blur-md border border-white/20">
-      <CardHeader>
-        <CardTitle className="text-white text-lg">
-          Current Cycle States ({formatNumber(Math.floor(simulatedYear))})
+    <Card className="card backdrop-blur-xl bg-black/20 border-white/10 overflow-hidden relative group">
+      <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+      
+      <div className="absolute -inset-[1px] bg-gradient-to-r from-purple-500/50 to-pink-500/50 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur" />
+      
+      <CardHeader className="relative z-10">
+        <CardTitle className="text-white text-lg flex items-center space-x-2">
+          <span className="text-gradient text-glow">Current Cycle States</span>
+          <span className="text-sm text-white/60">({formatNumber(Math.floor(simulatedYear))})</span>
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-2 text-sm max-h-[300px] overflow-y-auto">
-        <p className="text-white/80">{eccentricityMessage}</p>
-        <p className="text-white/80">{axialTiltMessage}</p>
-        <p className="text-white/80">{precessionMessage}</p>
-        <p
-          className={cn(
-            "text-white/80",
-            temperature < 5 && "text-blue-400",
-            temperature > 15 && "text-red-400"
-          )}
-        >
-          {temperatureMessage}
-        </p>
-        <p className="text-white/80">{causeEffectExplanation}</p>
+      
+      <CardContent className="space-y-4 relative z-10">
+        <div className="space-y-3">
+          <div className="flex items-start space-x-3 transition-all duration-300 hover:translate-x-2">
+            <div className="w-2 h-2 rounded-full bg-purple-500 mt-2 animate-pulse" />
+            <p className="text-white/80 leading-relaxed">{eccentricityMessage}</p>
+          </div>
+          
+          <div className="flex items-start space-x-3 transition-all duration-300 hover:translate-x-2">
+            <div className="w-2 h-2 rounded-full bg-pink-500 mt-2 animate-pulse" />
+            <p className="text-white/80 leading-relaxed">{axialTiltMessage}</p>
+          </div>
+          
+          <div className="flex items-start space-x-3 transition-all duration-300 hover:translate-x-2">
+            <div className="w-2 h-2 rounded-full bg-blue-500 mt-2 animate-pulse" />
+            <p className="text-white/80 leading-relaxed">{precessionMessage}</p>
+          </div>
+          
+          <div className="flex items-start space-x-3 transition-all duration-300 hover:translate-x-2">
+            <div className="w-2 h-2 rounded-full bg-cyan-500 mt-2 animate-pulse" />
+            <p className={cn(
+              "leading-relaxed transition-colors duration-500",
+              temperature < 5 ? "text-blue-400" : temperature > 15 ? "text-red-400" : "text-white/80"
+            )}>
+              {temperatureMessage}
+            </p>
+          </div>
+        </div>
+        
+        <div className="mt-6 pt-4 border-t border-white/10">
+          <p className="text-white/60 text-sm italic leading-relaxed">
+            {causeEffectExplanation}
+          </p>
+        </div>
       </CardContent>
+      
+      {/* Interactive particle effect on hover */}
+      <div className="absolute inset-0 pointer-events-none">
+        {[...Array(20)].map((_, i) => (
+          <div
+            key={i}
+            className="particle"
+            style={{
+              width: Math.random() * 4 + 2 + 'px',
+              height: Math.random() * 4 + 2 + 'px',
+              left: Math.random() * 100 + '%',
+              top: Math.random() * 100 + '%',
+              animationDelay: Math.random() * 2 + 's',
+              opacity: Math.random() * 0.5 + 0.3
+            }}
+          />
+        ))}
+      </div>
     </Card>
   );
 }
@@ -816,61 +859,100 @@ function CycleComparisonPanel({
   onPrecessionChange,
 }) {
   return (
-    <Card className="bg-white/10 backdrop-blur-md border border-white/20">
-      <CardHeader>
-        <CardTitle className="text-white">Milanković Cycles</CardTitle>
+    <Card className="card backdrop-blur-xl bg-black/20 border-white/10 overflow-hidden relative group">
+      <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+      
+      <div className="absolute -inset-[1px] bg-gradient-to-r from-purple-500/50 to-pink-500/50 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur" />
+      
+      <CardHeader className="relative z-10">
+        <CardTitle className="text-gradient text-glow">Milanković Cycles</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="space-y-3">
-          <div className="flex justify-between">
-            <span className="text-sm text-white/80">Eccentricity</span>
-            <span className="text-sm text-white/60">
-              {eccentricity.toFixed(4)}
-            </span>
+      
+      <CardContent className="space-y-8 relative z-10">
+        <div className="space-y-4">
+          <div className="space-y-3">
+            <div className="flex justify-between items-center">
+              <div className="space-y-1">
+                <span className="text-sm text-white/80 font-medium">Eccentricity</span>
+                <div className="flex items-center space-x-2">
+                  <span className="text-2xl text-white font-bold tracking-tight">{eccentricity.toFixed(4)}</span>
+                  <span className="text-xs text-white/60">baseline: {baselineEccentricity}</span>
+                </div>
+              </div>
+              <div className="h-8 w-8 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 animate-pulse" />
+            </div>
+            <Slider
+              defaultValue={[eccentricity]}
+              value={[eccentricity]}
+              min={0.001}
+              max={0.2}
+              step={0.001}
+              onValueChange={([value]) => onEccentricityChange(value)}
+              className="[&>span]:bg-gradient-to-r [&>span]:from-purple-500 [&>span]:to-pink-500 [&>span]:shadow-lg [&>span]:shadow-purple-500/50"
+            />
           </div>
-          <Slider
-            defaultValue={[eccentricity]}
-            value={[eccentricity]}
-            min={0.001}
-            max={0.2}
-            step={0.001}
-            onValueChange={([value]) => onEccentricityChange(value)}
-            className="[&>span]:bg-purple-600 [&>span]:shadow-[0_0_15px_rgba(147,51,234,0.5)] [&>span]:border-2 [&>span]:border-white/50"
-          />
+
+          <div className="space-y-3">
+            <div className="flex justify-between items-center">
+              <div className="space-y-1">
+                <span className="text-sm text-white/80 font-medium">Axial Tilt</span>
+                <div className="flex items-center space-x-2">
+                  <span className="text-2xl text-white font-bold tracking-tight">{axialTilt.toFixed(1)}°</span>
+                  <span className="text-xs text-white/60">baseline: {baselineAxialTilt}°</span>
+                </div>
+              </div>
+              <div className="h-8 w-8 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 animate-pulse" />
+            </div>
+            <Slider
+              defaultValue={[axialTilt]}
+              value={[axialTilt]}
+              min={10}
+              max={45}
+              step={0.1}
+              onValueChange={([value]) => onAxialTiltChange(value)}
+              className="[&>span]:bg-gradient-to-r [&>span]:from-blue-500 [&>span]:to-cyan-500 [&>span]:shadow-lg [&>span]:shadow-blue-500/50"
+            />
+          </div>
+
+          <div className="space-y-3">
+            <div className="flex justify-between items-center">
+              <div className="space-y-1">
+                <span className="text-sm text-white/80 font-medium">Precession</span>
+                <div className="flex items-center space-x-2">
+                  <span className="text-2xl text-white font-bold tracking-tight">{precession.toFixed(0)}°</span>
+                  <span className="text-xs text-white/60">baseline: {baselinePrecession}°</span>
+                </div>
+              </div>
+              <div className="h-8 w-8 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 animate-pulse" />
+            </div>
+            <Slider
+              defaultValue={[precession]}
+              value={[precession]}
+              min={0}
+              max={360}
+              step={1}
+              onValueChange={([value]) => onPrecessionChange(value)}
+              className="[&>span]:bg-gradient-to-r [&>span]:from-emerald-500 [&>span]:to-teal-500 [&>span]:shadow-lg [&>span]:shadow-emerald-500/50"
+            />
+          </div>
         </div>
-        <div className="space-y-3">
-          <div className="flex justify-between">
-            <span className="text-sm text-white/80">Axial Tilt (°)</span>
-            <span className="text-sm text-white/60">
-              {axialTilt.toFixed(1)}°
-            </span>
-          </div>
-          <Slider
-            defaultValue={[axialTilt]}
-            value={[axialTilt]}
-            min={10}
-            max={45}
-            step={0.1}
-            onValueChange={([value]) => onAxialTiltChange(value)}
-            className="[&>span]:bg-purple-600 [&>span]:shadow-[0_0_15px_rgba(147,51,234,0.5)] [&>span]:border-2 [&>span]:border-white/50"
-          />
-        </div>
-        <div className="space-y-3">
-          <div className="flex justify-between">
-            <span className="text-sm text-white/80">Precession (°)</span>
-            <span className="text-sm text-white/60">
-              {precession.toFixed(0)}°
-            </span>
-          </div>
-          <Slider
-            defaultValue={[precession]}
-            value={[precession]}
-            min={0}
-            max={360}
-            step={1}
-            onValueChange={([value]) => onPrecessionChange(value)}
-            className="[&>span]:bg-purple-600 [&>span]:shadow-[0_0_15px_rgba(147,51,234,0.5)] [&>span]:border-2 [&>span]:border-white/50"
-          />
+
+        {/* Interactive particle effect */}
+        <div className="absolute inset-0 pointer-events-none">
+          {[...Array(20)].map((_, i) => (
+            <div
+              key={i}
+              className="particle"
+              style={{
+                width: Math.random() * 4 + 2 + 'px',
+                height: Math.random() * 4 + 2 + 'px',
+                left: Math.random() * 100 + '%',
+                top: Math.random() * 100 + '%',
+                animationDelay: Math.random() * 2 + 's',
+                opacity: Math.random() * 0.5 + 0.3
+              }}
+            />
+          ))}
         </div>
       </CardContent>
     </Card>
@@ -1302,12 +1384,39 @@ export default function Home() {
       {hasIntroFadedOut && (
         <>
           <div className="canvas-container relative">
-            {/* Background gradient effects */}
-            <div className="absolute inset-0 bg-gradient-to-b from-[#030014] via-[#100b2e] to-[#0c0521] opacity-80" />
-            <div className="absolute inset-0">
-              <div className="absolute top-[20%] left-[25%] w-[30rem] h-[30rem] bg-purple-600/30 rounded-full blur-[10rem] animate-pulse" />
-              <div className="absolute bottom-[20%] right-[25%] w-[35rem] h-[35rem] bg-blue-600/30 rounded-full blur-[10rem] animate-pulse delay-1000" />
-              <div className="absolute top-[40%] right-[35%] w-[25rem] h-[25rem] bg-cyan-600/20 rounded-full blur-[10rem] animate-pulse delay-500" />
+            {/* Enhanced background effects */}
+            <div className="absolute inset-0 bg-gradient-to-b from-[#030014] via-[#100b2e] to-[#0c0521] opacity-90" />
+            
+            {/* Dynamic aurora effects */}
+            <div className="absolute inset-0 overflow-hidden">
+              <div className="absolute -inset-[10%] opacity-50">
+                <div className="absolute top-1/4 left-1/4 w-[50rem] h-[50rem] bg-purple-600/30 rounded-full blur-[10rem] animate-pulse" />
+                <div className="absolute bottom-1/4 right-1/4 w-[55rem] h-[55rem] bg-blue-600/30 rounded-full blur-[10rem] animate-pulse delay-1000" />
+                <div className="absolute top-1/2 right-1/3 w-[45rem] h-[45rem] bg-cyan-600/20 rounded-full blur-[10rem] animate-pulse delay-500" />
+              </div>
+            </div>
+            
+            {/* Animated grid overlay */}
+            <div className="absolute inset-0 bg-grid-white/[0.02] bg-[length:50px_50px] z-[1]">
+              <div className="absolute inset-0 bg-gradient-to-t from-[#030014] via-transparent to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-b from-[#030014] via-transparent to-transparent" />
+            </div>
+            
+            {/* Particle system */}
+            <div className="absolute inset-0 pointer-events-none">
+              {[...Array(50)].map((_, i) => (
+                <div
+                  key={i}
+                  className="absolute w-1 h-1 bg-white rounded-full"
+                  style={{
+                    top: `${Math.random() * 100}%`,
+                    left: `${Math.random() * 100}%`,
+                    opacity: Math.random() * 0.5 + 0.3,
+                    animation: `float ${Math.random() * 4 + 3}s ease-in-out infinite`,
+                    animationDelay: `${Math.random() * 2}s`
+                  }}
+                />
+              ))}
             </div>
 
             <Canvas
@@ -1323,22 +1432,47 @@ export default function Home() {
                 antialias: true,
                 alpha: true,
                 powerPreference: "high-performance",
+                stencil: false,
+                depth: true,
               }}
             >
               <color attach="background" args={["#030014"]} />
+              <fog attach="fog" args={["#030014", 30, 150]} />
               <ambientLight intensity={0.4} />
               <directionalLight
                 castShadow
                 position={[10, 20, 10]}
                 intensity={2.0}
-                shadow-mapSize-width={1024}
-                shadow-mapSize-height={1024}
+                shadow-mapSize-width={2048}
+                shadow-mapSize-height={2048}
+                shadow-camera-far={50}
+                shadow-camera-left={-10}
+                shadow-camera-right={10}
+                shadow-camera-top={10}
+                shadow-camera-bottom={-10}
               />
               <hemisphereLight
                 intensity={0.3}
                 color="#ffffff"
                 groundColor="#000000"
               />
+              
+              {/* Enhanced post-processing effects */}
+              {/* <EffectComposer> */}
+                {/* <Bloom
+                  intensity={1.5}
+                  luminanceThreshold={0.6}
+                  luminanceSmoothing={0.9}
+                  blurPass={undefined}
+                  width={Infinity}
+                  height={Infinity}
+                /> */}
+                {/* <ChromaticAberration
+                  blendFunction={BlendFunction.NORMAL}
+                  offset={[0.002, 0.002]}
+                /> */}
+              {/* </EffectComposer> */}
+
               <Sun />
               <OrbitPath eccentricity={eccentricity} />
               <OrbitingEarth
@@ -1360,18 +1494,11 @@ export default function Home() {
                 enablePan={false}
                 rotateSpeed={0.8}
               />
-              <SceneEffects />
-
-              {/* Enhanced atmospheric fog */}
-              <fog attach="fog" args={["#030014", 45, 200]} />
             </Canvas>
-
-            {/* Subtle grid overlay */}
-            <div className="absolute inset-0 bg-grid-white/[0.02] bg-[length:50px_50px] z-[1]" />
           </div>
 
-          {/* Left Panel Group */}
-          <div className="fixed left-5 top-5 space-y-4 w-[300px] z-20">
+          {/* Left Panel Group with enhanced positioning and animations */}
+          <div className="fixed left-5 top-5 space-y-4 w-[400px] z-20 animate-fadeIn">
             <CycleComparisonPanel
               eccentricity={eccentricity}
               axialTilt={axialTilt}
@@ -1404,26 +1531,31 @@ export default function Home() {
             />
           </div>
 
-          {/* Right Panel Group */}
-          <div className="fixed right-5 top-5 space-y-4 w-[300px] z-20">
+          {/* Right Panel Group with enhanced positioning and animations */}
+          <div className="fixed right-5 top-5 space-y-4 w-[400px] z-20 animate-fadeIn">
             {/* Time Control Panel */}
-            <Card className="bg-white/10 backdrop-blur-md border border-white/20">
-              <CardHeader>
-                <CardTitle className="text-white">Time Controls</CardTitle>
+            <Card className="card backdrop-blur-xl bg-black/20 border-white/10 overflow-hidden relative group">
+              <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              
+              <div className="absolute -inset-[1px] bg-gradient-to-r from-purple-500/50 to-pink-500/50 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur" />
+              
+              <CardHeader className="relative z-10">
+                <CardTitle className="text-gradient text-glow">Time Controls</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-6">
+              
+              <CardContent className="space-y-6 relative z-10">
                 <button
                   onClick={() => setIsPaused((prev) => !prev)}
-                  className="w-full px-4 py-2 bg-purple-600/80 hover:bg-purple-600/90 text-white rounded-md transition-colors"
+                  className="btn-primary w-full relative group overflow-hidden"
                 >
-                  {isPaused ? "Play" : "Pause"}
+                  <span className="relative z-10">{isPaused ? "Play" : "Pause"}</span>
+                  <div className="absolute inset-0 bg-gradient-to-r from-purple-600/50 to-pink-600/50 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 </button>
+
                 <div className="space-y-3">
-                  <div className="flex justify-between">
-                    <span className="text-sm text-white/80">Speed</span>
-                    <span className="text-sm text-white/60">
-                      {formatNumber(timeScale)}
-                    </span>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-white/80 font-medium">Simulation Speed</span>
+                    <span className="text-sm text-white/60">{formatNumber(timeScale)}</span>
                   </div>
                   <Slider
                     defaultValue={[timeScale]}
@@ -1432,71 +1564,117 @@ export default function Home() {
                     max={500000000}
                     step={1}
                     onValueChange={([value]) => setTimeScale(value)}
-                    className="[&>span]:bg-purple-600 [&>span]:shadow-[0_0_15px_rgba(147,51,234,0.5)] [&>span]:border-2 [&>span]:border-white/50"
+                    className="[&>span]:bg-gradient-to-r [&>span]:from-purple-500 [&>span]:to-pink-500 [&>span]:shadow-lg [&>span]:shadow-purple-500/50"
                   />
                 </div>
-                <div className="space-y-3">
-                  <label className="text-sm text-gray-800">Preset Scenarios</label>
-                  <select
-                    value={preset}
-                    onChange={(e) => {
-                      setPreset(e.target.value);
-                      if (presets[e.target.value]) {
-                        const { eccentricity, axialTilt, precession } =
-                          presets[e.target.value];
-                        setEccentricity(eccentricity);
-                        setAxialTilt(axialTilt);
-                        setPrecession(precession);
-                        setAutoAnimate(false);
-                      }
-                    }}
-                    className="w-full bg-black text-white border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-black focus:border-black hover:bg-black/90 transition-colors"
-                  >
-                    <option value="">None</option>
-                    {Object.keys(presets).map((key) => (
-                      <option key={key} value={key}>
-                        {key}
-                      </option>
-                    ))}
-                  </select>
-                  {preset && presets[preset]?.description && (
-                    <div className="text-sm text-gray-300 mt-2">
-                      {presets[preset].description}
-                    </div>
-                  )}
+
+                {/* Interactive particle effect */}
+                <div className="absolute inset-0 pointer-events-none">
+                  {[...Array(20)].map((_, i) => (
+                    <div
+                      key={i}
+                      className="particle"
+                      style={{
+                        width: Math.random() * 4 + 2 + 'px',
+                        height: Math.random() * 4 + 2 + 'px',
+                        left: Math.random() * 100 + '%',
+                        top: Math.random() * 100 + '%',
+                        animationDelay: Math.random() * 2 + 's',
+                        opacity: Math.random() * 0.5 + 0.3
+                      }}
+                    />
+                  ))}
                 </div>
               </CardContent>
             </Card>
 
-            {/* Additional Controls Panel */}
-            <Card className="bg-white border border-gray-300">
-              <CardHeader>
-                <CardTitle className="text-black">Additional Controls</CardTitle>
+            {/* Enhanced Preset Scenarios Panel */}
+            <Card className="card backdrop-blur-xl bg-black/20 border-white/10 overflow-hidden relative group">
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              
+              <div className="absolute -inset-[1px] bg-gradient-to-r from-blue-500/50 to-purple-500/50 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur" />
+              
+              <CardHeader className="relative z-10">
+                <CardTitle className="text-gradient text-glow">Historical Scenarios</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="space-y-3">
-                  <div className="flex justify-between">
-                    <span className="text-sm text-gray-800">CO₂ Level (ppm)</span>
-                    <span className="text-sm text-gray-400">{co2Level}</span>
-                  </div>
-                  <Slider
-                    defaultValue={[co2Level]}
-                    value={[co2Level]}
-                    min={250}
-                    max={500}
-                    step={1}
-                    onValueChange={([value]) => {
-                      setCo2Level(value);
-                      setAutoAnimate(false);
+              
+              <CardContent className="space-y-4 relative z-10">
+                {/* Scenario Selector */}
+                <div className="relative">
+                  <select
+                    value={preset}
+                    onChange={(e) => {
+                      const selectedPreset = e.target.value;
+                      setPreset(selectedPreset);
+                      if (selectedPreset && presets[selectedPreset]) {
+                        const config = presets[selectedPreset];
+                        setEccentricity(config.eccentricity);
+                        setAxialTilt(config.axialTilt);
+                        setPrecession(config.precession);
+                        setAutoAnimate(false);
+                      }
                     }}
-                  />
+                    className="w-full bg-black/40 text-white border border-white/20 rounded-lg px-4 py-2 appearance-none hover:border-white/40 transition-colors duration-200 focus:outline-none focus:border-purple-500"
+                  >
+                    <option value="">Select a scenario...</option>
+                    {Object.entries(presets).map(([name]) => (
+                      <option key={name} value={name}>{name}</option>
+                    ))}
+                  </select>
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                    <svg className="w-4 h-4 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </div>
+
+                {/* Scenario Description */}
+                {preset && presets[preset] && (
+                  <div className="space-y-4 animate-fadeIn">
+                    <p className="text-sm text-white/70 leading-relaxed">
+                      {presets[preset].description}
+                    </p>
+                    
+                    <div className="grid grid-cols-3 gap-3 text-center">
+                      <div className="bg-white/5 rounded-lg p-2">
+                        <div className="text-white/60 text-xs">Eccentricity</div>
+                        <div className="text-white font-medium mt-1">{presets[preset].eccentricity.toFixed(4)}</div>
+                      </div>
+                      <div className="bg-white/5 rounded-lg p-2">
+                        <div className="text-white/60 text-xs">Axial Tilt</div>
+                        <div className="text-white font-medium mt-1">{presets[preset].axialTilt.toFixed(1)}°</div>
+                      </div>
+                      <div className="bg-white/5 rounded-lg p-2">
+                        <div className="text-white/60 text-xs">Precession</div>
+                        <div className="text-white font-medium mt-1">{presets[preset].precession.toFixed(0)}°</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Interactive particle effect */}
+                <div className="absolute inset-0 pointer-events-none">
+                  {[...Array(20)].map((_, i) => (
+                    <div
+                      key={i}
+                      className="particle"
+                      style={{
+                        width: Math.random() * 4 + 2 + 'px',
+                        height: Math.random() * 4 + 2 + 'px',
+                        left: Math.random() * 100 + '%',
+                        top: Math.random() * 100 + '%',
+                        animationDelay: Math.random() * 2 + 's',
+                        opacity: Math.random() * 0.5 + 0.3
+                      }}
+                    />
+                  ))}
                 </div>
               </CardContent>
             </Card>
           </div>
 
-          {/* Bottom Graphs */}
-          <div className="fixed flex justify-center items-center w-[620px] h-[190px] bottom-0 right-0">
+          {/* Bottom Graphs with enhanced positioning and animations */}
+          <div className="fixed flex justify-center items-center w-[620px] h-[190px] bottom-0 right-0 animate-fadeIn">
             <GlobalTemperatureGraph
               axialTilt={axialTilt}
               eccentricity={eccentricity}
@@ -1513,7 +1691,7 @@ export default function Home() {
               }}
             />
           </div>
-          <div className="fixed bottom-0 left-0 flex justify-center items-center w-[620px] h-[190px]">
+          <div className="fixed bottom-0 left-0 flex justify-center items-center w-[620px] h-[190px] animate-fadeIn">
             <SeasonalInsolationGraph
               axialTilt={axialTilt}
               eccentricity={eccentricity}
@@ -1539,174 +1717,217 @@ function Sun() {
   const materialRef = useRef();
   const coronaRef = useRef();
   const glowRef = useRef();
+  const flareRef = useRef();
 
+  // Animate sun effects
   useFrame(({ clock, camera }) => {
     if (materialRef.current) {
       materialRef.current.uniforms.time.value = clock.getElapsedTime();
     }
-    // Update corona and glow to always face camera
-    if (coronaRef.current) {
-      coronaRef.current.quaternion.copy(camera.quaternion);
-    }
-    if (glowRef.current) {
-      glowRef.current.quaternion.copy(camera.quaternion);
-    }
+    // Update corona and effects to always face camera
+    [coronaRef, glowRef, flareRef].forEach(ref => {
+      if (ref.current) {
+        ref.current.quaternion.copy(camera.quaternion);
+      }
+    });
   });
 
   return (
     <group>
-      {/* Base glow layer - always visible */}
-      <mesh scale={2.2}>
-        <sphereGeometry args={[1, 32, 32]} />
+      {/* Enhanced core glow layer */}
+      <mesh scale={2.5}>
+        <sphereGeometry args={[1, 64, 64]} />
         <meshBasicMaterial
           color="#ff6b00"
           transparent
-          opacity={0.15}
+          opacity={0.1}
+          blending={THREE.AdditiveBlending}
           depthWrite={false}
         />
       </mesh>
 
-      {/* Main sun sphere */}
+      {/* Main sun sphere with enhanced surface detail */}
       <mesh position={[0, 0, 0]}>
-        <sphereGeometry args={[2, 128, 128]} />
+        <sphereGeometry args={[2, 256, 256]} />
         <shaderMaterial
           ref={materialRef}
           uniforms={{
             time: { value: 0 },
-            displacementStrength: { value: 0.03 },
-            pulseSpeed: { value: 0.5 },
-            colorIntensity: { value: 1.2 }
-          }}
-          vertexShader={sunVertexShader}
-          fragmentShader={sunFragmentShader}
-          transparent={false}
-        />
-      </mesh>
-
-      {/* Corona effect - improved visibility */}
-      <mesh ref={coronaRef} scale={2.5}>
-        <sphereGeometry args={[1.6, 64, 64]} />
-        <shaderMaterial
-          transparent
-          depthWrite={false}
-          depthTest={false}
-          blending={THREE.AdditiveBlending}
-          side={THREE.DoubleSide}
-          uniforms={{
-            time: { value: 0 },
-            viewVector: { value: new THREE.Vector3(0, 0, 1) }
+            displacementStrength: { value: 0.05 },
+            pulseSpeed: { value: 0.8 },
+            colorIntensity: { value: 1.5 }
           }}
           vertexShader={`
-            varying vec2 vUv;
-            varying vec3 vNormal;
-            varying vec3 vViewDir;
-            uniform vec3 viewVector;
-            
-            void main() {
-              vUv = uv;
-              vNormal = normalize(normalMatrix * normal);
-              vec4 worldPosition = modelMatrix * vec4(position, 1.0);
-              vViewDir = normalize(viewVector - worldPosition.xyz);
-              gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-            }
-          `}
-          fragmentShader={`
-            varying vec2 vUv;
-            varying vec3 vNormal;
-            varying vec3 vViewDir;
             uniform float time;
-            
-            float fresnel(vec3 viewDirection, vec3 normal) {
-              return pow(1.0 - clamp(dot(viewDirection, normal), 0.0, 1.0), 2.0);
+            uniform float displacementStrength;
+            varying vec2 vUv;
+            varying vec3 vNormal;
+            varying float vDisplacement;
+
+            // Improved noise function for more natural surface detail
+            vec4 permute(vec4 x) {
+              return mod(((x*34.0)+1.0)*x, 289.0);
             }
-            
-            float noise(vec2 p) {
-              return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453);
+
+            vec4 taylorInvSqrt(vec4 r) {
+              return 1.79284291400159 - 0.85373472095314 * r;
             }
+
+            vec3 fade(vec3 t) {
+              return t*t*t*(t*(t*6.0-15.0)+10.0);
+            }
+
+            float cnoise(vec3 P) {
+              vec3 Pi0 = floor(P);
+              vec3 Pi1 = Pi0 + vec3(1.0);
             
             void main() {
-              float fresnelTerm = fresnel(vViewDir, vNormal);
-              float noise = noise(vUv * 10.0 + time);
+              vUv = uv;
+              vNormal = normalize(normalMatrix * normal);
               
-              vec3 color = mix(
-                vec3(1.0, 0.6, 0.1),
-                vec3(1.0, 0.4, 0.0),
-                fresnelTerm
-              );
+              // Create complex surface displacement
+              float noise = cnoise(position * 2.0 + time * 0.2);
+              float noise2 = cnoise(position * 4.0 - time * 0.15);
+              float noise3 = cnoise(position * 8.0 + time * 0.1);
               
-              float alpha = max(0.2, fresnelTerm * (0.7 + noise * 0.3));
-              gl_FragColor = vec4(color, alpha);
+              vDisplacement = noise * 0.5 + noise2 * 0.25 + noise3 * 0.125;
+              vec3 displaced = position + normal * (vDisplacement * displacementStrength);
+              
+              gl_Position = projectionMatrix * modelViewMatrix * vec4(displaced, 1.0);
+            }
+          `}
+          fragmentShader={`
+            uniform float time;
+            uniform float colorIntensity;
+            varying vec2 vUv;
+            varying vec3 vNormal;
+            varying float vDisplacement;
+
+            void main() {
+              // Dynamic color palette
+              vec3 baseColor = vec3(1.0, 0.4, 0.0);
+              vec3 hotColor = vec3(1.0, 0.8, 0.3);
+              vec3 coolColor = vec3(0.8, 0.2, 0.0);
+              
+              // Create dynamic surface patterns
+              float pattern = sin(vUv.y * 100.0 + time) * 0.5 + 0.5;
+              pattern *= sin(vUv.x * 120.0 - time * 0.5) * 0.5 + 0.5;
+              
+              // Mix colors based on displacement and pattern
+              vec3 color = mix(coolColor, hotColor, vDisplacement * 2.0 + 0.5);
+              color = mix(color, baseColor, pattern);
+              
+              // Add pulsing brightness
+              float pulse = sin(time * 2.0) * 0.1 + 0.9;
+              color *= pulse * colorIntensity;
+              
+              // Add rim lighting effect
+              float fresnel = pow(1.0 - dot(vNormal, vec3(0.0, 0.0, 1.0)), 2.0);
+              color += vec3(1.0, 0.6, 0.3) * fresnel * 0.5;
+              
+              gl_FragColor = vec4(color, 1.0);
+            }
+          `}
+          transparent={true}
+        />
+      </mesh>
+
+      {/* Enhanced corona effect */}
+      <mesh ref={coronaRef} scale={3.0}>
+        <sphereGeometry args={[1, 64, 64]} />
+        <shaderMaterial
+          transparent={true}
+          depthWrite={false}
+          blending={THREE.AdditiveBlending}
+          vertexShader={`
+            varying vec3 vNormal;
+            void main() {
+              vNormal = normalize(normalMatrix * normal);
+              gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+            }
+          `}
+          fragmentShader={`
+            varying vec3 vNormal;
+            void main() {
+              float intensity = pow(0.7 - dot(vNormal, vec3(0.0, 0.0, 1.0)), 4.0);
+              gl_FragColor = vec4(1.0, 0.4, 0.0, intensity);
             }
           `}
         />
       </mesh>
 
-      {/* Outer glow - improved visibility */}
-      <mesh ref={glowRef} scale={3}>
-        <sphereGeometry args={[2, 64, 64]} />
+      {/* Outer glow with enhanced visual effects */}
+      <mesh ref={glowRef} scale={4.0}>
+        <sphereGeometry args={[1, 64, 64]} />
         <shaderMaterial
-          transparent
+          transparent={true}
           depthWrite={false}
-          depthTest={false}
           blending={THREE.AdditiveBlending}
-          side={THREE.DoubleSide}
           uniforms={{
-            time: { value: 0 },
-            viewVector: { value: new THREE.Vector3(0, 0, 1) }
+            time: { value: 0 }
+          }}
+          vertexShader={`
+            varying vec3 vNormal;
+            void main() {
+              vNormal = normalize(normalMatrix * normal);
+              gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+            }
+          `}
+          fragmentShader={`
+            varying vec3 vNormal;
+            void main() {
+              float intensity = pow(0.5 - dot(vNormal, vec3(0.0, 0.0, 1.0)), 2.0);
+              vec3 glowColor = mix(vec3(1.0, 0.4, 0.0), vec3(1.0, 0.8, 0.3), intensity);
+              gl_FragColor = vec4(glowColor, intensity * 0.5);
+            }
+          `}
+        />
+      </mesh>
+
+      {/* Lens flare effect */}
+      <mesh ref={flareRef} scale={5.0}>
+        <planeGeometry args={[10, 10]} />
+        <shaderMaterial
+          transparent={true}
+          depthWrite={false}
+          blending={THREE.AdditiveBlending}
+          uniforms={{
+            time: { value: 0 }
           }}
           vertexShader={`
             varying vec2 vUv;
-            varying vec3 vNormal;
-            varying vec3 vViewDir;
-            uniform vec3 viewVector;
-            
             void main() {
               vUv = uv;
-              vNormal = normalize(normalMatrix * normal);
-              vec4 worldPosition = modelMatrix * vec4(position, 1.0);
-              vViewDir = normalize(viewVector - worldPosition.xyz);
               gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
             }
           `}
           fragmentShader={`
             varying vec2 vUv;
-            varying vec3 vNormal;
-            varying vec3 vViewDir;
-            
-            float fresnel(vec3 viewDirection, vec3 normal) {
-              return pow(1.0 - clamp(dot(viewDirection, normal), 0.0, 1.0), 3.0);
-            }
-            
             void main() {
-              float fresnelTerm = fresnel(vViewDir, vNormal);
-              
-              vec3 color = mix(
-                vec3(1.0, 0.3, 0.0),
-                vec3(0.3, 0.1, 0.0),
-                fresnelTerm
-              );
-              
-              float alpha = max(0.15, fresnelTerm * 0.5);
-              gl_FragColor = vec4(color, alpha);
+              vec2 center = vec2(0.5, 0.5);
+              float dist = length(vUv - center);
+              float intensity = smoothstep(0.5, 0.0, dist);
+              vec3 flareColor = mix(vec3(1.0, 0.4, 0.0), vec3(1.0, 0.8, 0.3), dist);
+              gl_FragColor = vec4(flareColor, intensity * 0.3);
             }
           `}
         />
       </mesh>
 
-      {/* Light sources */}
+      {/* Enhanced lighting */}
       <pointLight
         position={[0, 0, 0]}
-        intensity={1.5}
+        intensity={2.0}
         distance={100}
-        decay={1.5}
+        decay={2}
         color="#ffd7b9"
       />
       
       <pointLight
         position={[0, 0, 0]}
-        intensity={0.5}
+        intensity={1.0}
         distance={200}
-        decay={1}
+        decay={2}
         color="#ff6b00"
       />
     </group>
