@@ -1462,8 +1462,6 @@ export default function Home() {
 
   return (
     <div className="fixed inset-0 w-screen h-screen overflow-hidden">
-      {showIntro && <IntroOverlay onStart={() => setShowIntro(false)} />}
-      {/* 3D Scene */}
       <div className="canvas-container">
         <Canvas
           shadows
@@ -1645,6 +1643,8 @@ export default function Home() {
           }}
         />
       </div>
+      {showIntro && <IntroOverlay onStart={() => setShowIntro(false)} />}
+      {/* 3D Scene */}
     </div>
   );
 }
@@ -1700,37 +1700,374 @@ function SceneEffects() {
   );
 }
 
-/* Updated IntroOverlay component */
-function IntroOverlay({ onStart }) {
+/* Particle Effect Component */
+function ParticleEffect() {
+  const canvasRef = useRef(null);
+  const particlesRef = useRef([]);
+  const mouseRef = useRef({ x: 0, y: 0 });
+  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+
+  // Particle class
+  class Particle {
+    constructor(x, y) {
+      this.x = x;
+      this.y = y;
+      this.size = Math.random() * 1.5 + 0.5; // Smaller particles
+      this.baseX = x;
+      this.baseY = y;
+      this.density = (Math.random() * 30) + 1; // Increased density for more movement
+      this.distance = 0;
+      this.speed = Math.random() * 0.5 + 0.1;
+      // Brighter particles with more opacity
+      this.color = `hsla(${Math.random() * 60 + 240}, 80%, 70%, ${Math.random() * 0.5 + 0.3})`;
+    }
+
+    draw(ctx) {
+      ctx.fillStyle = this.color;
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    update(mouse) {
+      const dx = mouse.x - this.x;
+      const dy = mouse.y - this.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      const forceDirectionX = dx / distance;
+      const forceDirectionY = dy / distance;
+      const maxDistance = 150; // Increased interaction radius
+      const force = (maxDistance - distance) / maxDistance;
+      const directionX = forceDirectionX * force * this.density;
+      const directionY = forceDirectionY * force * this.density;
+
+      if (distance < maxDistance) {
+        this.x -= directionX * 0.8; // Smoother movement
+        this.y -= directionY * 0.8;
+      } else {
+        if (this.x !== this.baseX) {
+          const dx = this.x - this.baseX;
+          this.x -= dx/10; // Faster return to base position
+        }
+        if (this.y !== this.baseY) {
+          const dy = this.y - this.baseY;
+          this.y -= dy/10;
+        }
+      }
+    }
+  }
+
+  // Initialize particles
+  useEffect(() => {
+    const handleResize = () => {
+      if (canvasRef.current) {
+        const canvas = canvasRef.current;
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        setDimensions({ width: canvas.width, height: canvas.height });
+
+        // Create particles - increased density
+        const numberOfParticles = Math.floor((canvas.width * canvas.height) / 8000);
+        particlesRef.current = [];
+        for (let i = 0; i < numberOfParticles; i++) {
+          const x = Math.random() * canvas.width;
+          const y = Math.random() * canvas.height;
+          particlesRef.current.push(new Particle(x, y));
+        }
+      }
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Handle mouse movement
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      mouseRef.current = { x: e.clientX, y: e.clientY };
+    };
+
+    // Add touch support
+    const handleTouch = (e) => {
+      e.preventDefault();
+      mouseRef.current = { 
+        x: e.touches[0].clientX,
+        y: e.touches[0].clientY
+      };
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('touchmove', handleTouch, { passive: false });
+    window.addEventListener('touchstart', handleTouch, { passive: false });
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('touchmove', handleTouch);
+      window.removeEventListener('touchstart', handleTouch);
+    };
+  }, []);
+
+  // Animation loop
+  useEffect(() => {
+    let animationFrameId;
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+
+    const drawConnections = (particles) => {
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+      ctx.lineWidth = 0.5;
+      
+      for (let i = 0; i < particles.length; i++) {
+        for (let j = i + 1; j < particles.length; j++) {
+          const dx = particles[i].x - particles[j].x;
+          const dy = particles[i].y - particles[j].y;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+          
+          if (distance < 100) { // Connection distance threshold
+            ctx.beginPath();
+            ctx.moveTo(particles[i].x, particles[i].y);
+            ctx.lineTo(particles[j].x, particles[j].y);
+            
+            // Fade out connections based on distance
+            const opacity = (100 - distance) / 100;
+            ctx.strokeStyle = `rgba(255, 255, 255, ${opacity * 0.15})`;
+            
+            ctx.stroke();
+          }
+        }
+      }
+    };
+
+    const animate = () => {
+      ctx.clearRect(0, 0, dimensions.width, dimensions.height);
+      
+      // Draw connections first (behind particles)
+      drawConnections(particlesRef.current);
+      
+      // Then draw and update particles
+      particlesRef.current.forEach(particle => {
+        particle.update(mouseRef.current);
+        particle.draw(ctx);
+      });
+
+      animationFrameId = requestAnimationFrame(animate);
+    };
+
+    if (canvas && ctx) {
+      // Set high quality rendering
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      animate();
+    }
+
+    return () => {
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, [dimensions]);
+
   return (
-    <div
-      className={`${poppins.className} fixed inset-0 bg-black bg-opacity-85 backdrop-blur-sm flex flex-col justify-center items-center text-white p-5 text-center z-50`}
-    >
-      <h1 className="text-4xl font-bold mb-5">
-        Introduction to Milanković Cycles
-      </h1>
-      <p className="text-lg max-w-xl mb-5">
-        Milanković cycles refer to the long-term variations in Earth's orbit
-        that affect climate patterns on our planet. These cycles are driven by
-        changes in Earth's eccentricity, axial tilt, and precession, which
-        influence the amount of sunlight Earth receives over thousands of years.
-      </p>
-      <p className="text-lg max-w-xl mb-5">
-        Milutin Milanković was a renowned Serbian mathematician and astronomer
-        who developed theories that explain how these orbital changes have
-        shaped our climate throughout history.
-      </p>
-      <img
-        src="/miltin-milankovic.png"
-        alt="Milutin Milanković"
-        className="w-48 h-auto rounded-lg mb-5"
+    <canvas
+      ref={canvasRef}
+      className="absolute inset-0 z-10 pointer-events-none"
+      style={{ opacity: 0.8 }} // Increased opacity
+    />
+  );
+}
+
+/* Updated IntroOverlay component with award-winning design */
+function IntroOverlay({ onStart }) {
+  const [isVisible, setIsVisible] = useState(true);
+  const backgroundRef = useRef(null);
+  const contentRef = useRef(null);
+
+  useEffect(() => {
+    // Parallax effect for background
+    const handleMouseMove = (e) => {
+      if (backgroundRef.current && contentRef.current) {
+        const x = (window.innerWidth - e.pageX) / 100;
+        const y = (window.innerHeight - e.pageY) / 100;
+        backgroundRef.current.style.transform = `translate(${x}px, ${y}px)`;
+        contentRef.current.style.transform = `translate(${x/2}px, ${y/2}px)`;
+      }
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, []);
+
+  const handleStart = () => {
+    setIsVisible(false);
+    setTimeout(onStart, 1000); // Delay to allow exit animation
+  };
+
+  if (!isVisible) return null;
+
+  return (
+    <div className={`
+      fixed inset-0 
+      bg-black
+      flex items-center justify-center 
+      overflow-hidden
+      transition-opacity duration-1000
+      ${poppins.className}
+    `}>
+      {/* Particle Effect */}
+      <ParticleEffect />
+
+      {/* Animated background gradient */}
+      <div 
+        ref={backgroundRef}
+        className="absolute inset-0 opacity-20"
+        style={{
+          background: 'radial-gradient(circle at 50% 50%, rgba(76, 0, 255, 0.5) 0%, rgba(0, 0, 0, 0) 70%)',
+          filter: 'blur(120px)',
+          transform: 'scale(1.5)',
+        }}
       />
-      <button
-        onClick={onStart}
-        className="px-5 py-2 text-lg bg-white text-black rounded hover:bg-gray-200 cursor-pointer"
+
+      {/* Main content */}
+      <div 
+        ref={contentRef}
+        className="relative z-10 max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-2 gap-12 items-center"
       >
-        Start Simulation
-      </button>
+        {/* Left column: Text content */}
+        <div className="space-y-8">
+          <div className="overflow-hidden">
+            <h1 className="text-6xl font-bold text-white opacity-0 animate-slideUp">
+              Milanković
+              <span className="block text-8xl bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-600">
+                Cycles
+              </span>
+            </h1>
+          </div>
+          
+          <div className="space-y-6 opacity-0 animate-fadeIn">
+            <p className="text-xl text-gray-300 leading-relaxed">
+              Discover how Earth's orbital dance shapes our climate through the groundbreaking work of Milutin Milanković, 
+              a visionary Serbian mathematician and astronomer.
+            </p>
+            
+            <div className="flex items-center space-x-4">
+              <div className="h-[1px] w-12 bg-purple-500" />
+              <p className="text-gray-400">
+                Explore the intricate relationship between orbital mechanics and climate patterns
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={handleStart}
+            className="group relative px-8 py-4 bg-white bg-opacity-5 rounded-full overflow-hidden transition-all duration-500
+                     hover:bg-opacity-10 hover:scale-105 hover:shadow-[0_0_40px_rgba(123,0,255,0.3)]"
+          >
+            <span className="relative z-10 text-white font-medium tracking-wider">
+              Begin Journey
+            </span>
+            <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 opacity-0 
+                          group-hover:opacity-20 transition-opacity duration-500" />
+            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+              <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 animate-spin-slow" 
+                   style={{ transform: 'rotate(-45deg)', filter: 'blur(20px)' }} />
+            </div>
+          </button>
+        </div>
+
+        {/* Right column: Visual content */}
+        <div className="relative aspect-square">
+          <div className="absolute inset-0 rounded-full bg-gradient-to-br from-purple-500/20 to-pink-500/20 
+                        animate-pulse blur-3xl" />
+          <img
+            src="/miltin-milankovic.png"
+            alt="Milutin Milanković"
+            className="relative z-10 w-full h-full object-cover rounded-2xl 
+                     opacity-0 animate-scaleUp shadow-[0_0_60px_rgba(123,0,255,0.3)]"
+          />
+          <div className="absolute -inset-4 bg-gradient-to-r from-purple-600/20 to-pink-600/20 rounded-2xl 
+                        -z-10 blur-2xl animate-pulse" />
+        </div>
+      </div>
+
+      {/* Decorative elements */}
+      <div className="absolute bottom-8 left-8 flex items-center space-x-4 text-sm text-gray-500">
+        <span className="animate-pulse">●</span>
+        <span>Interactive Experience</span>
+      </div>
+      
+      <div className="absolute bottom-8 right-8 text-sm text-gray-500">
+        Scroll to explore
+      </div>
     </div>
   );
 }
+
+// Add these animations to your globals.css
+const styles = `
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scaleUp {
+  from {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes gridFade {
+  from {
+    opacity: 0.05;
+  }
+  to {
+    opacity: 0.15;
+  }
+}
+
+.animate-slideUp {
+  animation: slideUp 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation-delay: 0.2s;
+}
+
+.animate-fadeIn {
+  animation: fadeIn 1s ease forwards;
+  animation-delay: 0.5s;
+}
+
+.animate-scaleUp {
+  animation: scaleUp 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation-delay: 0.3s;
+}
+
+.animate-spin-slow {
+  animation: spin-slow 15s linear infinite;
+}
+`;
