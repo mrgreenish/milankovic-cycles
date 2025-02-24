@@ -15,7 +15,9 @@ import { Slider } from "@/components/ui/slider";
 import { cn } from "@/lib/utils";
 import { Poppins } from "next/font/google";
 import { GlobalTemperatureGraph } from '@/components/GlobalTemperatureGraph';
+import IntroOverlay from '@/components/IntroOverlay';
 const poppins = Poppins({ subsets: ["latin"], weight: ["400", "600"] });
+
 
 //
 // CREATE A INTRO PAGE WITH INTRODUCTION AND A BUTTON TO GO TO THE SIMULATION
@@ -60,7 +62,7 @@ function AxisIndicators({ axialTilt, precession }) {
             new THREE.Vector3(0, 1, 0),
             new THREE.Vector3(0, 0, 0),
             5,
-            0x333333,
+            0xffffff,
             0.8,
             0.5
           )
@@ -1137,6 +1139,7 @@ export default function Home() {
   // Additional greenhouse gas slider.
   const [co2Level, setCo2Level] = useState(280);
   const [showIntro, setShowIntro] = useState(true);
+  const [hasIntroFadedOut, setHasIntroFadedOut] = useState(false);
 
   // Smooth the displayed temperature.
   const [displayedTemp, setDisplayedTemp] = useState(realisticAmsterdamTemp);
@@ -1284,231 +1287,246 @@ export default function Home() {
     setter(parseFloat(e.target.value));
   };
 
+  const handleIntroComplete = () => {
+    setShowIntro(false);
+    // Add a small delay to ensure the intro has fully faded out
+    setTimeout(() => {
+      setHasIntroFadedOut(true);
+    }, 1000);
+  };
+
   return (
     <div className="fixed inset-0 w-screen h-screen overflow-hidden bg-[#030014]">
-      <div className="canvas-container relative">
-        {/* Background gradient effects */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#030014] via-[#100b2e] to-[#0c0521] opacity-80" />
-        <div className="absolute inset-0">
-          <div className="absolute top-[20%] left-[25%] w-[30rem] h-[30rem] bg-purple-600/30 rounded-full blur-[10rem] animate-pulse" />
-          <div className="absolute bottom-[20%] right-[25%] w-[35rem] h-[35rem] bg-blue-600/30 rounded-full blur-[10rem] animate-pulse delay-1000" />
-          <div className="absolute top-[40%] right-[35%] w-[25rem] h-[25rem] bg-cyan-600/20 rounded-full blur-[10rem] animate-pulse delay-500" />
-        </div>
+      {showIntro && <IntroOverlay onStart={handleIntroComplete} />}
+      
+      {hasIntroFadedOut && (
+        <>
+          <div className="canvas-container relative">
+            {/* Background gradient effects */}
+            <div className="absolute inset-0 bg-gradient-to-b from-[#030014] via-[#100b2e] to-[#0c0521] opacity-80" />
+            <div className="absolute inset-0">
+              <div className="absolute top-[20%] left-[25%] w-[30rem] h-[30rem] bg-purple-600/30 rounded-full blur-[10rem] animate-pulse" />
+              <div className="absolute bottom-[20%] right-[25%] w-[35rem] h-[35rem] bg-blue-600/30 rounded-full blur-[10rem] animate-pulse delay-1000" />
+              <div className="absolute top-[40%] right-[35%] w-[25rem] h-[25rem] bg-cyan-600/20 rounded-full blur-[10rem] animate-pulse delay-500" />
+            </div>
 
-        <Canvas 
-          shadows 
-          camera={{ 
-            position: [0, 15, 25], 
-            fov: 50,
-            near: 0.1,
-            far: 1000
-          }}
-          className="z-10"
-          gl={{ 
-            antialias: true,
-            alpha: true,
-            powerPreference: "high-performance",
-          }}
-        >
-          <color attach="background" args={["#030014"]} />
-          <ambientLight intensity={0.4} />
-          <directionalLight
-            castShadow
-            position={[10, 20, 10]}
-            intensity={2.0}
-            shadow-mapSize-width={1024}
-            shadow-mapSize-height={1024}
-          />
-          <hemisphereLight
-            intensity={0.3}
-            color="#ffffff"
-            groundColor="#000000"
-          />
-          <Sun />
-          <OrbitPath eccentricity={eccentricity} />
-          <OrbitingEarth
-            eccentricity={eccentricity}
-            axialTilt={axialTilt}
-            precession={precession}
-            temperature={normTemp}
-            iceFactor={f_ice}
-            normTemp={normTemp}
-          />
-          <AxisIndicators axialTilt={axialTilt} precession={precession} />
-          <OrbitControls 
-            autoRotate
-            autoRotateSpeed={0.5}
-            enableDamping
-            dampingFactor={0.05}
-            minDistance={30}
-            maxDistance={80}
-            enablePan={false}
-            rotateSpeed={0.8}
-          />
-          <SceneEffects />
-          
-          {/* Enhanced atmospheric fog */}
-          <fog attach="fog" args={['#030014', 45, 200]} />
-        </Canvas>
-
-        {/* Subtle grid overlay */}
-        <div className="absolute inset-0 bg-grid-white/[0.02] bg-[length:50px_50px] z-[1]" />
-      </div>
-
-      {/* Left Panel Group - add glassmorphism */}
-      <div className="fixed left-5 top-5 space-y-4 w-[300px] z-20">
-        <CycleComparisonPanel
-          eccentricity={eccentricity}
-          axialTilt={axialTilt}
-          precession={precession}
-          baselineEccentricity={baselineEccentricity}
-          baselineAxialTilt={baselineAxialTilt}
-          baselinePrecession={baselinePrecession}
-          onEccentricityChange={(value) => {
-            setEccentricity(value);
-            setAutoAnimate(false);
-          }}
-          onAxialTiltChange={(value) => {
-            setAxialTilt(value);
-            setAutoAnimate(false);
-          }}
-          onPrecessionChange={(value) => {
-            setPrecession(value);
-            setAutoAnimate(false);
-          }}
-        />
-
-        <NarrativeOverlay
-          simulatedYear={simulatedYear}
-          temperature={displayedTemp}
-          iceFactor={f_ice}
-          eccentricity={eccentricity}
-          axialTilt={axialTilt}
-          precession={precession}
-          formatNumber={formatNumber}
-        />
-      </div>
-
-      {/* Right Panel Group - add glassmorphism */}
-      <div className="fixed right-5 top-5 space-y-4 w-[300px] z-20">
-        {/* Time Control Panel */}
-        <Card className="bg-white/10 backdrop-blur-md border border-white/20">
-          <CardHeader>
-            <CardTitle className="text-white">Time Controls</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <button
-              onClick={() => setIsPaused((prev) => !prev)}
-              className="w-full px-4 py-2 bg-purple-600/80 hover:bg-purple-600/90 text-white rounded-md transition-colors"
+            <Canvas
+              shadows
+              camera={{
+                position: [0, 15, 25],
+                fov: 50,
+                near: 0.1,
+                far: 1000,
+              }}
+              className="z-10"
+              gl={{
+                antialias: true,
+                alpha: true,
+                powerPreference: "high-performance",
+              }}
             >
-              {isPaused ? "Play" : "Pause"}
-            </button>
-            <div className="space-y-3">
-              <div className="flex justify-between">
-                <span className="text-sm text-white/80">Speed</span>
-                <span className="text-sm text-white/60">
-                  {formatNumber(timeScale)}
-                </span>
-              </div>
-              <Slider
-                defaultValue={[timeScale]}
-                value={[timeScale]}
-                min={0.001}
-                max={500000000}
-                step={1}
-                onValueChange={([value]) => setTimeScale(value)}
-                className="[&>span]:bg-purple-600 [&>span]:shadow-[0_0_15px_rgba(147,51,234,0.5)] [&>span]:border-2 [&>span]:border-white/50"
+              <color attach="background" args={["#030014"]} />
+              <ambientLight intensity={0.4} />
+              <directionalLight
+                castShadow
+                position={[10, 20, 10]}
+                intensity={2.0}
+                shadow-mapSize-width={1024}
+                shadow-mapSize-height={1024}
               />
-            </div>
-            <div className="space-y-3">
-              <label className="text-sm text-gray-800">Preset Scenarios</label>
-              <select
-                value={preset}
-                onChange={(e) => {
-                  setPreset(e.target.value);
-                  if (presets[e.target.value]) {
-                    const { eccentricity, axialTilt, precession } =
-                      presets[e.target.value];
-                    setEccentricity(eccentricity);
-                    setAxialTilt(axialTilt);
-                    setPrecession(precession);
-                    setAutoAnimate(false);
-                  }
-                }}
-                className="w-full bg-black text-white border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-black focus:border-black hover:bg-black/90 transition-colors"
-              >
-                <option value="">None</option>
-                {Object.keys(presets).map((key) => (
-                  <option key={key} value={key}>
-                    {key}
-                  </option>
-                ))}
-              </select>
-              {preset && presets[preset]?.description && (
-                <div className="text-sm text-gray-300 mt-2">
-                  {presets[preset].description}
+              <hemisphereLight
+                intensity={0.3}
+                color="#ffffff"
+                groundColor="#000000"
+              />
+              <Sun />
+              <OrbitPath eccentricity={eccentricity} />
+              <OrbitingEarth
+                eccentricity={eccentricity}
+                axialTilt={axialTilt}
+                precession={precession}
+                temperature={normTemp}
+                iceFactor={f_ice}
+                normTemp={normTemp}
+              />
+              <AxisIndicators axialTilt={axialTilt} precession={precession} />
+              <OrbitControls
+                autoRotate
+                autoRotateSpeed={0.5}
+                enableDamping
+                dampingFactor={0.05}
+                minDistance={30}
+                maxDistance={80}
+                enablePan={false}
+                rotateSpeed={0.8}
+              />
+              <SceneEffects />
+
+              {/* Enhanced atmospheric fog */}
+              <fog attach="fog" args={["#030014", 45, 200]} />
+            </Canvas>
+
+            {/* Subtle grid overlay */}
+            <div className="absolute inset-0 bg-grid-white/[0.02] bg-[length:50px_50px] z-[1]" />
+          </div>
+
+          {/* Left Panel Group */}
+          <div className="fixed left-5 top-5 space-y-4 w-[300px] z-20">
+            <CycleComparisonPanel
+              eccentricity={eccentricity}
+              axialTilt={axialTilt}
+              precession={precession}
+              baselineEccentricity={baselineEccentricity}
+              baselineAxialTilt={baselineAxialTilt}
+              baselinePrecession={baselinePrecession}
+              onEccentricityChange={(value) => {
+                setEccentricity(value);
+                setAutoAnimate(false);
+              }}
+              onAxialTiltChange={(value) => {
+                setAxialTilt(value);
+                setAutoAnimate(false);
+              }}
+              onPrecessionChange={(value) => {
+                setPrecession(value);
+                setAutoAnimate(false);
+              }}
+            />
+
+            <NarrativeOverlay
+              simulatedYear={simulatedYear}
+              temperature={displayedTemp}
+              iceFactor={f_ice}
+              eccentricity={eccentricity}
+              axialTilt={axialTilt}
+              precession={precession}
+              formatNumber={formatNumber}
+            />
+          </div>
+
+          {/* Right Panel Group */}
+          <div className="fixed right-5 top-5 space-y-4 w-[300px] z-20">
+            {/* Time Control Panel */}
+            <Card className="bg-white/10 backdrop-blur-md border border-white/20">
+              <CardHeader>
+                <CardTitle className="text-white">Time Controls</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <button
+                  onClick={() => setIsPaused((prev) => !prev)}
+                  className="w-full px-4 py-2 bg-purple-600/80 hover:bg-purple-600/90 text-white rounded-md transition-colors"
+                >
+                  {isPaused ? "Play" : "Pause"}
+                </button>
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-sm text-white/80">Speed</span>
+                    <span className="text-sm text-white/60">
+                      {formatNumber(timeScale)}
+                    </span>
+                  </div>
+                  <Slider
+                    defaultValue={[timeScale]}
+                    value={[timeScale]}
+                    min={0.001}
+                    max={500000000}
+                    step={1}
+                    onValueChange={([value]) => setTimeScale(value)}
+                    className="[&>span]:bg-purple-600 [&>span]:shadow-[0_0_15px_rgba(147,51,234,0.5)] [&>span]:border-2 [&>span]:border-white/50"
+                  />
                 </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+                <div className="space-y-3">
+                  <label className="text-sm text-gray-800">Preset Scenarios</label>
+                  <select
+                    value={preset}
+                    onChange={(e) => {
+                      setPreset(e.target.value);
+                      if (presets[e.target.value]) {
+                        const { eccentricity, axialTilt, precession } =
+                          presets[e.target.value];
+                        setEccentricity(eccentricity);
+                        setAxialTilt(axialTilt);
+                        setPrecession(precession);
+                        setAutoAnimate(false);
+                      }
+                    }}
+                    className="w-full bg-black text-white border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-black focus:border-black hover:bg-black/90 transition-colors"
+                  >
+                    <option value="">None</option>
+                    {Object.keys(presets).map((key) => (
+                      <option key={key} value={key}>
+                        {key}
+                      </option>
+                    ))}
+                  </select>
+                  {preset && presets[preset]?.description && (
+                    <div className="text-sm text-gray-300 mt-2">
+                      {presets[preset].description}
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
 
-        {/* Additional Controls Panel */}
-        <Card className="bg-white border border-gray-300">
-          <CardHeader>
-            <CardTitle className="text-black">Additional Controls</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="space-y-3">
-              <div className="flex justify-between">
-                <span className="text-sm text-gray-800">CO₂ Level (ppm)</span>
-                <span className="text-sm text-gray-400">{co2Level}</span>
-              </div>
-              <Slider
-                defaultValue={[co2Level]}
-                value={[co2Level]}
-                min={250}
-                max={500}
-                step={1}
-                onValueChange={([value]) => {
-                  setCo2Level(value);
-                  setAutoAnimate(false);
-                }}
-              />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-      <div className="fixed flex justify-center items-center">
-        <GlobalTemperatureGraph
-          axialTilt={axialTilt}
-          eccentricity={eccentricity}
-          precession={precession}
-          temperature={displayedTemp}
-          iceFactor={f_ice}
-          co2Level={co2Level}
-          simulatedYear={simulatedYear}
-          formatNumber={formatNumber}
-          style={{
-            zIndex: 10,
-            width: "600px",
-            height: "150px",
-          }}
-        />
+            {/* Additional Controls Panel */}
+            <Card className="bg-white border border-gray-300">
+              <CardHeader>
+                <CardTitle className="text-black">Additional Controls</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-800">CO₂ Level (ppm)</span>
+                    <span className="text-sm text-gray-400">{co2Level}</span>
+                  </div>
+                  <Slider
+                    defaultValue={[co2Level]}
+                    value={[co2Level]}
+                    min={250}
+                    max={500}
+                    step={1}
+                    onValueChange={([value]) => {
+                      setCo2Level(value);
+                      setAutoAnimate(false);
+                    }}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
 
-        <SeasonalInsolationGraph
-          axialTilt={axialTilt}
-          eccentricity={eccentricity}
-          precession={precession}
-          style={{
-            zIndex: 10,
-            width: "600px",
-            height: "150px",
-          }}
-        />
-      </div>
-      {showIntro && <IntroOverlay onStart={() => setShowIntro(false)} />}
-      {/* 3D Scene */}
+          {/* Bottom Graphs */}
+          <div className="fixed flex justify-center items-center w-[620px] h-[190px] bottom-0 right-0">
+            <GlobalTemperatureGraph
+              axialTilt={axialTilt}
+              eccentricity={eccentricity}
+              precession={precession}
+              temperature={displayedTemp}
+              iceFactor={f_ice}
+              co2Level={co2Level}
+              simulatedYear={simulatedYear}
+              formatNumber={formatNumber}
+              style={{
+                zIndex: 10,
+                width: "600px",
+                height: "150px",
+              }}
+            />
+          </div>
+          <div className="fixed bottom-0 left-0 flex justify-center items-center w-[620px] h-[190px]">
+            <SeasonalInsolationGraph
+              axialTilt={axialTilt}
+              eccentricity={eccentricity}
+              precession={precession}
+              style={{
+                zIndex: 10,
+                width: "600px",
+                height: "150px",
+              }}
+            />
+          </div>
+        </>
+      )}
     </div>
   );
 }
@@ -1718,408 +1736,5 @@ function SceneEffects() {
         offset={[0.0012, 0.0012]}
       />
     </EffectComposer>
-  );
-}
-
-/* Particle Effect Component */
-function ParticleEffect() {
-  const canvasRef = useRef(null);
-  const particlesRef = useRef([]);
-  const mouseRef = useRef({ x: 0, y: 0 });
-  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
-
-  // Particle class
-  class Particle {
-    constructor(x, y) {
-      this.x = x;
-      this.y = y;
-      this.size = Math.random() * 1.5 + 0.5; // Smaller particles
-      this.baseX = x;
-      this.baseY = y;
-      this.density = (Math.random() * 30) + 1; // Increased density for more movement
-      this.distance = 0;
-      this.speed = Math.random() * 0.5 + 0.1;
-      // Enhanced particle colors with purple/pink theme
-      const hue = Math.random() > 0.5 ? 
-        Math.random() * 60 + 240 : // Purple range
-        Math.random() * 30 + 330;  // Pink range
-      this.color = `hsla(${hue}, 80%, 70%, ${Math.random() * 0.5 + 0.4})`;
-    }
-
-    draw(ctx) {
-      ctx.fillStyle = this.color;
-      ctx.beginPath();
-      ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-      ctx.closePath();
-      ctx.fill();
-    }
-
-    update(mouse) {
-      const dx = mouse.x - this.x;
-      const dy = mouse.y - this.y;
-      const distance = Math.sqrt(dx * dx + dy * dy);
-      const forceDirectionX = dx / distance;
-      const forceDirectionY = dy / distance;
-      const maxDistance = 150; // Increased interaction radius
-      const force = (maxDistance - distance) / maxDistance;
-      const directionX = forceDirectionX * force * this.density;
-      const directionY = forceDirectionY * force * this.density;
-
-      if (distance < maxDistance) {
-        this.x -= directionX * 0.8; // Smoother movement
-        this.y -= directionY * 0.8;
-      } else {
-        if (this.x !== this.baseX) {
-          const dx = this.x - this.baseX;
-          this.x -= dx/10; // Faster return to base position
-        }
-        if (this.y !== this.baseY) {
-          const dy = this.y - this.baseY;
-          this.y -= dy/10;
-        }
-      }
-    }
-  }
-
-  // Initialize particles
-  useEffect(() => {
-    const handleResize = () => {
-      if (canvasRef.current) {
-        const canvas = canvasRef.current;
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-        setDimensions({ width: canvas.width, height: canvas.height });
-
-        // Create particles - increased density
-        const numberOfParticles = Math.floor((canvas.width * canvas.height) / 8000);
-        particlesRef.current = [];
-        for (let i = 0; i < numberOfParticles; i++) {
-          const x = Math.random() * canvas.width;
-          const y = Math.random() * canvas.height;
-          particlesRef.current.push(new Particle(x, y));
-        }
-      }
-    };
-
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  // Handle mouse movement
-  useEffect(() => {
-    const handleMouseMove = (e) => {
-      mouseRef.current = { x: e.clientX, y: e.clientY };
-    };
-
-    // Add touch support
-    const handleTouch = (e) => {
-      e.preventDefault();
-      mouseRef.current = { 
-        x: e.touches[0].clientX,
-        y: e.touches[0].clientY
-      };
-    };
-
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('touchmove', handleTouch, { passive: false });
-    window.addEventListener('touchstart', handleTouch, { passive: false });
-
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('touchmove', handleTouch);
-      window.removeEventListener('touchstart', handleTouch);
-    };
-  }, []);
-
-  // Animation loop
-  useEffect(() => {
-    let animationFrameId;
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-
-    const drawConnections = (particles) => {
-      // Create a glowing effect for connections
-      ctx.shadowBlur = 5;
-      ctx.shadowColor = 'rgba(123, 0, 255, 0.3)';
-      ctx.lineCap = 'round';
-      
-      for (let i = 0; i < particles.length; i++) {
-        for (let j = i + 1; j < particles.length; j++) {
-          const dx = particles[i].x - particles[j].x;
-          const dy = particles[i].y - particles[j].y;
-          const distance = Math.sqrt(dx * dx + dy * dy);
-          
-          if (distance < 100) { // Connection distance threshold
-            ctx.beginPath();
-            ctx.moveTo(particles[i].x, particles[i].y);
-            ctx.lineTo(particles[j].x, particles[j].y);
-            
-            // Enhanced gradient effect for lines
-            const gradient = ctx.createLinearGradient(
-              particles[i].x, 
-              particles[i].y, 
-              particles[j].x, 
-              particles[j].y
-            );
-            
-            // Calculate opacity based on distance and particle colors
-            const opacity = (100 - distance) / 100;
-            const baseColor = 'rgba(123, 0, 255,'; // Purple base color
-            const accentColor = 'rgba(255, 0, 123,'; // Pink accent
-            
-            gradient.addColorStop(0, `${baseColor}${opacity * 0.5})`);
-            gradient.addColorStop(0.5, `${accentColor}${opacity * 0.3})`);
-            gradient.addColorStop(1, `${baseColor}${opacity * 0.5})`);
-            
-            ctx.strokeStyle = gradient;
-            ctx.lineWidth = Math.max(0.5, (100 - distance) / 50); // Dynamic line width
-            
-            ctx.stroke();
-          }
-        }
-      }
-      
-      // Reset shadow effect after drawing connections
-      ctx.shadowBlur = 0;
-    };
-
-    const animate = () => {
-      ctx.clearRect(0, 0, dimensions.width, dimensions.height);
-      
-      // Draw connections first (behind particles)
-      drawConnections(particlesRef.current);
-      
-      // Then draw and update particles
-      particlesRef.current.forEach(particle => {
-        particle.update(mouseRef.current);
-        particle.draw(ctx);
-      });
-
-      animationFrameId = requestAnimationFrame(animate);
-    };
-
-    if (canvas && ctx) {
-      // Set high quality rendering
-      ctx.imageSmoothingEnabled = true;
-      ctx.imageSmoothingQuality = 'high';
-      animate();
-    }
-
-    return () => {
-      cancelAnimationFrame(animationFrameId);
-    };
-  }, [dimensions]);
-
-  return (
-    <canvas
-      ref={canvasRef}
-      className="absolute inset-0 z-10 pointer-events-none"
-      style={{ opacity: 0.8 }} // Increased opacity
-    />
-  );
-}
-
-/* IntroOverlay component with GSAP animations */
-function IntroOverlay({ onStart }) {
-  const [isVisible, setIsVisible] = useState(true);
-  const [isAnimatingOut, setIsAnimatingOut] = useState(false);
-  const backgroundRef = useRef(null);
-  const contentRef = useRef(null);
-  const titleRef = useRef(null);
-  const descriptionRef = useRef(null);
-  const buttonRef = useRef(null);
-  const imageRef = useRef(null);
-  const decorativeLeftRef = useRef(null);
-  const decorativeRightRef = useRef(null);
-  const particlesRef = useRef(null);
-  const containerRef = useRef(null);
-
-  useEffect(() => {
-    // Import GSAP dynamically to avoid SSR issues
-    import('gsap').then(({ gsap }) => {
-      // Initial animations (if needed)
-    });
-  }, []);
-
-  useEffect(() => {
-    // Parallax effect for background
-    const handleMouseMove = (e) => {
-      if (backgroundRef.current && contentRef.current) {
-        const x = (window.innerWidth - e.pageX) / 100;
-        const y = (window.innerHeight - e.pageY) / 100;
-        backgroundRef.current.style.transform = `translate(${x}px, ${y}px)`;
-        contentRef.current.style.transform = `translate(${x/2}px, ${y/2}px)`;
-      }
-    };
-
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, []);
-
-  const handleStart = async () => {
-    if (isAnimatingOut) return; // Prevent double-clicking
-    setIsAnimatingOut(true);
-
-    // Dynamically import GSAP
-    const { gsap } = await import('gsap');
-
-    // Create a timeline for the exit animation
-    const tl = gsap.timeline({
-      onComplete: () => {
-        setIsVisible(false);
-        onStart();
-      }
-    });
-
-    // First, fade out the container's backdrop
-    tl.to(containerRef.current, {
-      backgroundColor: 'rgba(0, 0, 0, 0)',
-      duration: 1,
-      ease: "power2.inOut"
-    });
-
-    // Staggered exit animations
-    tl
-      .to([decorativeLeftRef.current, decorativeRightRef.current], {
-        opacity: 0,
-        y: 20,
-        duration: 0.4,
-        ease: "power2.inOut"
-      }, "-=0.8")
-      .to(buttonRef.current, {
-        opacity: 0,
-        scale: 0.9,
-        duration: 0.4,
-        ease: "power2.inOut"
-      }, "-=0.2")
-      .to(descriptionRef.current, {
-        opacity: 0,
-        y: -30,
-        duration: 0.4,
-        ease: "power2.inOut"
-      }, "-=0.3")
-      .to([titleRef.current, imageRef.current], {
-        opacity: 0,
-        scale: 1.1,
-        duration: 0.6,
-        ease: "power2.inOut"
-      }, "-=0.2")
-      .to(particlesRef.current, {
-        opacity: 0,
-        duration: 0.4,
-        ease: "power2.inOut"
-      }, "-=0.4")
-      .to(backgroundRef.current, {
-        opacity: 0,
-        scale: 1.2,
-        duration: 0.8,
-        ease: "power2.inOut"
-      }, "-=0.6");
-  };
-
-  if (!isVisible) return null;
-
-  return (
-    <div 
-      ref={containerRef}
-      className={`
-        fixed inset-0 
-        bg-black
-        flex items-center justify-center 
-        overflow-hidden
-        ${poppins.className}
-        ${isAnimatingOut ? 'pointer-events-none' : ''}
-      `}
-    >
-      {/* Particle Effect */}
-      <div ref={particlesRef}>
-        <ParticleEffect />
-      </div>
-
-      {/* Animated background gradient */}
-      <div 
-        ref={backgroundRef}
-        className="absolute inset-0 opacity-20"
-        style={{
-          background: 'radial-gradient(circle at 50% 50%, rgba(76, 0, 255, 0.5) 0%, rgba(0, 0, 0, 0) 70%)',
-          filter: 'blur(120px)',
-          transform: 'scale(1.5)',
-        }}
-      />
-
-      {/* Main content */}
-      <div 
-        ref={contentRef}
-        className="relative z-10 max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-2 gap-12 items-center"
-      >
-        {/* Left column: Text content */}
-        <div className="space-y-8">
-          <div ref={titleRef} className="overflow-hidden">
-            <h1 className="text-6xl font-bold text-white animate-slideUp">
-              Milanković
-              <span className="block text-8xl bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-600">
-                Cycles
-              </span>
-            </h1>
-          </div>
-          
-          <div ref={descriptionRef} className="space-y-6 animate-fadeIn">
-            <p className="text-xl text-gray-300 leading-relaxed">
-              Discover how Earth's orbital dance shapes our climate through the groundbreaking work of Milutin Milanković, 
-              a visionary Serbian mathematician and astronomer.
-            </p>
-            
-            <div className="flex items-center space-x-4">
-              <div className="h-[1px] w-12 bg-purple-500" />
-              <p className="text-gray-400">
-                Explore the intricate relationship between orbital mechanics and climate patterns
-              </p>
-            </div>
-          </div>
-
-          <button
-            ref={buttonRef}
-            onClick={handleStart}
-            className="group relative px-8 py-4 bg-white bg-opacity-5 rounded-full overflow-hidden transition-all duration-500
-                     hover:bg-opacity-10 hover:scale-105 hover:shadow-[0_0_40px_rgba(123,0,255,0.3)]"
-          >
-            <span className="relative z-10 text-white font-medium tracking-wider">
-              Begin Journey
-            </span>
-            <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 opacity-0 
-                          group-hover:opacity-20 transition-opacity duration-500" />
-            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-              <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 animate-spin-slow" 
-                   style={{ transform: 'rotate(-45deg)', filter: 'blur(20px)' }} />
-            </div>
-          </button>
-        </div>
-
-        {/* Right column: Visual content */}
-        <div ref={imageRef} className="relative aspect-square">
-          <div className="absolute inset-0 rounded-full bg-gradient-to-br from-purple-500/20 to-pink-500/20 
-                        animate-pulse blur-3xl" />
-          <img
-            src="/miltin-milankovic.png"
-            alt="Milutin Milanković"
-            className="relative z-10 w-full h-full object-cover rounded-2xl 
-                     animate-scaleUp shadow-[0_0_60px_rgba(123,0,255,0.3)]"
-          />
-          <div className="absolute -inset-4 bg-gradient-to-r from-purple-600/20 to-pink-600/20 rounded-2xl 
-                        -z-10 blur-2xl animate-pulse" />
-        </div>
-      </div>
-
-      {/* Decorative elements */}
-      <div ref={decorativeLeftRef} className="absolute bottom-8 left-8 flex items-center space-x-4 text-sm text-gray-500">
-        <span className="animate-pulse">●</span>
-        <span>Interactive Experience</span>
-      </div>
-      
-      <div ref={decorativeRightRef} className="absolute bottom-8 right-8 text-sm text-gray-500">
-        Scroll to explore
-      </div>
-    </div>
   );
 }
