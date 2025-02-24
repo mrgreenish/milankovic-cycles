@@ -47,13 +47,55 @@
     --input: 217.2 32.6% 17.5%;
     --ring: 224.3 76.3% 48%;
   }
+
+  /* Base styles */
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: "kern" 1, "liga" 1, "calt" 1, "ss01" 1, "ss02" 1;
+  }
+
+  body {
+    @apply antialiased;
+    font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
+    letter-spacing: -0.015em;
+  }
+
+  /* Typography scale */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-poppins), system-ui, -apple-system, sans-serif;
+    @apply font-semibold tracking-tight;
+    letter-spacing: -0.02em;
+  }
+
+  h1 {
+    @apply text-4xl md:text-5xl lg:text-6xl leading-tight;
+    font-variation-settings: "wght" 600;
+  }
+
+  h2 {
+    @apply text-3xl md:text-4xl leading-snug;
+  }
+
+  h3 {
+    @apply text-2xl md:text-3xl leading-snug;
+  }
+
+  p {
+    font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
+    @apply text-base leading-relaxed;
+    font-feature-settings: "ss01" 1, "ss02" 1, "case" 1;
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
 }
 
 /* Enhanced base styles */
 html {
   scroll-behavior: smooth;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
@@ -64,7 +106,6 @@ body {
   overflow: hidden;
   background: black;
   color: white;
-  font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
 }
 
 #root {
@@ -283,11 +324,19 @@ button {
   border: 1px solid rgba(255, 255, 255, 0.18);
   box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
 }
 
 .card:hover {
   transform: translateY(-5px);
   box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.47);
+}
+
+/* Ensure card content is above particles */
+.card > [class*="CardHeader"],
+.card > [class*="CardContent"] {
+  position: relative;
+  z-index: 10;
 }
 
 /* Enhanced button styles */
@@ -321,15 +370,6 @@ button {
 
 .text-glow {
   text-shadow: 0 0 10px rgba(139, 92, 246, 0.5);
-}
-
-/* Particle effect styles */
-.particle {
-  position: absolute;
-  pointer-events: none;
-  background: radial-gradient(circle at center, rgba(139, 92, 246, 0.8), transparent);
-  border-radius: 50%;
-  animation: float 3s ease-in-out infinite;
 }
 
 /* Enhanced scrollbar */

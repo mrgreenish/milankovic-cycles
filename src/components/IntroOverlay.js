@@ -298,6 +298,7 @@ export default function IntroOverlay({ onStart }) {
         duration: 0.8,
         ease: "power2.inOut"
       }, "-=0.6");
+    tl.timeScale(2);
   };
 
   if (!isVisible) return null;
@@ -384,7 +385,7 @@ export default function IntroOverlay({ onStart }) {
           <div className="absolute inset-0 rounded-full bg-gradient-to-br from-purple-500/20 to-pink-500/20 
                         animate-pulse blur-3xl" />
           <img
-            src="/miltin-milankovic.png"
+            src="/miltin-milankovic.jpg"
             alt="Milutin Milanković"
             className="relative z-10 w-full h-full object-cover rounded-2xl 
                      animate-scaleUp shadow-[0_0_60px_rgba(123,0,255,0.3)]"

@@ -13,11 +13,8 @@ import "./globals.css";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
 import { cn } from "@/lib/utils";
-import { Poppins } from "next/font/google";
 import { GlobalTemperatureGraph } from '@/components/GlobalTemperatureGraph';
 import IntroOverlay from '@/components/IntroOverlay';
-const poppins = Poppins({ subsets: ["latin"], weight: ["400", "600"] });
-
 
 //
 // CREATE A INTRO PAGE WITH INTRODUCTION AND A BUTTON TO GO TO THE SIMULATION
@@ -735,6 +732,8 @@ function NarrativeOverlay({
   precession,
   formatNumber,
 }) {
+  const [isHovered, setIsHovered] = useState(false);
+  
   const eccentricityMessage =
     eccentricity > 0.0167
       ? "High eccentricity: The orbit is more elliptical, which can cause stronger seasonal contrasts."
@@ -761,41 +760,68 @@ function NarrativeOverlay({
   const causeEffectExplanation =
     "Cause and Effect: Variations in eccentricity, axial tilt, and precession alter the amount and timing of sunlight (insolation), driving seasonal temperature differences. Feedbacks, such as ice formation, can amplify these changes.";
 
+  // Format the year for display: use "BP" (Before Present) for historical years, 
+  // and "AP" (After Present) or just the year for future
+  const formattedYear = () => {
+    const year = Math.floor(simulatedYear);
+    if (year < 0) {
+      // Historical year (negative) - show as "X BP" (Before Present)
+      return `${formatNumber(Math.abs(year))} BP`;
+    } else if (year > 0) {
+      // Future year - show as year with optional "AP" for clarity with larger timeframes
+      return year > 1000 ? `${formatNumber(year)} AP` : `${formatNumber(year)}`;
+    } else {
+      // Current year (0)
+      return "Present Day";
+    }
+  };
+
   return (
-    <Card className="card backdrop-blur-xl bg-black/20 border-white/10 overflow-hidden relative group">
+    <Card 
+      className="card backdrop-blur-xl bg-black/20 border-white/10 overflow-hidden relative group"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
       <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-      
       <div className="absolute -inset-[1px] bg-gradient-to-r from-purple-500/50 to-pink-500/50 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur" />
       
       <CardHeader className="relative z-10">
-        <CardTitle className="text-white text-lg flex items-center space-x-2">
-          <span className="text-gradient text-glow">Current Cycle States</span>
-          <span className="text-sm text-white/60">({formatNumber(Math.floor(simulatedYear))})</span>
+        <CardTitle className="text-gradient text-glow flex items-baseline gap-3">
+          <span className="text-xl font-semibold">Current Cycle States</span>
+          <span className="text-sm font-medium text-white/60 tracking-wide inline-block min-w-[150px] text-right">
+            ({formattedYear()})
+          </span>
         </CardTitle>
       </CardHeader>
       
       <CardContent className="space-y-4 relative z-10">
-        <div className="space-y-3">
+        <div className="space-y-4">
           <div className="flex items-start space-x-3 transition-all duration-300 hover:translate-x-2">
             <div className="w-2 h-2 rounded-full bg-purple-500 mt-2 animate-pulse" />
-            <p className="text-white/80 leading-relaxed">{eccentricityMessage}</p>
+            <p className="text-white/90 leading-relaxed tracking-wide text-balance">
+              {eccentricityMessage}
+            </p>
           </div>
           
           <div className="flex items-start space-x-3 transition-all duration-300 hover:translate-x-2">
             <div className="w-2 h-2 rounded-full bg-pink-500 mt-2 animate-pulse" />
-            <p className="text-white/80 leading-relaxed">{axialTiltMessage}</p>
+            <p className="text-white/90 leading-relaxed tracking-wide text-balance">
+              {axialTiltMessage}
+            </p>
           </div>
           
           <div className="flex items-start space-x-3 transition-all duration-300 hover:translate-x-2">
             <div className="w-2 h-2 rounded-full bg-blue-500 mt-2 animate-pulse" />
-            <p className="text-white/80 leading-relaxed">{precessionMessage}</p>
+            <p className="text-white/90 leading-relaxed tracking-wide text-balance">
+              {precessionMessage}
+            </p>
           </div>
           
           <div className="flex items-start space-x-3 transition-all duration-300 hover:translate-x-2">
             <div className="w-2 h-2 rounded-full bg-cyan-500 mt-2 animate-pulse" />
             <p className={cn(
-              "leading-relaxed transition-colors duration-500",
-              temperature < 5 ? "text-blue-400" : temperature > 15 ? "text-red-400" : "text-white/80"
+              "leading-relaxed tracking-wide text-balance transition-colors duration-500",
+              temperature < 5 ? "text-blue-400" : temperature > 15 ? "text-red-400" : "text-white/90"
             )}>
               {temperatureMessage}
             </p>
@@ -803,29 +829,11 @@ function NarrativeOverlay({
         </div>
         
         <div className="mt-6 pt-4 border-t border-white/10">
-          <p className="text-white/60 text-sm italic leading-relaxed">
+          <p className="text-white/70 text-sm italic leading-relaxed tracking-wide font-light text-balance">
             {causeEffectExplanation}
           </p>
         </div>
       </CardContent>
-      
-      {/* Interactive particle effect on hover */}
-      <div className="absolute inset-0 pointer-events-none">
-        {[...Array(20)].map((_, i) => (
-          <div
-            key={i}
-            className="particle"
-            style={{
-              width: Math.random() * 4 + 2 + 'px',
-              height: Math.random() * 4 + 2 + 'px',
-              left: Math.random() * 100 + '%',
-              top: Math.random() * 100 + '%',
-              animationDelay: Math.random() * 2 + 's',
-              opacity: Math.random() * 0.5 + 0.3
-            }}
-          />
-        ))}
-      </div>
     </Card>
   );
 }
@@ -844,8 +852,14 @@ function CycleComparisonPanel({
   onAxialTiltChange,
   onPrecessionChange,
 }) {
+  const [isHovered, setIsHovered] = useState(false);
+  
   return (
-    <Card className="card backdrop-blur-xl bg-black/20 border-white/10 overflow-hidden relative group">
+    <Card 
+      className="card backdrop-blur-xl bg-black/20 border-white/10 overflow-hidden relative group"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
       <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
       
       <div className="absolute -inset-[1px] bg-gradient-to-r from-purple-500/50 to-pink-500/50 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur" />
@@ -921,24 +935,6 @@ function CycleComparisonPanel({
               className="[&>span]:bg-gradient-to-r [&>span]:from-emerald-500 [&>span]:to-teal-500 [&>span]:shadow-lg [&>span]:shadow-emerald-500/50"
             />
           </div>
-        </div>
-
-        {/* Interactive particle effect */}
-        <div className="absolute inset-0 pointer-events-none">
-          {[...Array(20)].map((_, i) => (
-            <div
-              key={i}
-              className="particle"
-              style={{
-                width: Math.random() * 4 + 2 + 'px',
-                height: Math.random() * 4 + 2 + 'px',
-                left: Math.random() * 100 + '%',
-                top: Math.random() * 100 + '%',
-                animationDelay: Math.random() * 2 + 's',
-                opacity: Math.random() * 0.5 + 0.3
-              }}
-            />
-          ))}
         </div>
       </CardContent>
     </Card>
@@ -1115,8 +1111,8 @@ export default function Home() {
   const baselineAxialTilt = 23.44; // Current Earth obliquity
   const baselinePrecession = 0;
   const realisticAmsterdamTemp = 10; // °C baseline temperature
-  const sensitivity = 30; // Temperature sensitivity factor
-
+  const sensitivity = 60; // Temperature sensitivity factor - INCREASED FROM 30 to make changes more noticeable
+  
   // State for orbital parameters.
   const [eccentricity, setEccentricity] = useState(baselineEccentricity);
   const [axialTilt, setAxialTilt] = useState(baselineAxialTilt);
@@ -1132,6 +1128,13 @@ export default function Home() {
   // Time control states.
   const [isPaused, setIsPaused] = useState(false);
   const [timeScale, setTimeScale] = useState(0.01);
+
+  // Ice factor state
+  const [iceFactor, setIceFactor] = useState(0);
+
+  // Hover states for cards
+  const [timeControlsHovered, setTimeControlsHovered] = useState(false);
+  const [scenariosHovered, setScenariosHovered] = useState(false);
 
   // Preset scenarios with historically accurate configurations
   const presets = {
@@ -1180,20 +1183,167 @@ export default function Home() {
 
   // Smooth the displayed temperature.
   const [displayedTemp, setDisplayedTemp] = useState(realisticAmsterdamTemp);
+  const [parameterPreview, setParameterPreview] = useState(null);
+  const [calculatedTemp, setCalculatedTemp] = useState(realisticAmsterdamTemp);
 
-  // Format number with k/m suffix and 3 significant digits
-  const formatNumber = (num) => {
-    if (num >= 1000000000) {
-      const billions = num / 1000000000;
-      return `${Math.round(billions)} billion years`;
-    } else if (num >= 1000000) {
-      const millions = num / 1000000;
-      return `${millions.toFixed(1)} million years`;
-    } else if (num >= 1000) {
-      const thousands = num / 1000;
-      return `${Math.round(thousands)}k years`;
+  // Calculate the final temperature
+  useEffect(() => {
+    // Safety check for extreme simulatedYear values
+    if (!isFinite(simulatedYear) || Math.abs(simulatedYear) > 1e21) {
+      setSimulatedYear(0);
+      return;
     }
-    return `${Math.round(num)} years`;
+    
+    // Solar constant variation over time (approximate)
+    const presentDaySolarConstant = 1361; // W/m²
+    const timeInBillionYears = Math.abs(simulatedYear) / 1000000000;
+    const solarConstant = presentDaySolarConstant / (1 + 0.4 * (4.57 - timeInBillionYears) / 4.57);
+
+    // Orbital geometry calculations
+    const tiltRad = THREE.MathUtils.degToRad(axialTilt);
+    const precessionRad = THREE.MathUtils.degToRad(precession);
+    
+    // Latitude-dependent calculations (for Amsterdam ~52.37°N)
+    const latitude = 52.37;
+    const latRad = THREE.MathUtils.degToRad(latitude);
+    
+    // Enhanced insolation calculation including orbital effects
+    const meanOrbitalDistance = 1 - eccentricity * eccentricity / 2;
+    const precessionFactor = 1 - 0.15 * Math.cos(precessionRad - THREE.MathUtils.degToRad(270));
+    
+    // Calculate seasonal insolation variation
+    const season = (simulatedYear - Math.floor(simulatedYear)) * 2 * Math.PI;
+    const solarDeclination = Math.asin(Math.sin(tiltRad) * Math.sin(season));
+    const hourAngle = Math.acos(-Math.tan(latRad) * Math.tan(solarDeclination));
+    
+    // Daily insolation calculation (W/m²)
+    const dailyInsolation = (solarConstant / (Math.PI * meanOrbitalDistance * meanOrbitalDistance)) * 
+      (hourAngle * Math.sin(latRad) * Math.sin(solarDeclination) + 
+       Math.cos(latRad) * Math.cos(solarDeclination) * Math.sin(hourAngle));
+
+    // Baseline insolation for comparison
+    const baselineTiltRad = THREE.MathUtils.degToRad(baselineAxialTilt);
+    const baselinePrecessionRad = THREE.MathUtils.degToRad(baselinePrecession);
+    const baselineMeanOrbitalDistance = 1 - baselineEccentricity * baselineEccentricity / 2;
+    
+    // Calculate baseline insolation
+    const baselineSolarDeclination = Math.asin(Math.sin(baselineTiltRad) * Math.sin(season));
+    const baselineHourAngle = Math.acos(-Math.tan(latRad) * Math.tan(baselineSolarDeclination));
+    const baselineDailyInsolation = (presentDaySolarConstant / (Math.PI * baselineMeanOrbitalDistance * baselineMeanOrbitalDistance)) *
+      (baselineHourAngle * Math.sin(latRad) * Math.sin(baselineSolarDeclination) +
+       Math.cos(latRad) * Math.cos(baselineSolarDeclination) * Math.sin(baselineHourAngle));
+
+    // Enhanced CO2 radiative forcing with updated IPCC equations
+    const co2Forcing = 5.35 * Math.log(co2Level / 280); // W/m²
+    
+    // Temperature calculation incorporating all factors
+    const insolationDifference = dailyInsolation - baselineDailyInsolation;
+    const T0 = realisticAmsterdamTemp;
+    
+    // Convert insolation difference to temperature effect
+    const insolationSensitivity = 0.3; // °C per W/m² - INCREASED FROM 0.15 to make changes more noticeable
+    const T_insolation = T0 + insolationSensitivity * insolationDifference;
+    
+    // Add CO2 effect
+    const co2Sensitivity = 1.2; // °C per W/m² - INCREASED FROM 0.8 to make changes more noticeable
+    const T_withCO2 = T_insolation + co2Sensitivity * co2Forcing;
+    
+    // Enhanced ice-albedo feedback with latitude dependence
+    const T_freeze = 0; // Freezing point
+    const latitudeEffect = Math.cos(latRad); // Ice formation more likely at higher latitudes
+    const T_threshold = T_freeze + 2 * latitudeEffect; // Latitude-dependent threshold
+    const logisticWidth = 1.5; // Width of transition zone
+    const calculatedIceFactor = 1 / (1 + Math.exp((T_withCO2 - T_threshold) / logisticWidth));
+    
+    // Update ice factor state
+    setIceFactor(calculatedIceFactor);
+    
+    // Ice albedo feedback strength varies with latitude
+    const maxFeedback = 8; // Maximum feedback strength
+    const feedback = maxFeedback * (1 - latitudeEffect);
+    const T_effective = T_withCO2 - feedback * calculatedIceFactor;
+
+    // Seasonal variation with latitude-dependent amplitude
+    const seasonalAmplitude = 12 * (1 - 0.3 * latitudeEffect); // Larger seasonal swings at higher latitudes
+    const seasonalVariation = seasonalAmplitude * Math.sin(2 * Math.PI * season - Math.PI / 2);
+    
+    setCalculatedTemp(T_effective + seasonalVariation + tempOffset);
+  }, [simulatedYear, eccentricity, axialTilt, precession, co2Level, tempOffset]);
+
+  // Modify the smoothing effect to be faster and add preview
+  useEffect(() => {
+    const smoothingFactor = 0.5; // Increased from 0.25 for faster response
+    const interval = setInterval(() => {
+      setDisplayedTemp((prev) => {
+        // If we have a parameter preview, blend it with the orbital temperature
+        if (parameterPreview) {
+          const previewWeight = 0.9; // Increased from 0.7 for more immediate feedback
+          return prev + smoothingFactor * ((calculatedTemp * (1 - previewWeight) + parameterPreview * previewWeight) - prev);
+        }
+        return prev + smoothingFactor * (calculatedTemp - prev);
+      });
+    }, 30); // Reduced from 50ms for more frequent updates
+    return () => clearInterval(interval);
+  }, [calculatedTemp, parameterPreview]);
+
+  // Clear parameter preview after a delay
+  useEffect(() => {
+    if (parameterPreview !== null) {
+      const timeout = setTimeout(() => {
+        setParameterPreview(null);
+      }, 1000);
+      return () => clearTimeout(timeout);
+    }
+  }, [parameterPreview]);
+
+  // Format number with k/m/b suffix and 3 significant digits
+  const formatNumber = (num) => {
+    // Handle extreme values that might result from JavaScript numeric errors
+    if (!isFinite(num) || Math.abs(num) > 1e21) {
+      return "0 years"; // Reset extreme values
+    }
+    
+    // Handle negative years
+    const isNegative = num < 0;
+    const absNum = Math.abs(num);
+    
+    // Function to format a number to exactly 3 significant digits
+    const formatTo3Digits = (n) => {
+      if (n < 10) {
+        // e.g., 7.83
+        return n.toPrecision(3);
+      } else if (n < 100) {
+        // e.g., 78.3
+        return n.toPrecision(3);
+      } else {
+        // e.g., 783
+        return Math.round(n);
+      }
+    };
+
+    // Special case for very small numbers (like timeScale)
+    if (absNum < 1 && absNum > 0) {
+      if (absNum < 0.001) {
+        return "< 0.001";
+      }
+      return absNum.toPrecision(3);
+    }
+
+    let result;
+    if (absNum >= 1000000000) {
+      const billions = absNum / 1000000000;
+      result = `${formatTo3Digits(billions)} billion years`;
+    } else if (absNum >= 1000000) {
+      const millions = absNum / 1000000;
+      result = `${formatTo3Digits(millions)} million years`;
+    } else if (absNum >= 1000) {
+      const thousands = absNum / 1000;
+      result = `${formatTo3Digits(thousands)}k years`;
+    } else {
+      result = `${Math.min(999, Math.round(absNum))} years`;
+    }
+    
+    return isNegative ? "-" + result : result;
   };
 
   // Main simulation loop with adjusted time scales
@@ -1206,8 +1356,17 @@ export default function Home() {
         lastTime = time;
         
         // Adjusted time scaling to show orbital cycles
-        const yearScale = timeScale * 1000; // Convert to kiloyears
-        setSimulatedYear((prev) => prev + delta * yearScale);
+        const yearScale = timeScale * 2000; // Increased from 1000 to 2000 kiloyears for faster changes
+        setSimulatedYear((prev) => {
+          const newYear = prev + delta * yearScale;
+          
+          // Safety checks to prevent numeric overflow/underflow
+          if (!isFinite(newYear) || Math.abs(newYear) > 1e21) {
+            return 0; // Reset if we reach extreme values
+          }
+          
+          return newYear;
+        });
         
         if (autoAnimate) {
           const elapsed = time;
@@ -1250,97 +1409,8 @@ export default function Home() {
     }
   }, [preset]);
 
-  /* 
-    Enhanced Temperature Model Calculation:
-    - Incorporates varying solar constant over geological time
-    - Includes latitude-dependent albedo effects
-    - Accounts for CO2 radiative forcing with updated IPCC equations
-    - Implements more sophisticated ice-albedo feedback
-  */
-  
-  // Solar constant variation over time (approximate)
-  const presentDaySolarConstant = 1361; // W/m²
-  const timeInBillionYears = Math.abs(simulatedYear) / 1000000000;
-  const solarConstant = presentDaySolarConstant / (1 + 0.4 * (4.57 - timeInBillionYears) / 4.57);
-
-  // Orbital geometry calculations
-  const tiltRad = THREE.MathUtils.degToRad(axialTilt);
-  const precessionRad = THREE.MathUtils.degToRad(precession);
-  
-  // Latitude-dependent calculations (for Amsterdam ~52.37°N)
-  const latitude = 52.37;
-  const latRad = THREE.MathUtils.degToRad(latitude);
-  
-  // Enhanced insolation calculation including orbital effects
-  const meanOrbitalDistance = 1 - eccentricity * eccentricity / 2;
-  const precessionFactor = 1 - 0.15 * Math.cos(precessionRad - THREE.MathUtils.degToRad(270));
-  
-  // Calculate seasonal insolation variation
-  const season = (simulatedYear - Math.floor(simulatedYear)) * 2 * Math.PI;
-  const solarDeclination = Math.asin(Math.sin(tiltRad) * Math.sin(season));
-  const hourAngle = Math.acos(-Math.tan(latRad) * Math.tan(solarDeclination));
-  
-  // Daily insolation calculation (W/m²)
-  const dailyInsolation = (solarConstant / (Math.PI * meanOrbitalDistance * meanOrbitalDistance)) * 
-    (hourAngle * Math.sin(latRad) * Math.sin(solarDeclination) + 
-     Math.cos(latRad) * Math.cos(solarDeclination) * Math.sin(hourAngle));
-
-  // Baseline insolation for comparison
-  const baselineTiltRad = THREE.MathUtils.degToRad(baselineAxialTilt);
-  const baselinePrecessionRad = THREE.MathUtils.degToRad(baselinePrecession);
-  const baselineMeanOrbitalDistance = 1 - baselineEccentricity * baselineEccentricity / 2;
-  const baselinePrecessionFactor = 1 - 0.15 * Math.cos(baselinePrecessionRad - THREE.MathUtils.degToRad(270));
-  
-  // Calculate baseline insolation
-  const baselineSolarDeclination = Math.asin(Math.sin(baselineTiltRad) * Math.sin(season));
-  const baselineHourAngle = Math.acos(-Math.tan(latRad) * Math.tan(baselineSolarDeclination));
-  const baselineDailyInsolation = (presentDaySolarConstant / (Math.PI * baselineMeanOrbitalDistance * baselineMeanOrbitalDistance)) *
-    (baselineHourAngle * Math.sin(latRad) * Math.sin(baselineSolarDeclination) +
-     Math.cos(latRad) * Math.cos(baselineSolarDeclination) * Math.sin(baselineHourAngle));
-
-  // Enhanced CO2 radiative forcing with updated IPCC equations
-  const co2Forcing = 5.35 * Math.log(co2Level / 280); // W/m²
-  
-  // Temperature calculation incorporating all factors
-  const insolationDifference = dailyInsolation - baselineDailyInsolation;
-  const T0 = realisticAmsterdamTemp;
-  
-  // Convert insolation difference to temperature effect
-  const insolationSensitivity = 0.15; // °C per W/m²
-  const T_insolation = T0 + insolationSensitivity * insolationDifference;
-  
-  // Add CO2 effect
-  const co2Sensitivity = 0.8; // °C per W/m²
-  const T_withCO2 = T_insolation + co2Sensitivity * co2Forcing;
-  
-  // Enhanced ice-albedo feedback with latitude dependence
-  const T_freeze = 0; // Freezing point
-  const latitudeEffect = Math.cos(latRad); // Ice formation more likely at higher latitudes
-  const T_threshold = T_freeze + 2 * latitudeEffect; // Latitude-dependent threshold
-  const logisticWidth = 1.5; // Width of transition zone
-  const f_ice = 1 / (1 + Math.exp((T_withCO2 - T_threshold) / logisticWidth));
-  
-  // Ice albedo feedback strength varies with latitude
-  const maxFeedback = 8; // Maximum feedback strength
-  const feedback = maxFeedback * (1 - latitudeEffect);
-  const T_effective = T_withCO2 - feedback * f_ice;
-
-  // Seasonal variation with latitude-dependent amplitude
-  const seasonalAmplitude = 12 * (1 - 0.3 * latitudeEffect); // Larger seasonal swings at higher latitudes
-  const seasonalVariation = seasonalAmplitude * Math.sin(2 * Math.PI * season - Math.PI / 2);
-  const finalTemp = T_effective + seasonalVariation + tempOffset;
-
-  // Smoothly update the displayed temperature.
-  useEffect(() => {
-    const smoothingFactor = 0.05;
-    const interval = setInterval(() => {
-      setDisplayedTemp((prev) => prev + smoothingFactor * (finalTemp - prev));
-    }, 100);
-    return () => clearInterval(interval);
-  }, [finalTemp]);
-
   // Normalize temperature value for shader tinting (0 to 1).
-  const normTemp = Math.max(0, Math.min(1, (finalTemp + 5) / 25));
+  const normTemp = Math.max(0, Math.min(1, (calculatedTemp + 5) / 25));
 
   // Handlers for manual parameter adjustments.
   const handleManualChange = (setter) => (e) => {
@@ -1355,6 +1425,37 @@ export default function Home() {
       setHasIntroFadedOut(true);
     }, 1000);
   };
+
+  // Update the CycleComparisonPanel props to include immediate feedback
+  <CycleComparisonPanel
+    eccentricity={eccentricity}
+    axialTilt={axialTilt}
+    precession={precession}
+    baselineEccentricity={baselineEccentricity}
+    baselineAxialTilt={baselineAxialTilt}
+    baselinePrecession={baselinePrecession}
+    onEccentricityChange={(value) => {
+      setEccentricity(value);
+      setAutoAnimate(false);
+      // Immediate feedback based on eccentricity change
+      const deltaEcc = value - baselineEccentricity;
+      setParameterPreview(realisticAmsterdamTemp + deltaEcc * 100); // Scale factor for visible effect
+    }}
+    onAxialTiltChange={(value) => {
+      setAxialTilt(value);
+      setAutoAnimate(false);
+      // Immediate feedback based on tilt change
+      const deltaTilt = value - baselineAxialTilt;
+      setParameterPreview(realisticAmsterdamTemp + deltaTilt * 2); // Scale factor for visible effect
+    }}
+    onPrecessionChange={(value) => {
+      setPrecession(value);
+      setAutoAnimate(false);
+      // Immediate feedback based on precession change
+      const deltaPrecession = Math.sin(THREE.MathUtils.degToRad(value - baselinePrecession));
+      setParameterPreview(realisticAmsterdamTemp + deltaPrecession * 5); // Scale factor for visible effect
+    }}
+  />
 
   return (
     <div className="fixed inset-0 w-screen h-screen overflow-hidden bg-[#030014]">
@@ -1459,7 +1560,7 @@ export default function Home() {
                 axialTilt={axialTilt}
                 precession={precession}
                 temperature={normTemp}
-                iceFactor={f_ice}
+                iceFactor={iceFactor}
                 normTemp={normTemp}
               />
               <AxisIndicators axialTilt={axialTilt} precession={precession} />
@@ -1488,21 +1589,30 @@ export default function Home() {
               onEccentricityChange={(value) => {
                 setEccentricity(value);
                 setAutoAnimate(false);
+                // Immediate feedback based on eccentricity change
+                const deltaEcc = value - baselineEccentricity;
+                setParameterPreview(realisticAmsterdamTemp + deltaEcc * 100); // Scale factor for visible effect
               }}
               onAxialTiltChange={(value) => {
                 setAxialTilt(value);
                 setAutoAnimate(false);
+                // Immediate feedback based on tilt change
+                const deltaTilt = value - baselineAxialTilt;
+                setParameterPreview(realisticAmsterdamTemp + deltaTilt * 2); // Scale factor for visible effect
               }}
               onPrecessionChange={(value) => {
                 setPrecession(value);
                 setAutoAnimate(false);
+                // Immediate feedback based on precession change
+                const deltaPrecession = Math.sin(THREE.MathUtils.degToRad(value - baselinePrecession));
+                setParameterPreview(realisticAmsterdamTemp + deltaPrecession * 5); // Scale factor for visible effect
               }}
             />
 
             <NarrativeOverlay
               simulatedYear={simulatedYear}
               temperature={displayedTemp}
-              iceFactor={f_ice}
+              iceFactor={iceFactor}
               eccentricity={eccentricity}
               axialTilt={axialTilt}
               precession={precession}
@@ -1513,7 +1623,11 @@ export default function Home() {
           {/* Right Panel Group with enhanced positioning and animations */}
           <div className="fixed right-5 top-5 space-y-4 w-[400px] z-20 animate-fadeIn">
             {/* Time Control Panel */}
-            <Card className="card backdrop-blur-xl bg-black/20 border-white/10 overflow-hidden relative group">
+            <Card 
+              className="card backdrop-blur-xl bg-black/20 border-white/10 overflow-hidden relative group"
+              onMouseEnter={() => setTimeControlsHovered(true)}
+              onMouseLeave={() => setTimeControlsHovered(false)}
+            >
               <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
               
               <div className="absolute -inset-[1px] bg-gradient-to-r from-purple-500/50 to-pink-500/50 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur" />
@@ -1534,41 +1648,27 @@ export default function Home() {
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-white/80 font-medium">Simulation Speed</span>
-                    <span className="text-sm text-white/60">{formatNumber(timeScale)}</span>
+                    <span className="text-sm text-white/60 inline-block min-w-[80px] text-right">{formatNumber(timeScale)}</span>
                   </div>
                   <Slider
                     defaultValue={[timeScale]}
                     value={[timeScale]}
                     min={0.001}
-                    max={500000000}
-                    step={1}
+                    max={1000000}
+                    step={100}
                     onValueChange={([value]) => setTimeScale(value)}
                     className="[&>span]:bg-gradient-to-r [&>span]:from-purple-500 [&>span]:to-pink-500 [&>span]:shadow-lg [&>span]:shadow-purple-500/50"
                   />
-                </div>
-
-                {/* Interactive particle effect */}
-                <div className="absolute inset-0 pointer-events-none">
-                  {[...Array(20)].map((_, i) => (
-                    <div
-                      key={i}
-                      className="particle"
-                      style={{
-                        width: Math.random() * 4 + 2 + 'px',
-                        height: Math.random() * 4 + 2 + 'px',
-                        left: Math.random() * 100 + '%',
-                        top: Math.random() * 100 + '%',
-                        animationDelay: Math.random() * 2 + 's',
-                        opacity: Math.random() * 0.5 + 0.3
-                      }}
-                    />
-                  ))}
                 </div>
               </CardContent>
             </Card>
 
             {/* Enhanced Preset Scenarios Panel */}
-            <Card className="card backdrop-blur-xl bg-black/20 border-white/10 overflow-hidden relative group">
+            <Card 
+              className="card backdrop-blur-xl bg-black/20 border-white/10 overflow-hidden relative group"
+              onMouseEnter={() => setScenariosHovered(true)}
+              onMouseLeave={() => setScenariosHovered(false)}
+            >
               <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
               
               <div className="absolute -inset-[1px] bg-gradient-to-r from-blue-500/50 to-purple-500/50 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur" />
@@ -1630,24 +1730,6 @@ export default function Home() {
                     </div>
                   </div>
                 )}
-
-                {/* Interactive particle effect */}
-                <div className="absolute inset-0 pointer-events-none">
-                  {[...Array(20)].map((_, i) => (
-                    <div
-                      key={i}
-                      className="particle"
-                      style={{
-                        width: Math.random() * 4 + 2 + 'px',
-                        height: Math.random() * 4 + 2 + 'px',
-                        left: Math.random() * 100 + '%',
-                        top: Math.random() * 100 + '%',
-                        animationDelay: Math.random() * 2 + 's',
-                        opacity: Math.random() * 0.5 + 0.3
-                      }}
-                    />
-                  ))}
-                </div>
               </CardContent>
             </Card>
           </div>
@@ -1659,7 +1741,7 @@ export default function Home() {
               eccentricity={eccentricity}
               precession={precession}
               temperature={displayedTemp}
-              iceFactor={f_ice}
+              iceFactor={iceFactor}
               co2Level={co2Level}
               simulatedYear={simulatedYear}
               formatNumber={formatNumber}
@@ -1764,7 +1846,70 @@ function Sun() {
             float cnoise(vec3 P) {
               vec3 Pi0 = floor(P);
               vec3 Pi1 = Pi0 + vec3(1.0);
-            
+              vec3 Pf0 = fract(P);
+              vec3 Pf1 = Pf0 - vec3(1.0);
+              
+              vec4 ix = vec4(Pi0.x, Pi1.x, Pi0.x, Pi1.x);
+              vec4 iy = vec4(Pi0.yy, Pi1.yy);
+              vec4 iz0 = Pi0.zzzz;
+              vec4 iz1 = Pi1.zzzz;
+
+              vec4 ixy = permute(permute(ix) + iy);
+              vec4 ixy0 = permute(ixy + iz0);
+              vec4 ixy1 = permute(ixy + iz1);
+
+              vec4 gx0 = ixy0 * (1.0 / 7.0);
+              vec4 gy0 = fract(floor(gx0) * (1.0 / 7.0)) - 0.5;
+              gx0 = fract(gx0);
+              vec4 gz0 = vec4(0.5) - abs(gx0) - abs(gy0);
+              vec4 sz0 = step(gz0, vec4(0.0));
+              gx0 -= sz0 * (step(0.0, gx0) - 0.5);
+              gy0 -= sz0 * (step(0.0, gy0) - 0.5);
+
+              vec4 gx1 = ixy1 * (1.0 / 7.0);
+              vec4 gy1 = fract(floor(gx1) * (1.0 / 7.0)) - 0.5;
+              gx1 = fract(gx1);
+              vec4 gz1 = vec4(0.5) - abs(gx1) - abs(gy1);
+              vec4 sz1 = step(gz1, vec4(0.0));
+              gx1 -= sz1 * (step(0.0, gx1) - 0.5);
+              gy1 -= sz1 * (step(0.0, gy1) - 0.5);
+
+              vec3 g000 = vec3(gx0.x, gy0.x, gz0.x);
+              vec3 g100 = vec3(gx0.y, gy0.y, gz0.y);
+              vec3 g010 = vec3(gx0.z, gy0.z, gz0.z);
+              vec3 g110 = vec3(gx0.w, gy0.w, gz0.w);
+              vec3 g001 = vec3(gx1.x, gy1.x, gz1.x);
+              vec3 g101 = vec3(gx1.y, gy1.y, gz1.y);
+              vec3 g011 = vec3(gx1.z, gy1.z, gz1.z);
+              vec3 g111 = vec3(gx1.w, gy1.w, gz1.w);
+
+              vec4 norm0 = taylorInvSqrt(vec4(dot(g000, g000), dot(g010, g010), dot(g100, g100), dot(g110, g110)));
+              g000 *= norm0.x;
+              g010 *= norm0.y;
+              g100 *= norm0.z;
+              g110 *= norm0.w;
+              vec4 norm1 = taylorInvSqrt(vec4(dot(g001, g001), dot(g011, g011), dot(g101, g101), dot(g111, g111)));
+              g001 *= norm1.x;
+              g011 *= norm1.y;
+              g101 *= norm1.z;
+              g111 *= norm1.w;
+
+              float n000 = dot(g000, Pf0);
+              float n100 = dot(g100, vec3(Pf1.x, Pf0.yz));
+              float n010 = dot(g010, vec3(Pf0.x, Pf1.y, Pf0.z));
+              float n110 = dot(g110, vec3(Pf1.xy, Pf0.z));
+              float n001 = dot(g001, vec3(Pf0.xy, Pf1.z));
+              float n101 = dot(g101, vec3(Pf1.x, Pf0.y, Pf1.z));
+              float n011 = dot(g011, vec3(Pf0.x, Pf1.yz));
+              float n111 = dot(g111, Pf1);
+
+              vec3 fade_xyz = fade(Pf0);
+              vec4 n_z = mix(vec4(n000, n100, n010, n110), vec4(n001, n101, n011, n111), fade_xyz.z);
+              vec2 n_yz = mix(n_z.xy, n_z.zw, fade_xyz.y);
+              float n_xyz = mix(n_yz.x, n_yz.y, fade_xyz.x); 
+              return 2.2 * n_xyz;
+            }
+
             void main() {
               vUv = uv;
               vNormal = normalize(normalMatrix * normal);
