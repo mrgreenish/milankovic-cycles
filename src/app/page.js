@@ -14,6 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
 import { cn } from "@/lib/utils";
 import { Poppins } from "next/font/google";
+import { GlobalTemperatureGraph } from '@/components/GlobalTemperatureGraph';
 const poppins = Poppins({ subsets: ["latin"], weight: ["400", "600"] });
 
 //
@@ -541,7 +542,6 @@ const Earth = React.forwardRef(
 // ------------------------------------------------------------------
 function OrbitPath({ eccentricity }) {
   const a = 20;
-  // Simplified elliptical orbit parameters.
   const b = a * (1 - 2 * eccentricity);
   const baselineB = a * (1 - 2 * 0.0167); // Baseline orbit for reference
 
@@ -569,27 +569,95 @@ function OrbitPath({ eccentricity }) {
 
   return (
     <group>
-      {/* Baseline orbit (dashed or thin line) */}
-      <Line points={baselinePoints} color="rgba(0,0,0,0.8)" lineWidth={0.5} />
-      {/* Current orbit */}
-      <Line points={points} color="black" lineWidth={2} />
+      {/* Baseline orbit with subtle visibility */}
+      <Line 
+        points={baselinePoints} 
+        color="#2a4858" 
+        lineWidth={1}
+        transparent={false}
+        opacity={1}
+      />
+      <Line 
+        points={baselinePoints} 
+        color="#2a4858" 
+        lineWidth={2}
+        transparent
+        opacity={0.5}
+      />
+      <Line 
+        points={baselinePoints} 
+        color="#2a4858" 
+        lineWidth={3}
+        transparent
+        opacity={0.2}
+      />
 
-      {/* Seasonal markers with labels */}
+      {/* Current orbit with enhanced visibility */}
+      <Line 
+        points={points} 
+        color="#8b5cf6" 
+        lineWidth={2}
+        transparent={false}
+        opacity={1}
+      />
+      <Line 
+        points={points} 
+        color="#8b5cf6" 
+        lineWidth={4}
+        transparent
+        opacity={0.7}
+      />
+      <Line 
+        points={points} 
+        color="#8b5cf6" 
+        lineWidth={6}
+        transparent
+        opacity={0.4}
+      />
+
+      {/* Seasonal markers with enhanced visibility */}
       {seasonalMarkers.map((position, index) => (
         <group key={index} position={position}>
+          {/* Core sphere with solid visibility */}
           <mesh>
             <sphereGeometry args={[0.3, 16, 16]} />
-            <meshBasicMaterial color={index % 2 === 0 ? "black" : "pink"} />
+            <meshBasicMaterial 
+              color={index % 2 === 0 ? "#8b5cf6" : "#ec4899"}
+              transparent={false}
+              opacity={1}
+            />
+          </mesh>
+          {/* Inner glow */}
+          <mesh scale={1.2}>
+            <sphereGeometry args={[0.3, 16, 16]} />
+            <meshBasicMaterial 
+              color={index % 2 === 0 ? "#8b5cf6" : "#ec4899"}
+              transparent
+              opacity={0.6}
+            />
+          </mesh>
+          {/* Outer glow */}
+          <mesh scale={1.4}>
+            <sphereGeometry args={[0.3, 16, 16]} />
+            <meshBasicMaterial 
+              color={index % 2 === 0 ? "#8b5cf6" : "#ec4899"}
+              transparent
+              opacity={0.3}
+            />
           </mesh>
           <Html position={[0, 1, 0]} center>
             <div
               style={{
                 color: "white",
-                backgroundColor: "rgba(0,0,0,0.7)",
+                backgroundColor: "rgba(139, 92, 246, 0.6)",
                 padding: "4px 8px",
                 borderRadius: "4px",
                 fontSize: "12px",
                 whiteSpace: "nowrap",
+                backdropFilter: "blur(4px)",
+                border: "1px solid rgba(139, 92, 246, 0.8)",
+                textShadow: "0 0 10px rgba(139, 92, 246, 1)",
+                boxShadow: "0 0 20px rgba(139, 92, 246, 0.5)",
               }}
             >
               {index === 0
@@ -679,19 +747,6 @@ function NarrativeOverlay({
   precession,
   formatNumber,
 }) {
-  // Add state for smoothed year display
-  const [displayYear, setDisplayYear] = useState(0);
-  
-  // Update the display year less frequently
-  useEffect(() => {
-    const updateInterval = 500; // Update every 500ms
-    const timeoutId = setTimeout(() => {
-      setDisplayYear(simulatedYear);
-    }, updateInterval);
-    
-    return () => clearTimeout(timeoutId);
-  }, [simulatedYear]);
-
   const eccentricityMessage =
     eccentricity > 0.0167
       ? "High eccentricity: The orbit is more elliptical, which can cause stronger seasonal contrasts."
@@ -719,257 +774,28 @@ function NarrativeOverlay({
     "Cause and Effect: Variations in eccentricity, axial tilt, and precession alter the amount and timing of sunlight (insolation), driving seasonal temperature differences. Feedbacks, such as ice formation, can amplify these changes.";
 
   return (
-    <Card className="bg-white border border-gray-300 pt-[250px]">
+    <Card className="bg-white/10 backdrop-blur-md border border-white/20">
       <CardHeader>
-        <CardTitle className="text-black text-lg">
-          Current Cycle States ({formatNumber(Math.floor(displayYear))})
+        <CardTitle className="text-white text-lg">
+          Current Cycle States ({formatNumber(Math.floor(simulatedYear))})
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-2 text-sm max-h-[300px] overflow-y-auto">
-        <p className="text-gray-800">{eccentricityMessage}</p>
-        <p className="text-gray-800">{axialTiltMessage}</p>
-        <p className="text-gray-800">{precessionMessage}</p>
+        <p className="text-white/80">{eccentricityMessage}</p>
+        <p className="text-white/80">{axialTiltMessage}</p>
+        <p className="text-white/80">{precessionMessage}</p>
         <p
           className={cn(
-            "text-gray-800",
-            temperature < 5 && "text-blue-700",
-            temperature > 15 && "text-red-700"
+            "text-white/80",
+            temperature < 5 && "text-blue-400",
+            temperature > 15 && "text-red-400"
           )}
         >
           {temperatureMessage}
         </p>
-        <p className="text-gray-800">{causeEffectExplanation}</p>
+        <p className="text-white/80">{causeEffectExplanation}</p>
       </CardContent>
     </Card>
-  );
-}
-
-// ------------------------------------------------------------------
-// COMPONENT: GlobalTemperatureGraph
-// Visualizes global temperature history along with other parameters.
-// ------------------------------------------------------------------
-function GlobalTemperatureGraph({
-  axialTilt,
-  eccentricity,
-  precession,
-  temperature,
-  iceFactor,
-  co2Level,
-  simulatedYear,
-  style,
-  formatNumber,
-}) {
-  const canvasRef = useRef();
-  const [temperatureHistory, setTemperatureHistory] = useState([]);
-  const maxHistoryLength = 200;
-  const lastUpdateRef = useRef(0);
-  const updateInterval = 100; // Update every 100ms
-
-  // Append new temperature data with rate limiting.
-  useEffect(() => {
-    const currentTime = Date.now();
-    if (currentTime - lastUpdateRef.current >= updateInterval) {
-      setTemperatureHistory((prev) => {
-        const newHistory = [
-          ...prev,
-          {
-            temp: temperature,
-            axialTilt,
-            eccentricity,
-            precession: precession % 360,
-            co2: co2Level,
-            ice: iceFactor,
-            year: simulatedYear,
-          },
-        ];
-        if (newHistory.length > maxHistoryLength) {
-          return newHistory.slice(-maxHistoryLength);
-        }
-        return newHistory;
-      });
-      lastUpdateRef.current = currentTime;
-    }
-  }, [
-    temperature,
-    axialTilt,
-    eccentricity,
-    precession,
-    co2Level,
-    iceFactor,
-    simulatedYear,
-  ]);
-
-  useEffect(() => {
-    let animationFrameId;
-
-    const render = () => {
-      const canvas = canvasRef.current;
-      if (!canvas || temperatureHistory.length < 2) return;
-      const ctx = canvas.getContext("2d");
-      const width = canvas.width;
-      const height = canvas.height;
-
-      // Clear the canvas
-      ctx.fillStyle = "white";
-      ctx.fillRect(0, 0, width, height);
-
-      // Define graph margins
-      const margin = { top: 30, right: 60, bottom: 40, left: 60 };
-      const graphWidth = width - margin.left - margin.right;
-      const graphHeight = height - margin.top - margin.bottom;
-
-      // Exaggerate temperature variations for visualization.
-      const baselineTemp = 10;
-      const exaggerationFactor = 5;
-      const displayTemps = temperatureHistory.map(
-        (p) => exaggerationFactor * (p.temp - baselineTemp) + baselineTemp
-      );
-      const minDisplayTemp = Math.min(...displayTemps) - 2;
-      const maxDisplayTemp = Math.max(...displayTemps) + 2;
-      const tempRange = maxDisplayTemp - minDisplayTemp;
-
-      // Draw grid lines
-      ctx.strokeStyle = "#e0e0e0";
-      ctx.lineWidth = 0.5;
-      for (let i = 0; i <= 5; i++) {
-        const y = height - margin.bottom - (i / 5) * graphHeight;
-        ctx.beginPath();
-        ctx.moveTo(margin.left, y);
-        ctx.lineTo(width - margin.right, y);
-        ctx.stroke();
-      }
-
-      // Draw axes
-      ctx.strokeStyle = "black";
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(margin.left, margin.top);
-      ctx.lineTo(margin.left, height - margin.bottom);
-      ctx.lineTo(width - margin.right, height - margin.bottom);
-      ctx.stroke();
-
-      // Draw temperature line with a color gradient.
-      const gradient = ctx.createLinearGradient(
-        0,
-        margin.top,
-        0,
-        height - margin.bottom
-      );
-      gradient.addColorStop(0, "#ff4444");
-      gradient.addColorStop(1, "#4444ff");
-
-      ctx.beginPath();
-      ctx.strokeStyle = gradient;
-      ctx.lineWidth = 2;
-      displayTemps.forEach((displayTemp, i) => {
-        const x = margin.left + (i / (maxHistoryLength - 1)) * graphWidth;
-        const y =
-          height -
-          margin.bottom -
-          ((displayTemp - minDisplayTemp) / tempRange) * graphHeight;
-        if (i === 0) ctx.moveTo(x, y);
-        else ctx.lineTo(x, y);
-      });
-      ctx.stroke();
-
-      // Draw parameter labels
-      const parameters = [
-        { label: "Tilt", value: axialTilt.toFixed(1) + "°", color: "#ffa500" },
-        { label: "Ecc", value: eccentricity.toFixed(4), color: "#4444ff" },
-        {
-          label: "Prec",
-          value: (precession % 360).toFixed(0) + "°",
-          color: "#44ff44",
-        },
-        { label: "CO₂", value: co2Level + "ppm", color: "#ff44ff" },
-        {
-          label: "Ice",
-          value: (iceFactor * 100).toFixed(0) + "%",
-          color: "#44ffff",
-        },
-      ];
-
-      ctx.textAlign = "left";
-      ctx.font = "12px Arial";
-      parameters.forEach((param, i) => {
-        const y = margin.top + 20 + i * 20;
-        ctx.fillStyle = param.color;
-        ctx.fillText(
-          `${param.label}: ${param.value}`,
-          width - margin.right + 10,
-          y
-        );
-      });
-
-      // Add temperature scale
-      ctx.fillStyle = "black";
-      ctx.textAlign = "right";
-      const tempStep = tempRange / 5;
-      for (let i = 0; i <= 5; i++) {
-        const temp = minDisplayTemp + i * tempStep;
-        const y = height - margin.bottom - (i / 5) * graphHeight;
-        ctx.fillText(`${temp.toFixed(1)}°C`, margin.left - 5, y + 4);
-      }
-
-      // Add time scale labels
-      ctx.textAlign = "center";
-      [0, 0.25, 0.5, 0.75, 1].forEach((fraction) => {
-        const x = margin.left + fraction * graphWidth;
-        const index = Math.floor(fraction * (temperatureHistory.length - 1));
-        const year = temperatureHistory[index]?.year || 0;
-        ctx.fillText(formatNumber(year), x, height - margin.bottom + 20);
-      });
-
-      // Title and axis labels
-      ctx.font = "bold 14px Arial";
-      ctx.textAlign = "center";
-      ctx.fillText("Global Temperature History", width / 2, margin.top - 10);
-
-      ctx.font = "12px Arial";
-      ctx.fillText("Simulation Time", width / 2, height - 5);
-
-      ctx.save();
-      ctx.translate(15, height / 2);
-      ctx.rotate(-Math.PI / 2);
-      ctx.textAlign = "center";
-      ctx.fillText("Temperature (°C)", 0, 0);
-      ctx.restore();
-
-      animationFrameId = requestAnimationFrame(render);
-    };
-
-    render();
-    return () => {
-      cancelAnimationFrame(animationFrameId);
-    };
-  }, [
-    temperatureHistory,
-    axialTilt,
-    eccentricity,
-    precession,
-    co2Level,
-    iceFactor,
-    formatNumber,
-  ]);
-
-  return (
-    <canvas
-      ref={canvasRef}
-      width={600}
-      height={150}
-      style={{
-        position: "fixed",
-        bottom: 20,
-        left: 20,
-        transform: "none",
-        zIndex: 10,
-        backgroundColor: "white",
-        borderRadius: "5px",
-        padding: "10px",
-        boxShadow: "0 2px 10px rgba(0, 0, 0, 0.1)",
-        ...style,
-      }}
-    />
   );
 }
 
@@ -988,15 +814,15 @@ function CycleComparisonPanel({
   onPrecessionChange,
 }) {
   return (
-    <Card className="fixed top-5 left-5 w-[300px] bg-white border border-gray-300">
+    <Card className="bg-white/10 backdrop-blur-md border border-white/20">
       <CardHeader>
-        <CardTitle className="text-black">Milanković Cycles</CardTitle>
+        <CardTitle className="text-white">Milanković Cycles</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="space-y-3">
           <div className="flex justify-between">
-            <span className="text-sm text-gray-800">Eccentricity</span>
-            <span className="text-sm text-gray-400">
+            <span className="text-sm text-white/80">Eccentricity</span>
+            <span className="text-sm text-white/60">
               {eccentricity.toFixed(4)}
             </span>
           </div>
@@ -1007,12 +833,13 @@ function CycleComparisonPanel({
             max={0.2}
             step={0.001}
             onValueChange={([value]) => onEccentricityChange(value)}
+            className="[&>span]:bg-purple-600 [&>span]:shadow-[0_0_15px_rgba(147,51,234,0.5)] [&>span]:border-2 [&>span]:border-white/50"
           />
         </div>
         <div className="space-y-3">
           <div className="flex justify-between">
-            <span className="text-sm text-gray-800">Axial Tilt (°)</span>
-            <span className="text-sm text-gray-400">
+            <span className="text-sm text-white/80">Axial Tilt (°)</span>
+            <span className="text-sm text-white/60">
               {axialTilt.toFixed(1)}°
             </span>
           </div>
@@ -1023,12 +850,13 @@ function CycleComparisonPanel({
             max={45}
             step={0.1}
             onValueChange={([value]) => onAxialTiltChange(value)}
+            className="[&>span]:bg-purple-600 [&>span]:shadow-[0_0_15px_rgba(147,51,234,0.5)] [&>span]:border-2 [&>span]:border-white/50"
           />
         </div>
         <div className="space-y-3">
           <div className="flex justify-between">
-            <span className="text-sm text-gray-800">Precession (°)</span>
-            <span className="text-sm text-gray-400">
+            <span className="text-sm text-white/80">Precession (°)</span>
+            <span className="text-sm text-white/60">
               {precession.toFixed(0)}°
             </span>
           </div>
@@ -1039,6 +867,7 @@ function CycleComparisonPanel({
             max={360}
             step={1}
             onValueChange={([value]) => onPrecessionChange(value)}
+            className="[&>span]:bg-purple-600 [&>span]:shadow-[0_0_15px_rgba(147,51,234,0.5)] [&>span]:border-2 [&>span]:border-white/50"
           />
         </div>
       </CardContent>
@@ -1064,11 +893,8 @@ function SeasonalInsolationGraph({
     const width = canvas.width;
     const height = canvas.height;
 
-    // Clear canvas with a gradient background
-    const bgGradient = ctx.createLinearGradient(0, 0, width, height);
-    bgGradient.addColorStop(0, "#ffffff");
-    bgGradient.addColorStop(1, "#f0f0f0");
-    ctx.fillStyle = bgGradient;
+    // Clear canvas with a semi-transparent dark background
+    ctx.fillStyle = "rgba(3, 0, 20, 0.3)";
     ctx.fillRect(0, 0, width, height);
 
     // Graph margins and dimensions
@@ -1218,16 +1044,14 @@ function SeasonalInsolationGraph({
 
   return (
     <div
+      className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl overflow-hidden shadow-[0_0_25px_rgba(0,0,0,0.3)]"
       style={{
         position: "fixed",
         bottom: 20,
         left: 440,
         transform: "none",
         zIndex: 10,
-        background: "white",
-        padding: "10px",
-        borderRadius: "8px",
-        boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
+        padding: "15px",
         ...style,
       }}
     >
@@ -1461,20 +1285,44 @@ export default function Home() {
   };
 
   return (
-    <div className="fixed inset-0 w-screen h-screen overflow-hidden">
-      <div className="canvas-container">
-        <Canvas
-          shadows
-          camera={{ position: [0, 25, 45], fov: 50 }}
-          background={new THREE.Color(0x000022)}
+    <div className="fixed inset-0 w-screen h-screen overflow-hidden bg-[#030014]">
+      <div className="canvas-container relative">
+        {/* Background gradient effects */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#030014] via-[#100b2e] to-[#0c0521] opacity-80" />
+        <div className="absolute inset-0">
+          <div className="absolute top-[20%] left-[25%] w-[30rem] h-[30rem] bg-purple-600/30 rounded-full blur-[10rem] animate-pulse" />
+          <div className="absolute bottom-[20%] right-[25%] w-[35rem] h-[35rem] bg-blue-600/30 rounded-full blur-[10rem] animate-pulse delay-1000" />
+          <div className="absolute top-[40%] right-[35%] w-[25rem] h-[25rem] bg-cyan-600/20 rounded-full blur-[10rem] animate-pulse delay-500" />
+        </div>
+
+        <Canvas 
+          shadows 
+          camera={{ 
+            position: [0, 15, 25], 
+            fov: 50,
+            near: 0.1,
+            far: 1000
+          }}
+          className="z-10"
+          gl={{ 
+            antialias: true,
+            alpha: true,
+            powerPreference: "high-performance",
+          }}
         >
-          <ambientLight intensity={0.2} />
+          <color attach="background" args={["#030014"]} />
+          <ambientLight intensity={0.4} />
           <directionalLight
             castShadow
             position={[10, 20, 10]}
-            intensity={1.5}
+            intensity={2.0}
             shadow-mapSize-width={1024}
             shadow-mapSize-height={1024}
+          />
+          <hemisphereLight
+            intensity={0.3}
+            color="#ffffff"
+            groundColor="#000000"
           />
           <Sun />
           <OrbitPath eccentricity={eccentricity} />
@@ -1487,13 +1335,28 @@ export default function Home() {
             normTemp={normTemp}
           />
           <AxisIndicators axialTilt={axialTilt} precession={precession} />
-          <OrbitControls autoRotate enableDamping dampingFactor={0.1} />
+          <OrbitControls 
+            autoRotate
+            autoRotateSpeed={0.5}
+            enableDamping
+            dampingFactor={0.05}
+            minDistance={30}
+            maxDistance={80}
+            enablePan={false}
+            rotateSpeed={0.8}
+          />
           <SceneEffects />
+          
+          {/* Enhanced atmospheric fog */}
+          <fog attach="fog" args={['#030014', 45, 200]} />
         </Canvas>
+
+        {/* Subtle grid overlay */}
+        <div className="absolute inset-0 bg-grid-white/[0.02] bg-[length:50px_50px] z-[1]" />
       </div>
 
-      {/* Left Panel Group */}
-      <div className="fixed left-5 top-5 space-y-4 w-[300px]">
+      {/* Left Panel Group - add glassmorphism */}
+      <div className="fixed left-5 top-5 space-y-4 w-[300px] z-20">
         <CycleComparisonPanel
           eccentricity={eccentricity}
           axialTilt={axialTilt}
@@ -1526,24 +1389,24 @@ export default function Home() {
         />
       </div>
 
-      {/* Right Panel Group */}
-      <div className="fixed right-5 top-5 space-y-4 w-[300px]">
+      {/* Right Panel Group - add glassmorphism */}
+      <div className="fixed right-5 top-5 space-y-4 w-[300px] z-20">
         {/* Time Control Panel */}
-        <Card className="bg-white border border-gray-300">
+        <Card className="bg-white/10 backdrop-blur-md border border-white/20">
           <CardHeader>
-            <CardTitle className="text-black">Time Controls</CardTitle>
+            <CardTitle className="text-white">Time Controls</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             <button
               onClick={() => setIsPaused((prev) => !prev)}
-              className="w-full px-4 py-2 bg-black hover:bg-black/90 text-white rounded-md transition-colors"
+              className="w-full px-4 py-2 bg-purple-600/80 hover:bg-purple-600/90 text-white rounded-md transition-colors"
             >
               {isPaused ? "Play" : "Pause"}
             </button>
             <div className="space-y-3">
               <div className="flex justify-between">
-                <span className="text-sm text-gray-800">Speed</span>
-                <span className="text-sm text-gray-400">
+                <span className="text-sm text-white/80">Speed</span>
+                <span className="text-sm text-white/60">
                   {formatNumber(timeScale)}
                 </span>
               </div>
@@ -1554,6 +1417,7 @@ export default function Home() {
                 max={500000000}
                 step={1}
                 onValueChange={([value]) => setTimeScale(value)}
+                className="[&>span]:bg-purple-600 [&>span]:shadow-[0_0_15px_rgba(147,51,234,0.5)] [&>span]:border-2 [&>span]:border-white/50"
               />
             </div>
             <div className="space-y-3">
@@ -1651,51 +1515,208 @@ export default function Home() {
 
 // ------------------------------------------------------------------
 // COMPONENT: Sun
+// Enhanced with realistic solar surface effects and corona
 // ------------------------------------------------------------------
-// Updated Sun component using the new shaders.
 function Sun() {
   const materialRef = useRef();
+  const coronaRef = useRef();
+  const glowRef = useRef();
 
-  useFrame(({ clock }) => {
+  useFrame(({ clock, camera }) => {
     if (materialRef.current) {
       materialRef.current.uniforms.time.value = clock.getElapsedTime();
+    }
+    // Update corona and glow to always face camera
+    if (coronaRef.current) {
+      coronaRef.current.quaternion.copy(camera.quaternion);
+    }
+    if (glowRef.current) {
+      glowRef.current.quaternion.copy(camera.quaternion);
     }
   });
 
   return (
-    <mesh position={[0, 0, 0]}>
-      {/* Higher geometry detail for better displacement fidelity */}
-      <sphereGeometry args={[2, 128, 128]} />
-      <shaderMaterial
-        ref={materialRef}
-        uniforms={{
-          time: { value: 0 },
-          displacementStrength: { value: 0.02 }, // Increase or decrease for more or less "bubbling"
-        }}
-        vertexShader={sunVertexShader}
-        fragmentShader={sunFragmentShader}
+    <group>
+      {/* Base glow layer - always visible */}
+      <mesh scale={2.2}>
+        <sphereGeometry args={[1, 32, 32]} />
+        <meshBasicMaterial
+          color="#ff6b00"
+          transparent
+          opacity={0.15}
+          depthWrite={false}
+        />
+      </mesh>
+
+      {/* Main sun sphere */}
+      <mesh position={[0, 0, 0]}>
+        <sphereGeometry args={[2, 128, 128]} />
+        <shaderMaterial
+          ref={materialRef}
+          uniforms={{
+            time: { value: 0 },
+            displacementStrength: { value: 0.03 },
+            pulseSpeed: { value: 0.5 },
+            colorIntensity: { value: 1.2 }
+          }}
+          vertexShader={sunVertexShader}
+          fragmentShader={sunFragmentShader}
+          transparent={false}
+        />
+      </mesh>
+
+      {/* Corona effect - improved visibility */}
+      <mesh ref={coronaRef} scale={2.5}>
+        <sphereGeometry args={[1.6, 64, 64]} />
+        <shaderMaterial
+          transparent
+          depthWrite={false}
+          depthTest={false}
+          blending={THREE.AdditiveBlending}
+          side={THREE.DoubleSide}
+          uniforms={{
+            time: { value: 0 },
+            viewVector: { value: new THREE.Vector3(0, 0, 1) }
+          }}
+          vertexShader={`
+            varying vec2 vUv;
+            varying vec3 vNormal;
+            varying vec3 vViewDir;
+            uniform vec3 viewVector;
+            
+            void main() {
+              vUv = uv;
+              vNormal = normalize(normalMatrix * normal);
+              vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+              vViewDir = normalize(viewVector - worldPosition.xyz);
+              gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+            }
+          `}
+          fragmentShader={`
+            varying vec2 vUv;
+            varying vec3 vNormal;
+            varying vec3 vViewDir;
+            uniform float time;
+            
+            float fresnel(vec3 viewDirection, vec3 normal) {
+              return pow(1.0 - clamp(dot(viewDirection, normal), 0.0, 1.0), 2.0);
+            }
+            
+            float noise(vec2 p) {
+              return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453);
+            }
+            
+            void main() {
+              float fresnelTerm = fresnel(vViewDir, vNormal);
+              float noise = noise(vUv * 10.0 + time);
+              
+              vec3 color = mix(
+                vec3(1.0, 0.6, 0.1),
+                vec3(1.0, 0.4, 0.0),
+                fresnelTerm
+              );
+              
+              float alpha = max(0.2, fresnelTerm * (0.7 + noise * 0.3));
+              gl_FragColor = vec4(color, alpha);
+            }
+          `}
+        />
+      </mesh>
+
+      {/* Outer glow - improved visibility */}
+      <mesh ref={glowRef} scale={3}>
+        <sphereGeometry args={[2, 64, 64]} />
+        <shaderMaterial
+          transparent
+          depthWrite={false}
+          depthTest={false}
+          blending={THREE.AdditiveBlending}
+          side={THREE.DoubleSide}
+          uniforms={{
+            time: { value: 0 },
+            viewVector: { value: new THREE.Vector3(0, 0, 1) }
+          }}
+          vertexShader={`
+            varying vec2 vUv;
+            varying vec3 vNormal;
+            varying vec3 vViewDir;
+            uniform vec3 viewVector;
+            
+            void main() {
+              vUv = uv;
+              vNormal = normalize(normalMatrix * normal);
+              vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+              vViewDir = normalize(viewVector - worldPosition.xyz);
+              gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+            }
+          `}
+          fragmentShader={`
+            varying vec2 vUv;
+            varying vec3 vNormal;
+            varying vec3 vViewDir;
+            
+            float fresnel(vec3 viewDirection, vec3 normal) {
+              return pow(1.0 - clamp(dot(viewDirection, normal), 0.0, 1.0), 3.0);
+            }
+            
+            void main() {
+              float fresnelTerm = fresnel(vViewDir, vNormal);
+              
+              vec3 color = mix(
+                vec3(1.0, 0.3, 0.0),
+                vec3(0.3, 0.1, 0.0),
+                fresnelTerm
+              );
+              
+              float alpha = max(0.15, fresnelTerm * 0.5);
+              gl_FragColor = vec4(color, alpha);
+            }
+          `}
+        />
+      </mesh>
+
+      {/* Light sources */}
+      <pointLight
+        position={[0, 0, 0]}
+        intensity={1.5}
+        distance={100}
+        decay={1.5}
+        color="#ffd7b9"
       />
-    </mesh>
+      
+      <pointLight
+        position={[0, 0, 0]}
+        intensity={0.5}
+        distance={200}
+        decay={1}
+        color="#ff6b00"
+      />
+    </group>
   );
 }
 
 // ------------------------------------------------------------------
 // COMPONENT: SceneEffects
-// Adds post-processing effects for a hip, vintage look.
+// Adds cinematic post-processing effects for an award-winning look
 // ------------------------------------------------------------------
 function SceneEffects() {
   return (
     <EffectComposer>
+      {/* Atmospheric bloom with subtle glow */}
       <Bloom
-        intensity={1.0}
-        luminanceThreshold={0.2}
+        intensity={1.2}
+        luminanceThreshold={0.4}
         luminanceSmoothing={0.9}
+        blurPass={undefined}
+        width={Infinity}
+        height={Infinity}
       />
-      {/* Uncomment the ChromaticAberration effect below for an extra cool visual twist.
+      
+      {/* Subtle color aberration for depth */}
       <ChromaticAberration
         blendFunction={BlendFunction.NORMAL}
-        offset={[0.002, 0.002]}
-      /> */}
+        offset={[0.0012, 0.0012]}
+      />
     </EffectComposer>
   );
 }
@@ -1718,8 +1739,11 @@ function ParticleEffect() {
       this.density = (Math.random() * 30) + 1; // Increased density for more movement
       this.distance = 0;
       this.speed = Math.random() * 0.5 + 0.1;
-      // Brighter particles with more opacity
-      this.color = `hsla(${Math.random() * 60 + 240}, 80%, 70%, ${Math.random() * 0.5 + 0.3})`;
+      // Enhanced particle colors with purple/pink theme
+      const hue = Math.random() > 0.5 ? 
+        Math.random() * 60 + 240 : // Purple range
+        Math.random() * 30 + 330;  // Pink range
+      this.color = `hsla(${hue}, 80%, 70%, ${Math.random() * 0.5 + 0.4})`;
     }
 
     draw(ctx) {
@@ -1815,8 +1839,10 @@ function ParticleEffect() {
     const ctx = canvas.getContext('2d');
 
     const drawConnections = (particles) => {
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
-      ctx.lineWidth = 0.5;
+      // Create a glowing effect for connections
+      ctx.shadowBlur = 5;
+      ctx.shadowColor = 'rgba(123, 0, 255, 0.3)';
+      ctx.lineCap = 'round';
       
       for (let i = 0; i < particles.length; i++) {
         for (let j = i + 1; j < particles.length; j++) {
@@ -1829,14 +1855,33 @@ function ParticleEffect() {
             ctx.moveTo(particles[i].x, particles[i].y);
             ctx.lineTo(particles[j].x, particles[j].y);
             
-            // Fade out connections based on distance
+            // Enhanced gradient effect for lines
+            const gradient = ctx.createLinearGradient(
+              particles[i].x, 
+              particles[i].y, 
+              particles[j].x, 
+              particles[j].y
+            );
+            
+            // Calculate opacity based on distance and particle colors
             const opacity = (100 - distance) / 100;
-            ctx.strokeStyle = `rgba(255, 255, 255, ${opacity * 0.15})`;
+            const baseColor = 'rgba(123, 0, 255,'; // Purple base color
+            const accentColor = 'rgba(255, 0, 123,'; // Pink accent
+            
+            gradient.addColorStop(0, `${baseColor}${opacity * 0.5})`);
+            gradient.addColorStop(0.5, `${accentColor}${opacity * 0.3})`);
+            gradient.addColorStop(1, `${baseColor}${opacity * 0.5})`);
+            
+            ctx.strokeStyle = gradient;
+            ctx.lineWidth = Math.max(0.5, (100 - distance) / 50); // Dynamic line width
             
             ctx.stroke();
           }
         }
       }
+      
+      // Reset shadow effect after drawing connections
+      ctx.shadowBlur = 0;
     };
 
     const animate = () => {
@@ -1875,9 +1920,10 @@ function ParticleEffect() {
   );
 }
 
-/* Updated IntroOverlay component with GSAP animations */
+/* IntroOverlay component with GSAP animations */
 function IntroOverlay({ onStart }) {
   const [isVisible, setIsVisible] = useState(true);
+  const [isAnimatingOut, setIsAnimatingOut] = useState(false);
   const backgroundRef = useRef(null);
   const contentRef = useRef(null);
   const titleRef = useRef(null);
@@ -1887,6 +1933,7 @@ function IntroOverlay({ onStart }) {
   const decorativeLeftRef = useRef(null);
   const decorativeRightRef = useRef(null);
   const particlesRef = useRef(null);
+  const containerRef = useRef(null);
 
   useEffect(() => {
     // Import GSAP dynamically to avoid SSR issues
@@ -1911,6 +1958,9 @@ function IntroOverlay({ onStart }) {
   }, []);
 
   const handleStart = async () => {
+    if (isAnimatingOut) return; // Prevent double-clicking
+    setIsAnimatingOut(true);
+
     // Dynamically import GSAP
     const { gsap } = await import('gsap');
 
@@ -1922,43 +1972,44 @@ function IntroOverlay({ onStart }) {
       }
     });
 
+    // First, fade out the container's backdrop
+    tl.to(containerRef.current, {
+      backgroundColor: 'rgba(0, 0, 0, 0)',
+      duration: 1,
+      ease: "power2.inOut"
+    });
+
     // Staggered exit animations
     tl
-      // Fade out decorative elements first
       .to([decorativeLeftRef.current, decorativeRightRef.current], {
         opacity: 0,
         y: 20,
         duration: 0.4,
         ease: "power2.inOut"
-      })
-      // Fade out button with scale
+      }, "-=0.8")
       .to(buttonRef.current, {
         opacity: 0,
         scale: 0.9,
         duration: 0.4,
         ease: "power2.inOut"
       }, "-=0.2")
-      // Fade out description
       .to(descriptionRef.current, {
         opacity: 0,
         y: -30,
         duration: 0.4,
         ease: "power2.inOut"
       }, "-=0.3")
-      // Animate title and image
       .to([titleRef.current, imageRef.current], {
         opacity: 0,
         scale: 1.1,
         duration: 0.6,
         ease: "power2.inOut"
       }, "-=0.2")
-      // Fade out particles
       .to(particlesRef.current, {
         opacity: 0,
         duration: 0.4,
         ease: "power2.inOut"
       }, "-=0.4")
-      // Finally, fade out the background
       .to(backgroundRef.current, {
         opacity: 0,
         scale: 1.2,
@@ -1970,13 +2021,17 @@ function IntroOverlay({ onStart }) {
   if (!isVisible) return null;
 
   return (
-    <div className={`
-      fixed inset-0 
-      bg-black
-      flex items-center justify-center 
-      overflow-hidden
-      ${poppins.className}
-    `}>
+    <div 
+      ref={containerRef}
+      className={`
+        fixed inset-0 
+        bg-black
+        flex items-center justify-center 
+        overflow-hidden
+        ${poppins.className}
+        ${isAnimatingOut ? 'pointer-events-none' : ''}
+      `}
+    >
       {/* Particle Effect */}
       <div ref={particlesRef}>
         <ParticleEffect />
@@ -2068,74 +2123,3 @@ function IntroOverlay({ onStart }) {
     </div>
   );
 }
-
-// Add these animations to your globals.css
-const styles = `
-@keyframes slideUp {
-  from {
-    transform: translateY(100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes scaleUp {
-  from {
-    transform: scale(0.8);
-    opacity: 0;
-  }
-  to {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
-@keyframes spin-slow {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@keyframes gridFade {
-  from {
-    opacity: 0.05;
-  }
-  to {
-    opacity: 0.15;
-  }
-}
-
-.animate-slideUp {
-  animation: slideUp 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  animation-delay: 0.2s;
-}
-
-.animate-fadeIn {
-  animation: fadeIn 1s ease forwards;
-  animation-delay: 0.5s;
-}
-
-.animate-scaleUp {
-  animation: scaleUp 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  animation-delay: 0.3s;
-}
-
-.animate-spin-slow {
-  animation: spin-slow 15s linear infinite;
-}
-`;
