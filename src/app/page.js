@@ -1875,11 +1875,25 @@ function ParticleEffect() {
   );
 }
 
-/* Updated IntroOverlay component with award-winning design */
+/* Updated IntroOverlay component with GSAP animations */
 function IntroOverlay({ onStart }) {
   const [isVisible, setIsVisible] = useState(true);
   const backgroundRef = useRef(null);
   const contentRef = useRef(null);
+  const titleRef = useRef(null);
+  const descriptionRef = useRef(null);
+  const buttonRef = useRef(null);
+  const imageRef = useRef(null);
+  const decorativeLeftRef = useRef(null);
+  const decorativeRightRef = useRef(null);
+  const particlesRef = useRef(null);
+
+  useEffect(() => {
+    // Import GSAP dynamically to avoid SSR issues
+    import('gsap').then(({ gsap }) => {
+      // Initial animations (if needed)
+    });
+  }, []);
 
   useEffect(() => {
     // Parallax effect for background
@@ -1896,9 +1910,61 @@ function IntroOverlay({ onStart }) {
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, []);
 
-  const handleStart = () => {
-    setIsVisible(false);
-    setTimeout(onStart, 1000); // Delay to allow exit animation
+  const handleStart = async () => {
+    // Dynamically import GSAP
+    const { gsap } = await import('gsap');
+
+    // Create a timeline for the exit animation
+    const tl = gsap.timeline({
+      onComplete: () => {
+        setIsVisible(false);
+        onStart();
+      }
+    });
+
+    // Staggered exit animations
+    tl
+      // Fade out decorative elements first
+      .to([decorativeLeftRef.current, decorativeRightRef.current], {
+        opacity: 0,
+        y: 20,
+        duration: 0.4,
+        ease: "power2.inOut"
+      })
+      // Fade out button with scale
+      .to(buttonRef.current, {
+        opacity: 0,
+        scale: 0.9,
+        duration: 0.4,
+        ease: "power2.inOut"
+      }, "-=0.2")
+      // Fade out description
+      .to(descriptionRef.current, {
+        opacity: 0,
+        y: -30,
+        duration: 0.4,
+        ease: "power2.inOut"
+      }, "-=0.3")
+      // Animate title and image
+      .to([titleRef.current, imageRef.current], {
+        opacity: 0,
+        scale: 1.1,
+        duration: 0.6,
+        ease: "power2.inOut"
+      }, "-=0.2")
+      // Fade out particles
+      .to(particlesRef.current, {
+        opacity: 0,
+        duration: 0.4,
+        ease: "power2.inOut"
+      }, "-=0.4")
+      // Finally, fade out the background
+      .to(backgroundRef.current, {
+        opacity: 0,
+        scale: 1.2,
+        duration: 0.8,
+        ease: "power2.inOut"
+      }, "-=0.6");
   };
 
   if (!isVisible) return null;
@@ -1909,11 +1975,12 @@ function IntroOverlay({ onStart }) {
       bg-black
       flex items-center justify-center 
       overflow-hidden
-      transition-opacity duration-1000
       ${poppins.className}
     `}>
       {/* Particle Effect */}
-      <ParticleEffect />
+      <div ref={particlesRef}>
+        <ParticleEffect />
+      </div>
 
       {/* Animated background gradient */}
       <div 
@@ -1933,8 +2000,8 @@ function IntroOverlay({ onStart }) {
       >
         {/* Left column: Text content */}
         <div className="space-y-8">
-          <div className="overflow-hidden">
-            <h1 className="text-6xl font-bold text-white opacity-0 animate-slideUp">
+          <div ref={titleRef} className="overflow-hidden">
+            <h1 className="text-6xl font-bold text-white animate-slideUp">
               Milanković
               <span className="block text-8xl bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-600">
                 Cycles
@@ -1942,7 +2009,7 @@ function IntroOverlay({ onStart }) {
             </h1>
           </div>
           
-          <div className="space-y-6 opacity-0 animate-fadeIn">
+          <div ref={descriptionRef} className="space-y-6 animate-fadeIn">
             <p className="text-xl text-gray-300 leading-relaxed">
               Discover how Earth's orbital dance shapes our climate through the groundbreaking work of Milutin Milanković, 
               a visionary Serbian mathematician and astronomer.
@@ -1957,6 +2024,7 @@ function IntroOverlay({ onStart }) {
           </div>
 
           <button
+            ref={buttonRef}
             onClick={handleStart}
             className="group relative px-8 py-4 bg-white bg-opacity-5 rounded-full overflow-hidden transition-all duration-500
                      hover:bg-opacity-10 hover:scale-105 hover:shadow-[0_0_40px_rgba(123,0,255,0.3)]"
@@ -1974,14 +2042,14 @@ function IntroOverlay({ onStart }) {
         </div>
 
         {/* Right column: Visual content */}
-        <div className="relative aspect-square">
+        <div ref={imageRef} className="relative aspect-square">
           <div className="absolute inset-0 rounded-full bg-gradient-to-br from-purple-500/20 to-pink-500/20 
                         animate-pulse blur-3xl" />
           <img
             src="/miltin-milankovic.png"
             alt="Milutin Milanković"
             className="relative z-10 w-full h-full object-cover rounded-2xl 
-                     opacity-0 animate-scaleUp shadow-[0_0_60px_rgba(123,0,255,0.3)]"
+                     animate-scaleUp shadow-[0_0_60px_rgba(123,0,255,0.3)]"
           />
           <div className="absolute -inset-4 bg-gradient-to-r from-purple-600/20 to-pink-600/20 rounded-2xl 
                         -z-10 blur-2xl animate-pulse" />
@@ -1989,12 +2057,12 @@ function IntroOverlay({ onStart }) {
       </div>
 
       {/* Decorative elements */}
-      <div className="absolute bottom-8 left-8 flex items-center space-x-4 text-sm text-gray-500">
+      <div ref={decorativeLeftRef} className="absolute bottom-8 left-8 flex items-center space-x-4 text-sm text-gray-500">
         <span className="animate-pulse">●</span>
         <span>Interactive Experience</span>
       </div>
       
-      <div className="absolute bottom-8 right-8 text-sm text-gray-500">
+      <div ref={decorativeRightRef} className="absolute bottom-8 right-8 text-sm text-gray-500">
         Scroll to explore
       </div>
     </div>
