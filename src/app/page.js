@@ -1,5 +1,5 @@
 "use client";
-import React, { useRef, useState, useEffect, useCallback } from "react";
+import React, { useRef, useState, useEffect, useCallback, useMemo } from "react";
 import { Canvas, useFrame, extend } from "@react-three/fiber";
 import { OrbitControls, Line, Html } from "@react-three/drei";
 import {
@@ -37,22 +37,6 @@ const poppins = Poppins({ subsets: ["latin"], weight: ["400", "600"] });
 // ------------------------------------------------------------------
 function AxisIndicators({ axialTilt, precession }) {
   const arrowRef = useRef();
-  useEffect(() => {
-    if (arrowRef.current) {
-      // Set the arrow direction based on axial tilt and precession.
-      arrowRef.current.setDirection(
-        new THREE.Vector3(0, 1, 0)
-          .applyAxisAngle(
-            new THREE.Vector3(0, 0, 1),
-            THREE.MathUtils.degToRad(axialTilt)
-          )
-          .applyAxisAngle(
-            new THREE.Vector3(0, 1, 0),
-            THREE.MathUtils.degToRad(precession)
-          )
-      );
-    }
-  }, [axialTilt, precession]);
 
   return (
     <group>
@@ -72,12 +56,14 @@ function AxisIndicators({ axialTilt, precession }) {
       <Html position={[0, 5.2, 0]} center>
         <div
           style={{
-            color: "#333333",
-            background: "rgba(255, 255, 255, 0.8)",
+            color: "white",
+            background: "rgba(0, 0, 0, 0.7)",
             padding: "4px 8px",
             borderRadius: "4px",
             fontSize: "12px",
             fontFamily: "'Courier New', Courier, monospace",
+            backdropFilter: "blur(4px)",
+            border: "1px solid rgba(255, 255, 255, 0.1)",
           }}
         >
           Rotation Axis
@@ -493,7 +479,7 @@ const Earth = React.forwardRef(
       THREE.MathUtils.degToRad(precession)
     );
 
-    // Combine the rotations
+    // Combine the rotations - tilt first, then precession
     const combinedQuaternion = tiltQuaternion.multiply(precessionQuaternion);
 
     return (
@@ -1332,21 +1318,23 @@ export default function Home() {
     baselinePrecessionFactor;
 
   const T0 = realisticAmsterdamTemp;
-  const co2Sensitivity = (co2Level - 280) / 280;
-  const adjustedSensitivity = sensitivity + co2Sensitivity * 10;
+  // Improved CO2 sensitivity using logarithmic relationship
+  const co2Sensitivity = 5.35 * Math.log(co2Level / 280); // Based on IPCC radiative forcing equation
+  const adjustedSensitivity = 15 + co2Sensitivity * 2; // Reduced base sensitivity to 15°C per unit insolation
   const T_prelim = T0 + adjustedSensitivity * (summerIns - baselineSummerIns);
   const T_adjusted = T_prelim + tempOffset;
 
-  // Ice feedback: a logistic function where lower temperatures produce more ice.
-  const T_threshold = 7;
-  const logisticWidth = 0.5;
+  // Ice feedback with more realistic threshold and width
+  const T_threshold = 2; // Lower threshold based on paleoclimate data
+  const logisticWidth = 1.5; // Wider transition zone for ice formation
   const f_ice = 1 / (1 + Math.exp((T_adjusted - T_threshold) / logisticWidth));
-  const feedback = 3;
+  const feedback = 5; // Increased feedback strength based on paleoclimate studies
   const T_effective = T_adjusted - feedback * f_ice;
 
-  // Seasonal variation (annual cycle)
+  // Seasonal variation with latitude-dependent amplitude
   const season = simulatedYear - Math.floor(simulatedYear);
-  const seasonalAmplitude = 5;
+  const latitudeEffect = Math.cos(THREE.MathUtils.degToRad(52)); // Amsterdam's latitude
+  const seasonalAmplitude = 8 * (1 - 0.3 * latitudeEffect); // Amplitude varies with latitude
   const seasonalVariation =
     seasonalAmplitude * Math.sin(2 * Math.PI * season - Math.PI / 2);
   const finalTemp = T_effective + seasonalVariation;
@@ -1674,7 +1662,7 @@ export default function Home() {
           </div>
 
           {/* Bottom Graphs with enhanced positioning and animations */}
-          <div className="fixed flex justify-center items-center w-[620px] h-[190px] bottom-0 right-0 animate-fadeIn">
+          <div className="fixed flex justify-center items-center w-[620px] h-[200px] bottom-5 right-5 animate-fadeIn">
             <GlobalTemperatureGraph
               axialTilt={axialTilt}
               eccentricity={eccentricity}
@@ -1685,9 +1673,8 @@ export default function Home() {
               simulatedYear={simulatedYear}
               formatNumber={formatNumber}
               style={{
-                zIndex: 10,
-                width: "600px",
-                height: "150px",
+                width: "100%",
+                height: "100%",
               }}
             />
           </div>
@@ -1700,6 +1687,12 @@ export default function Home() {
                 zIndex: 10,
                 width: "600px",
                 height: "150px",
+                padding: "15px",
+                background: "rgba(3, 0, 20, 0.3)",
+                backdropFilter: "blur(10px)",
+                borderRadius: "12px",
+                border: "1px solid rgba(255, 255, 255, 0.1)",
+                boxShadow: "0 8px 32px rgba(0, 0, 0, 0.4)",
               }}
             />
           </div>
