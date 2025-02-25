@@ -1,83 +1,92 @@
-# GlobalTemperatureGraph Implementation Todolist
+# GlobalTemperatureGraph Simplification Tasks
 
-## Setup and Structure
-- [ ] Create GlobalTemperatureGraph.js component file
-  * Define component with appropriate props (eccentricity, axialTilt, precession, simulatedYear, simulationSpeed)
-  * Set up necessary imports and dependencies
-  * Create basic component structure
+## Core Functionality Changes
 
-## Three.js Setup
-- [ ] Initialize Three.js scene
-  * Create canvas element and renderer
-  * Set up camera with appropriate position
-  * Add lighting elements (ambient and directional)
-  * Create responsive resize handler
+- [ ] **Remove complex cycle calculations**
+  * Replace Milankovitch cycle calculations with simple sine wave
+  * Remove individual contributions (eccentricity, axial tilt, precession)
+  * Simplify temperature data generation function
 
-## Temperature Calculation Model
-- [ ] Implement temperature calculation function
-  * Create base formula for temperature over time
-  * Model eccentricity effects (100,000-year cycle)
-  * Model axial tilt effects (41,000-year cycle)
-  * Model precession effects (26,000-year cycle)
-  * Add amplification factor for visual clarity
-  * Generate temperature data points across 100,000-year timeline
+- [ ] **Simplify data model**
+  * Reduce number of data points for better performance
+  * Abstract time scale to show passage of time rather than specific years
+  * Create simpler temperature calculation function
 
-## Graph Visual Elements
-- [ ] Create time axis (x-axis)
-  * Add tick marks for time intervals
-  * Add labels for key time periods
-  * Style to match UI aesthetic
-- [ ] Create temperature axis (y-axis)
-  * Add tick marks for temperature values
-  * Add labels for temperature ranges
-  * Style to match UI aesthetic
-- [ ] Implement temperature line visualization
-  * Create line geometry based on calculated data
-  * Add dynamic color gradient based on temperature
-  * Implement animated transitions when parameters change
-- [ ] Add current time indicator
-  * Create vertical line or marker showing current position
-  * Add animation for smooth movement
-  * Ensure visibility against background
+- [ ] **Update component props**
+  * Remove unnecessary props (eccentricity, axialTilt, precession)
+  * Keep only simulatedTime (rename from simulatedYear), simulationSpeed, style
+  * Add documentation for simplified props
 
-## Special Effects and Styling
-- [ ] Implement container styling
-  * Match SeasonalInsolationGraph styling (blur background, rounded corners)
-  * Add proper border and shadow effects
-  * Ensure proper positioning in the layout
-- [ ] Add visual effects
-  * Implement glow effect for temperature line
-  * Add bloom post-processing
-  * Create dynamic color transitions based on temperature
-  * Add motion blur for fast simulation speeds
-  * Implement Grid lines and background elements
+## Rendering and Visual Changes
 
-## Educational Elements
-- [ ] Add annotations and markers
-  * Create indicators for ice ages and warm periods
-  * Add labels explaining key temperature shifts
-  * Highlight which cycle is dominant at different points
-- [ ] Implement visual legend
-  * Create color reference for temperature ranges
-  * Add explanatory text for graph interpretation
-  * Style to be unobtrusive but informative
+- [ ] **Simplify Three.js setup**
+  * Remove EffectComposer and post-processing effects
+  * Replace complex shader materials with basic materials
+  * Remove UnrealBloomPass effects
 
-## Integration with Simulation
-- [ ] Connect with simulation parameters
-  * Sync graph with simulatedYear
-  * Update visualization based on current parameter values
-  * Adjust detail level based on simulationSpeed
-- [ ] Implement optimization
-  * Pre-calculate data where possible
-  * Use efficient rendering techniques
-  * Add performance monitoring and optimizations
+- [ ] **Create single temperature line**
+  * Implement simple line with gradient color based on temperature
+  * Remove glow effects and shader-based animations
+  * Use basic LineBasicMaterial with color
 
-## Testing and Refinement
-- [ ] Test performance across different scenarios
-  * Verify smooth animation at various simulation speeds
-  * Test with extreme parameter values
-  * Check rendering performance
-- [ ] Final polish
-  * Refine animations and transitions
-  * Adjust colors and visual elements for clarity
-  * Ensure all educational elements are clear and helpful 
+- [ ] **Simplify time indicator**
+  * Create cleaner, simpler time position indicator
+  * Remove complex statistics and cycle contributions at time point
+  * Show only basic time and temperature information
+
+- [ ] **Clean up visual elements**
+  * Remove cycle contribution indicators
+  * Remove key period annotations
+  * Keep only basic axes and grid
+  * Simplify text labels and reduce their number
+
+## UI Improvements
+
+- [ ] **Update legend and info panels**
+  * Remove detailed cycle information
+  * Simplify to only show temperature range
+  * Use cleaner layout for information display
+
+- [ ] **Improve readability**
+  * Increase contrast for text elements
+  * Make grid and axes subtler
+  * Add better spacing between elements
+
+- [ ] **Add simple tooltip**
+  * Create hover effect for temperature values
+  * Use HTML-based tooltip instead of Three.js sprites
+  * Ensure tooltip is accessible and responsive
+
+## Code Structure Improvements
+
+- [ ] **Clean up useEffect hooks**
+  * Reduce number of effects and dependencies
+  * Separate concerns properly between effects
+  * Remove unused state updates
+
+- [ ] **Remove unused state variables and refs**
+  * Clean up state declarations
+  * Remove refs for elements no longer needed
+  * Keep only essential component state
+
+- [ ] **Simplify animation loop**
+  * Remove complex uniform updates
+  * Use standard render calls instead of composer
+  * Optimize animation performance
+
+## Testing and Optimization
+
+- [ ] **Test performance**
+  * Verify rendering performance is improved
+  * Check for memory leaks
+  * Ensure cleanup functions work properly
+
+- [ ] **Ensure responsiveness**
+  * Test resize handling works properly
+  * Verify canvas scales correctly with container
+  * Check mobile compatibility
+
+- [ ] **Final review**
+  * Ensure code meets project standards
+  * Document key aspects of simplified implementation
+  * Verify all requirements for simplification have been met 
