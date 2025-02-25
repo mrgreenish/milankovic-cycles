@@ -15,6 +15,11 @@ import { Slider } from "@/components/ui/slider";
 import { cn } from "@/lib/utils";
 import { GlobalTemperatureGraph } from '@/components/GlobalTemperatureGraph';
 import IntroOverlay from '@/components/IntroOverlay';
+import { 
+  calculateGlobalTemperature, 
+  normalizeTemperature, 
+  smoothTemperature 
+} from '@/lib/temperatureUtils';
 
 //
 // CREATE A INTRO PAGE WITH INTRODUCTION AND A BUTTON TO GO TO THE SIMULATION
@@ -1194,80 +1199,23 @@ export default function Home() {
       return;
     }
     
-    // Solar constant variation over time (approximate)
-    const presentDaySolarConstant = 1361; // W/m²
-    const timeInBillionYears = Math.abs(simulatedYear) / 1000000000;
-    const solarConstant = presentDaySolarConstant / (1 + 0.4 * (4.57 - timeInBillionYears) / 4.57);
-
-    // Orbital geometry calculations
-    const tiltRad = THREE.MathUtils.degToRad(axialTilt);
-    const precessionRad = THREE.MathUtils.degToRad(precession);
+    // Calculate the season based on the simulated year (normalized to 0-1)
+    const season = (simulatedYear % 1 + 1) % 1;
     
-    // Latitude-dependent calculations (for Amsterdam ~52.37°N)
-    const latitude = 52.37;
-    const latRad = THREE.MathUtils.degToRad(latitude);
+    // Calculate global temperature using our utility
+    const tempData = calculateGlobalTemperature({
+      latitude: 52.37, // Amsterdam latitude
+      season,
+      eccentricity,
+      axialTilt,
+      precession,
+      co2Level,
+      tempOffset
+    });
     
-    // Enhanced insolation calculation including orbital effects
-    const meanOrbitalDistance = 1 - eccentricity * eccentricity / 2;
-    const precessionFactor = 1 - 0.15 * Math.cos(precessionRad - THREE.MathUtils.degToRad(270));
-    
-    // Calculate seasonal insolation variation
-    const season = (simulatedYear - Math.floor(simulatedYear)) * 2 * Math.PI;
-    const solarDeclination = Math.asin(Math.sin(tiltRad) * Math.sin(season));
-    const hourAngle = Math.acos(-Math.tan(latRad) * Math.tan(solarDeclination));
-    
-    // Daily insolation calculation (W/m²)
-    const dailyInsolation = (solarConstant / (Math.PI * meanOrbitalDistance * meanOrbitalDistance)) * 
-      (hourAngle * Math.sin(latRad) * Math.sin(solarDeclination) + 
-       Math.cos(latRad) * Math.cos(solarDeclination) * Math.sin(hourAngle));
-
-    // Baseline insolation for comparison
-    const baselineTiltRad = THREE.MathUtils.degToRad(baselineAxialTilt);
-    const baselinePrecessionRad = THREE.MathUtils.degToRad(baselinePrecession);
-    const baselineMeanOrbitalDistance = 1 - baselineEccentricity * baselineEccentricity / 2;
-    
-    // Calculate baseline insolation
-    const baselineSolarDeclination = Math.asin(Math.sin(baselineTiltRad) * Math.sin(season));
-    const baselineHourAngle = Math.acos(-Math.tan(latRad) * Math.tan(baselineSolarDeclination));
-    const baselineDailyInsolation = (presentDaySolarConstant / (Math.PI * baselineMeanOrbitalDistance * baselineMeanOrbitalDistance)) *
-      (baselineHourAngle * Math.sin(latRad) * Math.sin(baselineSolarDeclination) +
-       Math.cos(latRad) * Math.cos(baselineSolarDeclination) * Math.sin(baselineHourAngle));
-
-    // Enhanced CO2 radiative forcing with updated IPCC equations
-    const co2Forcing = 5.35 * Math.log(co2Level / 280); // W/m²
-    
-    // Temperature calculation incorporating all factors
-    const insolationDifference = dailyInsolation - baselineDailyInsolation;
-    const T0 = realisticAmsterdamTemp;
-    
-    // Convert insolation difference to temperature effect
-    const insolationSensitivity = 0.3; // °C per W/m² - INCREASED FROM 0.15 to make changes more noticeable
-    const T_insolation = T0 + insolationSensitivity * insolationDifference;
-    
-    // Add CO2 effect
-    const co2Sensitivity = 1.2; // °C per W/m² - INCREASED FROM 0.8 to make changes more noticeable
-    const T_withCO2 = T_insolation + co2Sensitivity * co2Forcing;
-    
-    // Enhanced ice-albedo feedback with latitude dependence
-    const T_freeze = 0; // Freezing point
-    const latitudeEffect = Math.cos(latRad); // Ice formation more likely at higher latitudes
-    const T_threshold = T_freeze + 2 * latitudeEffect; // Latitude-dependent threshold
-    const logisticWidth = 1.5; // Width of transition zone
-    const calculatedIceFactor = 1 / (1 + Math.exp((T_withCO2 - T_threshold) / logisticWidth));
-    
-    // Update ice factor state
-    setIceFactor(calculatedIceFactor);
-    
-    // Ice albedo feedback strength varies with latitude
-    const maxFeedback = 8; // Maximum feedback strength
-    const feedback = maxFeedback * (1 - latitudeEffect);
-    const T_effective = T_withCO2 - feedback * calculatedIceFactor;
-
-    // Seasonal variation with latitude-dependent amplitude
-    const seasonalAmplitude = 12 * (1 - 0.3 * latitudeEffect); // Larger seasonal swings at higher latitudes
-    const seasonalVariation = seasonalAmplitude * Math.sin(2 * Math.PI * season - Math.PI / 2);
-    
-    setCalculatedTemp(T_effective + seasonalVariation + tempOffset);
+    // Update temperature and ice factor states
+    setCalculatedTemp(tempData.temperature);
+    setIceFactor(tempData.iceFactor);
   }, [simulatedYear, eccentricity, axialTilt, precession, co2Level, tempOffset]);
 
   // Modify the smoothing effect to be faster and add preview
@@ -1278,9 +1226,10 @@ export default function Home() {
         // If we have a parameter preview, blend it with the orbital temperature
         if (parameterPreview) {
           const previewWeight = 0.9; // Increased from 0.7 for more immediate feedback
-          return prev + smoothingFactor * ((calculatedTemp * (1 - previewWeight) + parameterPreview * previewWeight) - prev);
+          const targetTemp = calculatedTemp * (1 - previewWeight) + parameterPreview * previewWeight;
+          return smoothTemperature(prev, targetTemp, smoothingFactor);
         }
-        return prev + smoothingFactor * (calculatedTemp - prev);
+        return smoothTemperature(prev, calculatedTemp, smoothingFactor);
       });
     }, 30); // Reduced from 50ms for more frequent updates
     return () => clearInterval(interval);
@@ -1410,7 +1359,7 @@ export default function Home() {
   }, [preset]);
 
   // Normalize temperature value for shader tinting (0 to 1).
-  const normTemp = Math.max(0, Math.min(1, (calculatedTemp + 5) / 25));
+  const normTemp = normalizeTemperature(calculatedTemp, -5, 20);
 
   // Handlers for manual parameter adjustments.
   const handleManualChange = (setter) => (e) => {

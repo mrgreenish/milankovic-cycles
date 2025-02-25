@@ -1,5 +1,6 @@
 'use client';
 import React, { useRef, useState, useEffect } from "react";
+import { normalizeTemperature } from "@/lib/temperatureUtils";
 
 export function GlobalTemperatureGraph({
   axialTilt,
