@@ -24,17 +24,20 @@ export function GlobalTemperatureGraph({
   useEffect(() => {
     const currentTime = Date.now();
     if (currentTime - lastUpdateRef.current >= updateInterval) {
+      // Skip adding the data point if temperature is not a valid number
+      if (!isFinite(temperature)) return;
+      
       setTemperatureHistory((prev) => {
         const newHistory = [
           ...prev,
           {
-            temp: temperature,
-            axialTilt,
-            eccentricity,
-            precession: precession % 360,
-            co2: co2Level,
-            ice: iceFactor,
-            year: simulatedYear,
+            temp: isFinite(temperature) ? temperature : prev.length > 0 ? prev[prev.length - 1].temp : 10,
+            axialTilt: isFinite(axialTilt) ? axialTilt : 23.44,
+            eccentricity: isFinite(eccentricity) ? eccentricity : 0.0167,
+            precession: isFinite(precession) ? precession % 360 : 0,
+            co2: isFinite(co2Level) ? co2Level : 280,
+            ice: isFinite(iceFactor) ? iceFactor : 0,
+            year: isFinite(simulatedYear) ? simulatedYear : 0,
           },
         ];
         if (newHistory.length > maxHistoryLength) {
@@ -112,11 +115,22 @@ export function GlobalTemperatureGraph({
       const baselineTemp = 10;
       const exaggerationFactor = 1;
       const displayTemps = temperatureHistory.map(
-        (p) => exaggerationFactor * (p.temp - baselineTemp) + baselineTemp
+        (p) => {
+          // Ensure we don't use NaN values
+          if (!isFinite(p.temp)) return baselineTemp;
+          return exaggerationFactor * (p.temp - baselineTemp) + baselineTemp;
+        }
       );
-      const minDisplayTemp = Math.min(...displayTemps) - 2;
-      const maxDisplayTemp = Math.max(...displayTemps) + 2;
-      const tempRange = maxDisplayTemp - minDisplayTemp;
+
+      // Filter out any remaining NaN values before calculating min/max
+      const validTemps = displayTemps.filter(temp => isFinite(temp));
+      const minDisplayTemp = validTemps.length > 0 
+        ? Math.min(...validTemps) - 2 
+        : baselineTemp - 5;
+      const maxDisplayTemp = validTemps.length > 0 
+        ? Math.max(...validTemps) + 2 
+        : baselineTemp + 5;
+      const tempRange = Math.max(0.1, maxDisplayTemp - minDisplayTemp);
 
       // Title with enhanced typography
       ctx.textBaseline = "middle";
@@ -141,11 +155,31 @@ export function GlobalTemperatureGraph({
 
       // Parameter labels with modern styling
       const parameters = [
-        { label: "Axial Tilt", value: axialTilt.toFixed(1) + "°", color: "rgba(249, 168, 212, 0.95)" },
-        { label: "Eccentricity", value: eccentricity.toFixed(4), color: "rgba(129, 140, 248, 0.95)" },
-        { label: "Precession", value: (precession % 360).toFixed(0) + "°", color: "rgba(52, 211, 153, 0.95)" },
-        { label: "CO₂ Level", value: co2Level + "ppm", color: "rgba(236, 72, 153, 0.95)" },
-        { label: "Ice Coverage", value: (iceFactor * 100).toFixed(0) + "%", color: "rgba(56, 189, 248, 0.95)" }
+        { 
+          label: "Axial Tilt", 
+          value: isFinite(axialTilt) ? axialTilt.toFixed(1) + "°" : "N/A", 
+          color: "rgba(249, 168, 212, 0.95)" 
+        },
+        { 
+          label: "Eccentricity", 
+          value: isFinite(eccentricity) ? eccentricity.toFixed(4) : "N/A", 
+          color: "rgba(129, 140, 248, 0.95)" 
+        },
+        { 
+          label: "Precession", 
+          value: isFinite(precession) ? (precession % 360).toFixed(0) + "°" : "N/A", 
+          color: "rgba(52, 211, 153, 0.95)" 
+        },
+        { 
+          label: "CO₂ Level", 
+          value: isFinite(co2Level) ? co2Level + "ppm" : "N/A", 
+          color: "rgba(236, 72, 153, 0.95)" 
+        },
+        { 
+          label: "Ice Coverage", 
+          value: isFinite(iceFactor) ? (iceFactor * 100).toFixed(0) + "%" : "N/A", 
+          color: "rgba(56, 189, 248, 0.95)" 
+        }
       ];
 
       ctx.textAlign = "left";

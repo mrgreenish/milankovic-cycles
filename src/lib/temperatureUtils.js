@@ -37,20 +37,25 @@ export function calculateDailyInsolation(latitude, season, eccentricity, axialTi
   const trueAnomaly = 2 * Math.PI * season + precRad;
   
   // Calculate Earth-Sun distance based on orbital position
-  const distance = (1 - eccentricity * eccentricity) / (1 + eccentricity * Math.cos(trueAnomaly));
+  // Ensure we don't get NaN from division by zero
+  const distance = Math.max(0.001, (1 - eccentricity * eccentricity) / (1 + eccentricity * Math.cos(trueAnomaly)));
   
   // Calculate solar declination (angle between solar rays and equatorial plane)
   const solarDeclination = Math.asin(Math.sin(tiltRad) * Math.sin(trueAnomaly));
   
   // Calculate hour angle (angle between noon and sunset)
-  const hourAngle = Math.acos(-Math.tan(latRad) * Math.tan(solarDeclination));
+  // Clamp input to acos to prevent NaN values - this is a critical fix
+  const hourAngleInput = -Math.tan(latRad) * Math.tan(solarDeclination);
+  const hourAngle = Math.acos(Math.max(-1, Math.min(1, hourAngleInput)));
   
   // Calculate daily insolation using the standard formula
-  const dailyInsolation = (PRESENT_DAY_SOLAR_CONSTANT / (Math.PI * distance * distance)) *
+  // Ensure we don't get NaN from division by zero
+  const dailyInsolation = (PRESENT_DAY_SOLAR_CONSTANT / (Math.PI * Math.max(0.001, distance * distance))) *
     (hourAngle * Math.sin(latRad) * Math.sin(solarDeclination) +
      Math.cos(latRad) * Math.cos(solarDeclination) * Math.sin(hourAngle));
   
-  return dailyInsolation;
+  // Ensure we return a valid number, not NaN or Infinity
+  return isFinite(dailyInsolation) ? dailyInsolation : 0;
 }
 
 /**
@@ -81,7 +86,9 @@ export function calculateBaselineInsolation(latitude, season) {
  * @returns {number} - Radiative forcing in W/m²
  */
 export function calculateCO2Forcing(co2Level) {
-  return 5.35 * Math.log(co2Level / BASELINE_CO2_LEVEL);
+  // Ensure we don't get NaN from log of zero or negative
+  const safeLevel = Math.max(1, co2Level);
+  return 5.35 * Math.log(safeLevel / BASELINE_CO2_LEVEL);
 }
 
 /**
@@ -97,7 +104,9 @@ export function calculateIceFactor(temperature, latitude) {
   const tempThreshold = FREEZING_POINT + 2 * latitudeEffect; // Latitude-dependent threshold
   const logisticWidth = 1.5; // Width of transition zone
   
-  return 1 / (1 + Math.exp((temperature - tempThreshold) / logisticWidth));
+  // Prevent division issues with extreme values that could lead to NaN
+  const exponent = Math.max(-50, Math.min(50, (temperature - tempThreshold) / logisticWidth));
+  return 1 / (1 + Math.exp(exponent));
 }
 
 /**
@@ -198,6 +207,10 @@ export function calculateGlobalTemperature({
  * @returns {number} - Normalized temperature (0-1)
  */
 export function normalizeTemperature(temperature, minTemp = 0, maxTemp = 15) {
+  // Safety check for invalid inputs
+  if (!isFinite(temperature) || !isFinite(minTemp) || !isFinite(maxTemp) || minTemp === maxTemp) {
+    return 0.5; // Return a reasonable default value
+  }
   return Math.max(0, Math.min(1, (temperature - minTemp) / (maxTemp - minTemp)));
 }
 
@@ -210,5 +223,9 @@ export function normalizeTemperature(temperature, minTemp = 0, maxTemp = 15) {
  * @returns {number} - Smoothed temperature
  */
 export function smoothTemperature(currentTemp, targetTemp, smoothingFactor = 0.5) {
+  // Safety check for invalid inputs
+  if (!isFinite(currentTemp) || !isFinite(targetTemp) || !isFinite(smoothingFactor)) {
+    return isFinite(currentTemp) ? currentTemp : isFinite(targetTemp) ? targetTemp : 10;
+  }
   return currentTemp + smoothingFactor * (targetTemp - currentTemp);
 } 
