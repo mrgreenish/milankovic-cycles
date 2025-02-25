@@ -110,7 +110,7 @@ export function GlobalTemperatureGraph({
 
       // Enhanced temperature calculations
       const baselineTemp = 10;
-      const exaggerationFactor = 5;
+      const exaggerationFactor = 1;
       const displayTemps = temperatureHistory.map(
         (p) => exaggerationFactor * (p.temp - baselineTemp) + baselineTemp
       );

@@ -193,11 +193,11 @@ export function calculateGlobalTemperature({
  * Normalize temperature for visualization (0-1 scale)
  * 
  * @param {number} temperature - Temperature in °C
- * @param {number} minTemp - Minimum expected temperature (default: -10°C)
- * @param {number} maxTemp - Maximum expected temperature (default: 30°C)
+ * @param {number} minTemp - Minimum expected temperature (default: 0°C)
+ * @param {number} maxTemp - Maximum expected temperature (default: 15°C)
  * @returns {number} - Normalized temperature (0-1)
  */
-export function normalizeTemperature(temperature, minTemp = -10, maxTemp = 30) {
+export function normalizeTemperature(temperature, minTemp = 0, maxTemp = 15) {
   return Math.max(0, Math.min(1, (temperature - minTemp) / (maxTemp - minTemp)));
 }
 

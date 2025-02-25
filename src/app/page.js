@@ -1287,12 +1287,21 @@ export default function Home() {
       result = `${formatTo3Digits(millions)} million years`;
     } else if (absNum >= 1000) {
       const thousands = absNum / 1000;
-      result = `${formatTo3Digits(thousands)}k years`;
+      // For historical years (negative), use "thousand years BP" format
+      if (isNegative) {
+        result = `${formatTo3Digits(thousands)} thousand years BP`;
+      } else {
+        result = `${formatTo3Digits(thousands)}k years`;
+      }
     } else {
-      result = `${Math.min(999, Math.round(absNum))} years`;
+      if (isNegative) {
+        result = `${Math.min(999, Math.round(absNum))} years BP`;
+      } else {
+        result = `${Math.min(999, Math.round(absNum))} years`;
+      }
     }
     
-    return isNegative ? "-" + result : result;
+    return isNegative ? result : result;
   };
 
   // Main simulation loop with adjusted time scales
@@ -1350,16 +1359,19 @@ export default function Home() {
   // Apply a preset scenario if selected.
   useEffect(() => {
     if (preset && presets[preset]) {
-      const { eccentricity, axialTilt, precession } = presets[preset];
+      const { eccentricity, axialTilt, precession, year } = presets[preset];
       setEccentricity(eccentricity);
       setAxialTilt(axialTilt);
       setPrecession(precession);
+      if (year !== undefined) {
+        setSimulatedYear(year);
+      }
       setAutoAnimate(false);
     }
   }, [preset]);
 
   // Normalize temperature value for shader tinting (0 to 1).
-  const normTemp = normalizeTemperature(calculatedTemp, -5, 20);
+  const normTemp = normalizeTemperature(calculatedTemp, 0, 15);
 
   // Handlers for manual parameter adjustments.
   const handleManualChange = (setter) => (e) => {
