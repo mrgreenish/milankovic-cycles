@@ -1,13 +1,25 @@
 {
   "name": "milankovic-visualization",
   "version": "0.1.0",
+  "description": "Milankovitch Cycles Climate Model",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test": "node src/examples/test-climate-model.js",
+    "test:additional": "node src/examples/additional-feedbacks.js",
+    "test:regional": "node src/examples/regional-visualization.js"
   },
+  "keywords": [
+    "climate",
+    "milankovitch",
+    "orbital",
+    "model"
+  ],  
+  "author": "Filip van Harreveld",
+  "license": "MIT",
   "dependencies": {
     "@radix-ui/react-label": "^2.0.2",
     "@radix-ui/react-select": "^2.0.0",
@@ -38,3 +50,5 @@
     "tailwindcss": "^3.4.1"
   }
 }
+
+

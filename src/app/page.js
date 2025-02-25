@@ -973,6 +973,12 @@ function SeasonalInsolationGraph({
     const graphWidth = width - margin.left - margin.right;
     const graphHeight = height - margin.top - margin.bottom;
 
+    // Safety check for NaN parameters
+    const safeAxialTilt = isFinite(axialTilt) ? axialTilt : 23.44;
+    const safeEccentricity = isFinite(eccentricity) ? Math.max(0.001, Math.min(0.2, eccentricity)) : 0.0167;
+    const safePrecession = isFinite(precession) ? precession : 0;
+
+    // Parameters for insolation calculation
     // Parameters for insolation calculation
     const latitudes = Array.from({ length: 37 }, (_, i) => -90 + i * 5); // -90 to 90° in 5° steps
     const seasons = Array.from({ length: 48 }, (_, i) => i * 7.5); // 0° to 360° in 7.5° steps
