@@ -49,8 +49,6 @@ import { NarrativeOverlay } from "@/components/NarrativeOverlay";
 import { SeasonalInsolationGraph } from "@/components/SeasonalInsolationGraph";
 import { LatitudinalInsolationGraph } from "@/components/LatitudinalInsolationGraph";
 import { TemperatureTimeline } from "@/components/TemperatureTimeline";
-import { useSpring } from "@react-spring/web";
-import { useLoader } from "@react-three/fiber";
 
 /*
   This simulation illustrates key ideas behind Milankovitch cycles:
