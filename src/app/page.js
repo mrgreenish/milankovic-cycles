@@ -781,7 +781,7 @@ export default function Home() {
   const [preset, setPreset] = useState("");
 
   const [co2Level, setCo2Level] = useState(280);
-  const [showIntro, setShowIntro] = useState(false);
+  const [showIntro, setShowIntro] = useState(true);
   const [hasIntroFadedOut, setHasIntroFadedOut] = useState(true);
 
   const [displayedTemp, setDisplayedTemp] = useState(realisticAmsterdamTemp);
