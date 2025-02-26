@@ -1,18 +1,38 @@
-import { Inter, Poppins } from 'next/font/google';
+import { Inter, Poppins, Space_Mono, Playfair_Display } from 'next/font/google';
+import localFont from 'next/font/local';
 import './globals.css';
 
+// Define our fonts
+const playfair = Playfair_Display({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-playfair',
+  // Using Playfair Display as an alternative to GT Sectra
+});
+
+const spaceMono = Space_Mono({
+  subsets: ['latin'],
+  weight: ['400', '700'],
+  display: 'swap',
+  variable: '--font-space-mono',
+});
+
+// Using Inter as a fallback for Switzer
 const inter = Inter({
   subsets: ['latin'],
-  weight: ['400', '500', '600'],
   display: 'swap',
   variable: '--font-inter',
 });
 
-const poppins = Poppins({
-  subsets: ['latin'],
-  weight: ['300', '400', '500', '600', '700'],
-  display: 'swap',
-  variable: '--font-poppins',
+// Define the switzer font
+const switzer = localFont({
+  src: [
+    {
+      path: '../font/Switzer-Variable.woff2',
+      style: 'normal',
+    },
+  ],
+  variable: '--font-switzer',
 });
 
 export const metadata = {
@@ -22,7 +42,7 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className={`${inter.variable} ${poppins.variable}`}>
+    <html lang="en" className={`${playfair.variable} ${spaceMono.variable} ${inter.variable} ${switzer.variable}`}>
       <body className="font-sans antialiased">{children}</body>
     </html>
   );

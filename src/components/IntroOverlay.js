@@ -213,34 +213,28 @@ function ParticleEffect() {
 
 /* IntroOverlay component with GSAP animations */
 export default function IntroOverlay({ onStart }) {
-  const [isVisible, setIsVisible] = useState(true);
-  const [isAnimatingOut, setIsAnimatingOut] = useState(false);
-  const backgroundRef = useRef(null);
-  const contentRef = useRef(null);
-  const titleRef = useRef(null);
-  const descriptionRef = useRef(null);
+  const [isHovering, setIsHovering] = useState(false);
+  const [isStarting, setIsStarting] = useState(false);
   const buttonRef = useRef(null);
-  const imageRef = useRef(null);
-  const decorativeLeftRef = useRef(null);
-  const decorativeRightRef = useRef(null);
-  const particlesRef = useRef(null);
-  const containerRef = useRef(null);
 
   useEffect(() => {
-    // Dynamically import GSAP to avoid SSR issues
-    import("gsap").then(() => {
-      // Optional: Initialize GSAP-based intro animations here
-    });
-  }, []);
-
-  useEffect(() => {
-    // Parallax effect for background
     const handleMouseMove = (e) => {
-      if (!backgroundRef.current || !contentRef.current) return;
-      const x = (window.innerWidth - e.pageX) / 100;
-      const y = (window.innerHeight - e.pageY) / 100;
-      backgroundRef.current.style.transform = `translate(${x}px, ${y}px)`;
-      contentRef.current.style.transform = `translate(${x / 2}px, ${y / 2}px)`;
+      if (buttonRef.current) {
+        const rect = buttonRef.current.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const centerX = rect.width / 2;
+        const centerY = rect.height / 2;
+        const distanceFromCenter = Math.sqrt(
+          Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2)
+        );
+
+        if (distanceFromCenter < rect.width / 2) {
+          setIsHovering(true);
+        } else {
+          setIsHovering(false);
+        }
+      }
     };
 
     window.addEventListener("mousemove", handleMouseMove);
@@ -248,204 +242,61 @@ export default function IntroOverlay({ onStart }) {
   }, []);
 
   const handleStart = async () => {
-    if (isAnimatingOut) return;
-    setIsAnimatingOut(true);
-
-    const { gsap } = await import("gsap");
-
-    // Timeline for exit animation
-    const tl = gsap.timeline({
-      onComplete: () => {
-        setIsVisible(false);
-        onStart();
-      },
-    });
-
-    // Fade out container backdrop
-    tl.to(containerRef.current, {
-      backgroundColor: "rgba(0, 0, 0, 0)",
-      duration: 1,
-      ease: "power2.inOut",
-    });
-
-    // Staggered exit animations
-    tl.to(
-      [decorativeLeftRef.current, decorativeRightRef.current],
-      {
-        opacity: 0,
-        y: 20,
-        duration: 0.4,
-        ease: "power2.inOut",
-      },
-      "-=0.8"
-    )
-      .to(
-        buttonRef.current,
-        {
-          opacity: 0,
-          scale: 0.9,
-          duration: 0.4,
-          ease: "power2.inOut",
-        },
-        "-=0.2"
-      )
-      .to(
-        descriptionRef.current,
-        {
-          opacity: 0,
-          y: -30,
-          duration: 0.4,
-          ease: "power2.inOut",
-        },
-        "-=0.3"
-      )
-      .to(
-        [titleRef.current, imageRef.current],
-        {
-          opacity: 0,
-          scale: 1.1,
-          duration: 0.6,
-          ease: "power2.inOut",
-        },
-        "-=0.2"
-      )
-      .to(
-        particlesRef.current,
-        {
-          opacity: 0,
-          duration: 0.4,
-          ease: "power2.inOut",
-        },
-        "-=0.4"
-      )
-      .to(
-        backgroundRef.current,
-        {
-          opacity: 0,
-          scale: 1.2,
-          duration: 0.8,
-          ease: "power2.inOut",
-        },
-        "-=0.6"
-      );
-
-    // Speed up exit animation
-    tl.timeScale(2);
+    setIsStarting(true);
+    // Delay to allow for animation
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    onStart();
   };
 
-  if (!isVisible) return null;
-
   return (
-    <div
-      ref={containerRef}
-      className={`
-        fixed inset-0 
-        bg-black
-        z-50
-        flex items-center justify-center 
-        overflow-hidden
-        ${poppins.className}
-        ${isAnimatingOut ? "pointer-events-none" : ""}
-      `}
-    >
-      {/* Particle Effect */}
-      <div ref={particlesRef}>
-        <ParticleEffect />
-      </div>
-
-      {/* Animated background gradient */}
-      <div
-        ref={backgroundRef}
-        className="absolute inset-0 opacity-20"
-        style={{
-          background:
-            "radial-gradient(circle at 50% 50%, rgba(76, 0, 255, 0.5) 0%, rgba(0, 0, 0, 0) 70%)",
-          filter: "blur(120px)",
-          transform: "scale(1.5)",
-        }}
-      />
-
-      {/* Main content */}
-      <div
-        ref={contentRef}
-        className="relative z-10 max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-2 gap-12 items-center"
-      >
-        {/* Left column: Text content */}
-        <div className="space-y-8">
-          <div ref={titleRef} className="overflow-hidden">
-            <h1 className="text-6xl font-bold text-white animate-slideUp">
-              Milanković
-              <span className="block text-8xl bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-600">
-                Cycles
-              </span>
-            </h1>
-          </div>
-
-          <div ref={descriptionRef} className="space-y-6 animate-fadeIn">
-            <p className="text-xl text-gray-300 leading-relaxed">
-              Discover how Earth's orbital dance shapes our climate through the
-              groundbreaking work of Milutin Milanković, a visionary Serbian
-              mathematician and astronomer.
-            </p>
-
-            <div className="flex items-center space-x-4">
-              <div className="h-[1px] w-12 bg-purple-500" />
-              <p className="text-gray-400">
-                Explore the intricate relationship between orbital mechanics and
-                climate patterns
-              </p>
-            </div>
-          </div>
-
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-deep-space">
+      <ParticleEffect />
+      
+      <div className="relative z-10 max-w-4xl px-6 py-12 text-center">
+        <h1 className="mb-6 text-5xl font-serif text-stardust-white animate-slideUp">
+          Milankovitch Cycles <span className="text-antique-brass">Observatory</span>
+        </h1>
+        
+        <p className="mb-8 text-lg text-stardust-white opacity-80 max-w-2xl mx-auto animate-fadeIn">
+          Explore how Earth's orbital variations influence our climate over thousands of years. 
+          This interactive simulation demonstrates the relationship between orbital mechanics and climate patterns.
+        </p>
+        
+        <div className="mb-12 flex justify-center animate-scaleUp">
           <button
             ref={buttonRef}
             onClick={handleStart}
-            className="group relative px-8 py-4 bg-white bg-opacity-5 rounded-full overflow-hidden
-                       transition-all duration-500 hover:bg-opacity-10 hover:scale-105
-                       hover:shadow-[0_0_40px_rgba(123,0,255,0.3)]"
+            disabled={isStarting}
+            className={`celestial-button px-8 py-4 text-lg font-medium transition-all duration-500 ${
+              isHovering ? "bg-antique-brass text-deep-space" : ""
+            } ${isStarting ? "opacity-0 scale-90" : "opacity-100 scale-100"}`}
           >
-            <span className="relative z-10 text-white font-medium tracking-wider">
-              Begin Journey
-            </span>
-            <div
-              className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 opacity-0
-                         group-hover:opacity-20 transition-opacity duration-500"
-            />
-            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-              <div
-                className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 animate-spin-slow"
-                style={{ transform: "rotate(-45deg)", filter: "blur(20px)" }}
-              />
-            </div>
+            Enter Observatory
           </button>
         </div>
-
-        {/* Right column: Visual content */}
-        <div ref={imageRef} className="relative aspect-square">
-          <div
-            className="absolute inset-0 rounded-full bg-gradient-to-br from-purple-500/20 to-pink-500/20
-                       animate-pulse blur-3xl"
-          />
-          <img
-            src="/miltin-milankovic.jpg"
-            alt="Milutin Milanković"
-            className="relative z-10 w-full h-full object-cover rounded-2xl
-                       animate-scaleUp shadow-[0_0_60px_rgba(123,0,255,0.3)]"
-          />
-          <div
-            className="absolute -inset-4 bg-gradient-to-r from-purple-600/20 to-pink-600/20
-                       rounded-2xl -z-10 blur-2xl animate-pulse"
-          />
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-fadeIn">
+          <div className="observatory-panel p-4">
+            <h3 className="text-lg font-serif text-antique-brass mb-2">Eccentricity</h3>
+            <p className="text-sm text-stardust-white opacity-80">
+              The shape of Earth's orbit around the Sun, varying from nearly circular to more elliptical over a 100,000-year cycle.
+            </p>
+          </div>
+          
+          <div className="observatory-panel p-4">
+            <h3 className="text-lg font-serif text-antique-brass mb-2">Axial Tilt</h3>
+            <p className="text-sm text-stardust-white opacity-80">
+              The angle of Earth's axis relative to its orbital plane, oscillating between 22.1° and 24.5° over a 41,000-year cycle.
+            </p>
+          </div>
+          
+          <div className="observatory-panel p-4">
+            <h3 className="text-lg font-serif text-antique-brass mb-2">Precession</h3>
+            <p className="text-sm text-stardust-white opacity-80">
+              The wobble of Earth's axis, completing a full cycle every 26,000 years and determining which hemisphere faces the Sun at perihelion.
+            </p>
+          </div>
         </div>
-      </div>
-
-      {/* Decorative elements */}
-      <div
-        ref={decorativeLeftRef}
-        className="absolute bottom-8 left-8 flex items-center space-x-4 text-sm text-gray-500"
-      >
-        <span className="animate-pulse">●</span>
-        <span>Interactive Experience</span>
       </div>
     </div>
   );

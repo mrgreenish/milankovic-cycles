@@ -82,15 +82,15 @@ export function GlobalTemperatureGraph({
       // Clear the canvas with the background
       ctx.clearRect(0, 0, width, height);
 
-      // Enhanced background with subtle gradient
+      // Enhanced background with celestial gradient - using actual color values instead of CSS variables
       const bgGradient = ctx.createLinearGradient(0, 0, width, height);
-      bgGradient.addColorStop(0, "rgba(3, 0, 20, 0.85)");
-      bgGradient.addColorStop(1, "rgba(12, 5, 33, 0.85)");
+      bgGradient.addColorStop(0, "rgba(13, 15, 30, 0.85)"); // Deep space color
+      bgGradient.addColorStop(1, "rgba(20, 25, 45, 0.85)"); // Midnight blue color
       ctx.fillStyle = bgGradient;
       ctx.fillRect(0, 0, width, height);
 
       // Add subtle grid pattern
-      ctx.strokeStyle = "rgba(255, 255, 255, 0.03)";
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.03)"; // Stardust white with low opacity
       ctx.lineWidth = 1;
       const gridSize = 20;
       for (let x = 0; x < width; x += gridSize) {
@@ -135,7 +135,7 @@ export function GlobalTemperatureGraph({
       // Title with enhanced typography
       ctx.textBaseline = "middle";
       ctx.textAlign = "center";
-      ctx.font = "600 18px Inter, system-ui, -apple-system, sans-serif";
+      ctx.font = "600 18px var(--font-playfair), serif";
       
       // Draw text shadow for depth
       ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
@@ -148,48 +148,53 @@ export function GlobalTemperatureGraph({
         width / 2 + 100,
         0
       );
-      titleGradient.addColorStop(0, "rgba(236, 72, 153, 1)");
-      titleGradient.addColorStop(1, "rgba(99, 102, 241, 1)");
+      titleGradient.addColorStop(0, "#cdaf7d"); // Antique brass color
+      titleGradient.addColorStop(1, "#e8d0a9"); // Pale gold color
       ctx.fillStyle = titleGradient;
       ctx.fillText("Global Temperature History", width / 2, margin.top - 15);
 
-      // Parameter labels with modern styling
+      // Parameter labels with Celestial Observatory styling
       const parameters = [
         { 
           label: "Axial Tilt", 
           value: isFinite(axialTilt) ? axialTilt.toFixed(1) + "°" : "N/A", 
-          color: "rgba(249, 168, 212, 0.95)" 
+          color: "rgba(55, 90, 130, 0.95)" // Slate blue color
         },
         { 
           label: "Eccentricity", 
           value: isFinite(eccentricity) ? eccentricity.toFixed(4) : "N/A", 
-          color: "rgba(129, 140, 248, 0.95)" 
+          color: "rgba(205, 175, 125, 0.95)" // Antique brass color
         },
         { 
           label: "Precession", 
           value: isFinite(precession) ? (precession % 360).toFixed(0) + "°" : "N/A", 
-          color: "rgba(52, 211, 153, 0.95)" 
+          color: "rgba(180, 140, 100, 0.95)" // Aged copper color
         },
         { 
           label: "CO₂ Level", 
           value: isFinite(co2Level) ? co2Level + "ppm" : "N/A", 
-          color: "rgba(236, 72, 153, 0.95)" 
+          color: "rgba(200, 80, 60, 0.95)" // Warm temperature color
         },
         { 
           label: "Ice Coverage", 
           value: isFinite(iceFactor) ? (iceFactor * 100).toFixed(0) + "%" : "N/A", 
-          color: "rgba(56, 189, 248, 0.95)" 
+          color: "rgba(70, 130, 180, 0.95)" // Cold temperature color
         }
       ];
 
       ctx.textAlign = "left";
-      ctx.font = "500 14px Inter, system-ui, -apple-system, sans-serif";
+      ctx.font = "500 14px var(--font-switzer), var(--font-inter), system-ui, sans-serif";
       parameters.forEach((param, i) => {
         const y = margin.top + 15 + i * 26;
         
-        // Parameter background
-        ctx.fillStyle = "rgba(255, 255, 255, 0.03)";
+        // Parameter background - observatory panel style
+        ctx.fillStyle = "rgba(13, 15, 30, 0.4)"; // Deep space color
         ctx.fillRect(width - margin.right + 5, y - 10, margin.right - 10, 22);
+        
+        // Subtle border
+        ctx.strokeStyle = "rgba(55, 90, 130, 0.3)"; // Slate blue color
+        ctx.lineWidth = 1;
+        ctx.strokeRect(width - margin.right + 5, y - 10, margin.right - 10, 22);
         
         // Label shadow
         ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
@@ -199,71 +204,81 @@ export function GlobalTemperatureGraph({
         ctx.fillStyle = param.color;
         ctx.fillText(`${param.label}:`, width - margin.right + 15, y);
         
-        // Value with enhanced contrast
-        ctx.font = "600 14px Inter, system-ui, -apple-system, sans-serif";
-        ctx.fillStyle = "rgba(255, 255, 255, 0.95)";
+        // Value with enhanced contrast - using monospace font for data
+        ctx.font = "600 14px monospace";
+        ctx.fillStyle = "#f7fafc"; // Stardust white color
         ctx.fillText(
           param.value,
           width - margin.right + 15 + ctx.measureText(`${param.label}: `).width,
           y
         );
-        ctx.font = "500 14px Inter, system-ui, -apple-system, sans-serif";
+        ctx.font = "500 14px system-ui, sans-serif";
       });
 
-      // Temperature scale with modern styling
-      ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
+      // Temperature scale with Celestial Observatory styling
+      ctx.fillStyle = "#f7fafc"; // Stardust white color
       ctx.textAlign = "right";
-      ctx.font = "500 13px Inter, system-ui, -apple-system, sans-serif";
+      ctx.font = "500 13px monospace";
       const tempStep = tempRange / 5;
       for (let i = 0; i <= 5; i++) {
         const temp = minDisplayTemp + i * tempStep;
         const y = height - margin.bottom - (i / 5) * graphHeight;
         
         // Grid line
-        ctx.strokeStyle = "rgba(255, 255, 255, 0.1)";
+        ctx.strokeStyle = "rgba(55, 90, 130, 0.2)"; // Slate blue color
         ctx.beginPath();
         ctx.moveTo(margin.left, y);
         ctx.lineTo(width - margin.right, y);
         ctx.stroke();
         
-        // Label with background
+        // Label with background - observatory panel style
         const labelWidth = ctx.measureText(`${temp.toFixed(1)}°C`).width + 10;
-        ctx.fillStyle = "rgba(255, 255, 255, 0.05)";
+        ctx.fillStyle = "rgba(13, 15, 30, 0.4)"; // Deep space color
         ctx.fillRect(margin.left - labelWidth - 15, y - 10, labelWidth, 20);
         
-        ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
+        // Subtle border
+        ctx.strokeStyle = "rgba(55, 90, 130, 0.3)"; // Slate blue color
+        ctx.lineWidth = 1;
+        ctx.strokeRect(margin.left - labelWidth - 15, y - 10, labelWidth, 20);
+        
+        ctx.fillStyle = "#f7fafc"; // Stardust white color
         ctx.fillText(`${temp.toFixed(1)}°C`, margin.left - 20, y);
       }
 
-      // Time scale with modern styling
+      // Time scale with Celestial Observatory styling
       ctx.textAlign = "center";
-      ctx.font = "500 13px Inter, system-ui, -apple-system, sans-serif";
+      ctx.font = "500 13px monospace";
       [0, 0.25, 0.5, 0.75, 1].forEach((fraction) => {
         const x = margin.left + fraction * graphWidth;
         const index = Math.floor(fraction * (temperatureHistory.length - 1));
         const year = temperatureHistory[index]?.year || 0;
         
         // Vertical grid line
-        ctx.strokeStyle = "rgba(255, 255, 255, 0.1)";
+        ctx.strokeStyle = "rgba(55, 90, 130, 0.2)"; // Slate blue color
         ctx.beginPath();
         ctx.moveTo(x, margin.top);
         ctx.lineTo(x, height - margin.bottom);
         ctx.stroke();
         
-        // Label with background
+        // Label with background - observatory panel style
         const labelWidth = ctx.measureText(formatNumber(year)).width + 20;
-        ctx.fillStyle = "rgba(255, 255, 255, 0.05)";
+        ctx.fillStyle = "rgba(13, 15, 30, 0.4)"; // Deep space color
         ctx.fillRect(x - labelWidth / 2, height - margin.bottom + 10, labelWidth, 24);
         
-        ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
+        // Subtle border
+        ctx.strokeStyle = "rgba(55, 90, 130, 0.3)"; // Slate blue color
+        ctx.lineWidth = 1;
+        ctx.strokeRect(x - labelWidth / 2, height - margin.bottom + 10, labelWidth, 24);
+        
+        ctx.fillStyle = "#f7fafc"; // Stardust white color
         ctx.fillText(formatNumber(year), x, height - margin.bottom + 22);
       });
 
-      // Axis labels with modern typography
-      ctx.font = "600 14px Inter, system-ui, -apple-system, sans-serif";
+      // Axis labels with Celestial Observatory typography
+      ctx.font = "600 14px serif";
       const labelGradient = ctx.createLinearGradient(0, 0, width, 0);
-      labelGradient.addColorStop(0, "rgba(236, 72, 153, 0.9)");
-      labelGradient.addColorStop(1, "rgba(99, 102, 241, 0.9)");
+      labelGradient.addColorStop(0, "#cdaf7d"); // Antique brass color
+      labelGradient.addColorStop(1, "#e8d0a9"); // Pale gold color
       ctx.fillStyle = labelGradient;
       
       // X-axis label
@@ -276,20 +291,20 @@ export function GlobalTemperatureGraph({
       ctx.fillText("Temperature (°C)", 0, 0);
       ctx.restore();
 
-      // Temperature line with enhanced styling
+      // Temperature line with Celestial Observatory styling
       const lineGradient = ctx.createLinearGradient(
         0,
         margin.top,
         0,
         height - margin.bottom
       );
-      lineGradient.addColorStop(0, "rgba(236, 72, 153, 0.9)");
-      lineGradient.addColorStop(0.5, "rgba(99, 102, 241, 0.9)");
-      lineGradient.addColorStop(1, "rgba(56, 189, 248, 0.9)");
+      lineGradient.addColorStop(0, "#c84a38"); // Warm temperature color
+      lineGradient.addColorStop(0.5, "#b48c64"); // Neutral temperature color
+      lineGradient.addColorStop(1, "#4682b4"); // Cold temperature color
 
       // Glow effect
-      ctx.shadowBlur = 20;
-      ctx.shadowColor = "rgba(236, 72, 153, 0.5)";
+      ctx.shadowBlur = isHovered ? 15 : 10;
+      ctx.shadowColor = "rgba(205, 175, 125, 0.6)"; // Antique brass color
       ctx.beginPath();
       ctx.strokeStyle = lineGradient;
       ctx.lineWidth = isHovered ? 3 : 2;
@@ -308,18 +323,27 @@ export function GlobalTemperatureGraph({
       ctx.stroke();
       ctx.shadowBlur = 0;
 
-      // Add subtle point indicators
+      // Add data points with Celestial Observatory styling
       displayTemps.forEach((displayTemp, i) => {
-        const x = margin.left + (i / (maxHistoryLength - 1)) * graphWidth;
-        const y =
-          height -
-          margin.bottom -
-          ((displayTemp - minDisplayTemp) / tempRange) * graphHeight;
-        
-        ctx.beginPath();
-        ctx.arc(x, y, 2, 0, Math.PI * 2);
-        ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
-        ctx.fill();
+        if (i % 10 === 0 || i === displayTemps.length - 1) { // Show fewer points for cleaner look
+          const x = margin.left + (i / (maxHistoryLength - 1)) * graphWidth;
+          const y =
+            height -
+            margin.bottom -
+            ((displayTemp - minDisplayTemp) / tempRange) * graphHeight;
+          
+          // Outer glow
+          ctx.beginPath();
+          ctx.arc(x, y, 4, 0, Math.PI * 2);
+          ctx.fillStyle = "rgba(205, 175, 125, 0.3)"; // Antique brass color
+          ctx.fill();
+          
+          // Inner point
+          ctx.beginPath();
+          ctx.arc(x, y, 2, 0, Math.PI * 2);
+          ctx.fillStyle = "#e8d0a9"; // Pale gold color
+          ctx.fill();
+        }
       });
 
       animationFrameId = requestAnimationFrame(render);
@@ -342,13 +366,12 @@ export function GlobalTemperatureGraph({
 
   return (
     <div
-      className="graph-container bg-gradient-to-br from-slate-900/95 to-slate-800/95 backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.4)] hover:shadow-[0_12px_48px_rgba(0,0,0,0.5)] transition-all duration-500 ease-out animate-fade-slide-up"
+      className="observatory-panel bg-opacity-50 border-aged-copper backdrop-blur-xl overflow-hidden transition-all duration-500 ease-out animate-fadeIn"
       style={{
         position: "relative",
         width: "100%",
         height: "100%",
         zIndex: 10,
-        padding: "15px",
         ...style,
       }}
       onMouseEnter={() => setIsHovered(true)}
@@ -361,35 +384,10 @@ export function GlobalTemperatureGraph({
         style={{
           width: "100%",
           height: "100%",
-          borderRadius: "8px",
           transition: "transform 0.3s ease-out",
           transform: isHovered ? "scale(1.01)" : "scale(1)",
         }}
       />
-      <style jsx>{`
-        @keyframes fade-slide-up {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        .animate-fade-slide-up {
-          animation: fade-slide-up 0.5s ease-out forwards;
-        }
-
-        .graph-container {
-          will-change: transform, opacity, box-shadow;
-        }
-
-        .graph-container:hover {
-          transform: translateY(-2px);
-        }
-      `}</style>
     </div>
   );
 }

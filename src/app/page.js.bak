@@ -1,21 +1,7 @@
 "use client";
-import React, {
-  useRef,
-  useState,
-  useEffect,
-  useCallback,
-  useMemo,
-  Suspense,
-} from "react";
-import { Canvas, useFrame } from "@react-three/fiber";
-import {
-  OrbitControls,
-  Line,
-  Html,
-  Environment,
-  PerspectiveCamera,
-  Billboard,
-} from "@react-three/drei";
+import React, { useRef, useState, useEffect, useCallback, useMemo, Suspense } from "react";
+import { Canvas, useFrame, extend } from "@react-three/fiber";
+import { OrbitControls, Line, Html, Environment, PerspectiveCamera } from "@react-three/drei";
 import {
   EffectComposer,
   Bloom,
@@ -32,25 +18,24 @@ import "./globals.css";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
 import { cn } from "@/lib/utils";
-import { GlobalTemperatureGraph } from "@/components/GlobalTemperatureGraph";
-import IntroOverlay from "@/components/IntroOverlay";
-import {
-  calculateGlobalTemperature,
-  normalizeTemperature,
-  smoothTemperature,
-} from "@/lib/temperatureUtils";
-import {
-  ObservatoryPanel,
-  ObservatoryButton,
-  DataDisplay,
-} from "@/components/ObservatoryPanel";
-import { CycleComparisonPanel } from "@/components/CycleComparisonPanel";
-import { NarrativeOverlay } from "@/components/NarrativeOverlay";
-import { SeasonalInsolationGraph } from "@/components/SeasonalInsolationGraph";
-import { LatitudinalInsolationGraph } from "@/components/LatitudinalInsolationGraph";
-import { TemperatureTimeline } from "@/components/TemperatureTimeline";
+import { GlobalTemperatureGraph } from '@/components/GlobalTemperatureGraph';
+import IntroOverlay from '@/components/IntroOverlay';
+import { 
+  calculateGlobalTemperature, 
+  normalizeTemperature, 
+  smoothTemperature 
+} from '@/lib/temperatureUtils';
+import { ObservatoryPanel, ObservatoryButton, DataDisplay } from '@/components/ObservatoryPanel';
+import { CycleComparisonPanel } from '@/components/CycleComparisonPanel';
+import { NarrativeOverlay } from '@/components/NarrativeOverlay';
+import { SeasonalInsolationGraph } from '@/components/SeasonalInsolationGraph';
+import { LatitudinalInsolationGraph } from '@/components/LatitudinalInsolationGraph';
+import { TemperatureTimeline } from '@/components/TemperatureTimeline';
 import { useSpring } from "@react-spring/web";
 import { useLoader } from "@react-three/fiber";
+
+//
+// CREATE A INTRO PAGE WITH INTRODUCTION AND A BUTTON TO GO TO THE SIMULATION
 
 /*
   This simulation illustrates key ideas behind Milankovitch cycles:
@@ -58,7 +43,7 @@ import { useLoader } from "@react-three/fiber";
   - The model uses simplified approximations to modulate a baseline temperature.
   - Temperature feedbacks (like ice–albedo) are introduced via a logistic function.
   - Seasonal variations are added as a sine wave.
-
+  
   Note: The formulas here are simplified for clarity and educational purposes.
 */
 
@@ -140,7 +125,7 @@ const fragmentShader = `
   uniform vec3 directionalLightColor;
   uniform vec3 directionalLightDirection;
   uniform float temperature;
-  uniform float precession; 
+  uniform float precession; // Used to dynamically adjust lighting
   uniform float iceFactor;
   
   varying vec2 vUv;
@@ -155,6 +140,7 @@ const fragmentShader = `
     
     float sunInfluence = dot(normal, normalize(sunDirection));
     float mixValue = smoothstep(-0.2, 0.2, sunInfluence);
+    
     vec4 color = mix(nightColor, dayColor, mixValue);
     
     // Atmospheric scattering effect (simplified)
@@ -171,14 +157,19 @@ const fragmentShader = `
     vec3 lighting = ambientLightColor + directionalLightColor * diff;
     color.rgb *= lighting;
     
-    // Subtle ice effect
     vec3 gray = vec3(dot(color.rgb, vec3(0.299, 0.587, 0.114)));
     color.rgb = mix(gray, color.rgb, iceFactor);
-    
     gl_FragColor = color;
   }
 `;
 
+// New Sun shaders with noise, displacement, and brightness mapping
+
+// Vertex shader – displaces vertices using a simplex noise function.
+
+//////////////////////
+// VERTEX SHADER
+//////////////////////
 const sunVertexShader = `
 uniform float time;
 uniform float displacementStrength;
@@ -202,7 +193,6 @@ vec4 taylorInvSqrt(vec4 r) {
 float snoise(vec3 v) {
   const vec2  C = vec2(1.0/6.0, 1.0/3.0);
   const vec4  D = vec4(0.0, 0.5, 1.0, 2.0);
-
   vec3 i = floor(v + dot(v, C.yyy));
   vec3 x0 = v - i + dot(i, C.xxx);
   vec3 g = step(x0.yzx, x0.xyz);
@@ -212,57 +202,62 @@ float snoise(vec3 v) {
   vec3 x1 = x0 - i1 + C.xxx;
   vec3 x2 = x0 - i2 + 2.0 * C.xxx;
   vec3 x3 = x0 - 1.0 + 3.0 * C.xxx;
-
-  i = mod289(i); 
+  i = mod289(i);
   vec4 p = permute( permute( permute(
-    i.z + vec4(0.0, i1.z, i2.z, 1.0))
-    + i.y + vec4(0.0, i1.y, i2.y, 1.0))
-    + i.x + vec4(0.0, i1.x, i2.x, 1.0));
-    
-  float n_ = 1.0/7.0; 
-  vec3 ns = n_ * D.wyz - D.xzx; 
-  vec4 j = p - 49.0*floor(p*ns.z*ns.z); 
-  vec4 x_ = floor(j*ns.z); 
-  vec4 y_ = floor(j - 7.0*x_); 
-  vec4 x = x_*ns.x + ns.yyyy; 
-  vec4 y = y_*ns.x + ns.yyyy; 
-  vec4 h = 1.0 - abs(x) - abs(y); 
-  vec4 b0 = vec4(x.xy, y.xy); 
-  vec4 b1 = vec4(x.zw, y.zw); 
-  vec4 s0 = floor(b0)*2.0 + 1.0; 
-  vec4 s1 = floor(b1)*2.0 + 1.0; 
-  vec4 sh = -step(h, vec4(0.0)); 
-  vec4 a0 = b0.xzyw + s0.xzyw*sh.xxyy; 
-  vec4 a1 = b1.xzyw + s1.xzyw*sh.zzww; 
-  vec3 g0 = vec3(a0.xy,h.x); 
-  vec3 g1 = vec3(a0.zw,h.y); 
-  vec3 g2 = vec3(a1.xy,h.z); 
-  vec3 g3 = vec3(a1.zw,h.w); 
+               i.z + vec4(0.0, i1.z, i2.z, 1.0))
+             + i.y + vec4(0.0, i1.y, i2.y, 1.0))
+             + i.x + vec4(0.0, i1.x, i2.x, 1.0));
+  float n_ = 1.0/7.0;
+  vec3 ns = n_ * D.wyz - D.xzx;
+  vec4 j = p - 49.0*floor(p*ns.z*ns.z);
+  vec4 x_ = floor(j*ns.z);
+  vec4 y_ = floor(j - 7.0*x_);
+  vec4 x = x_*ns.x + ns.yyyy;
+  vec4 y = y_*ns.x + ns.yyyy;
+  vec4 h = 1.0 - abs(x) - abs(y);
+  vec4 b0 = vec4(x.xy, y.xy);
+  vec4 b1 = vec4(x.zw, y.zw);
+  vec4 s0 = floor(b0)*2.0 + 1.0;
+  vec4 s1 = floor(b1)*2.0 + 1.0;
+  vec4 sh = -step(h, vec4(0.0));
+  vec4 a0 = b0.xzyw + s0.xzyw*sh.xxyy;
+  vec4 a1 = b1.xzyw + s1.xzyw*sh.zzww;
+  vec3 g0 = vec3(a0.xy,h.x);
+  vec3 g1 = vec3(a0.zw,h.y);
+  vec3 g2 = vec3(a1.xy,h.z);
+  vec3 g3 = vec3(a1.zw,h.w);
   vec4 norm = taylorInvSqrt(vec4(dot(g0,g0), dot(g1,g1), 
-    dot(g2,g2), dot(g3,g3))); 
-  g0 *= norm.x; 
-  g1 *= norm.y; 
-  g2 *= norm.z; 
-  g3 *= norm.w; 
+                                 dot(g2,g2), dot(g3,g3)));
+  g0 *= norm.x;
+  g1 *= norm.y;
+  g2 *= norm.z;
+  g3 *= norm.w;
   vec4 m = max(0.6 - vec4(dot(x0,x0), dot(x1,x1),
-    dot(x2,x2), dot(x3,x3)), 0.0); 
-  m = m * m; 
+                          dot(x2,x2), dot(x3,x3)), 0.0);
+  m = m * m;
   return 42.0 * dot( m*m, vec4( dot(g0,x0), dot(g1,x1),
-    dot(g2,x2), dot(g3,x3) ) );
+                                dot(g2,x2), dot(g3,x3) ) );
 }
 
 void main() {
   vUv = uv;
   vWorldNormal = normalize(normalMatrix * normal);
 
+  // Displace vertices by noise for a wavy surface
   float noiseVal = snoise(position * 3.0 + time * 0.2);
   vec3 displaced = position + normal * noiseVal * displacementStrength;
 
+  // Calculate camera-space position for limb darkening
   vec4 mvPosition = modelViewMatrix * vec4(displaced, 1.0);
-  vViewPos = -mvPosition.xyz; 
+  vViewPos = -mvPosition.xyz; // camera-space view vector
+
   gl_Position = projectionMatrix * mvPosition;
 }
 `;
+
+//////////////////////
+// FRAGMENT SHADER
+//////////////////////
 
 const sunFragmentShader = `
 uniform float time;
@@ -270,6 +265,7 @@ varying vec2 vUv;
 varying vec3 vWorldNormal;
 varying vec3 vViewPos;
 
+// Reuse the same simplex noise & fBm as before
 vec3 mod289(vec3 x) {
   return x - floor(x * (1.0 / 289.0)) * 289.0;
 }
@@ -283,11 +279,12 @@ vec4 taylorInvSqrt(vec4 r) {
   return 1.79284291400159 - 0.85373472095314 * r;
 }
 float snoise(vec3 v) {
+  // ... same as in vertex
   const vec2  C = vec2(1.0/6.0, 1.0/3.0);
   const vec4  D = vec4(0.0, 0.5, 1.0, 2.0);
+
   vec3 i = floor(v + dot(v, C.yyy));
   vec3 x0 = v - i + dot(i, C.xxx);
-
   vec3 g = step(x0.yzx, x0.xyz);
   vec3 l = 1.0 - g;
   vec3 i1 = min(g, l.zxy);
@@ -295,43 +292,41 @@ float snoise(vec3 v) {
   vec3 x1 = x0 - i1 + C.xxx;
   vec3 x2 = x0 - i2 + 2.0*C.xxx;
   vec3 x3 = x0 - 1.0 + 3.0*C.xxx;
-
   i = mod289(i);
   vec4 p = permute( permute( permute(
-    i.z + vec4(0.0, i1.z, i2.z, 1.0))
-    + i.y + vec4(0.0, i1.y, i2.y, 1.0))
-    + i.x + vec4(0.0, i1.x, i2.x, 1.0));
-    
-  float n_ = 1.0/7.0; 
-  vec3 ns = n_ * D.wyz - D.xzx; 
-  vec4 j = p - 49.0*floor(p*ns.z*ns.z); 
-  vec4 x_ = floor(j*ns.z); 
-  vec4 y_ = floor(j - 7.0*x_); 
-  vec4 x = x_*ns.x + ns.yyyy; 
-  vec4 y = y_*ns.x + ns.yyyy; 
-  vec4 h = 1.0 - abs(x) - abs(y); 
-  vec4 b0 = vec4(x.xy, y.xy); 
-  vec4 b1 = vec4(x.zw, y.zw); 
-  vec4 s0 = floor(b0)*2.0 + 1.0; 
-  vec4 s1 = floor(b1)*2.0 + 1.0; 
-  vec4 sh = -step(h, vec4(0.0)); 
-  vec4 a0 = b0.xzyw + s0.xzyw*sh.xxyy; 
-  vec4 a1 = b1.xzyw + s1.xzyw*sh.zzww; 
-  vec3 g0 = vec3(a0.xy,h.x); 
-  vec3 g1 = vec3(a0.zw,h.y); 
-  vec3 g2 = vec3(a1.xy,h.z); 
-  vec3 g3 = vec3(a1.zw,h.w); 
+               i.z + vec4(0.0, i1.z, i2.z, 1.0))
+             + i.y + vec4(0.0, i1.y, i2.y, 1.0))
+             + i.x + vec4(0.0, i1.x, i2.x, 1.0));
+  float n_ = 1.0/7.0;
+  vec3 ns = n_ * D.wyz - D.xzx;
+  vec4 j = p - 49.0*floor(p*ns.z*ns.z);
+  vec4 x_ = floor(j*ns.z);
+  vec4 y_ = floor(j - 7.0*x_);
+  vec4 x = x_*ns.x + ns.yyyy;
+  vec4 y = y_*ns.x + ns.yyyy;
+  vec4 h = 1.0 - abs(x) - abs(y);
+  vec4 b0 = vec4(x.xy, y.xy);
+  vec4 b1 = vec4(x.zw, y.zw);
+  vec4 s0 = floor(b0)*2.0 + 1.0;
+  vec4 s1 = floor(b1)*2.0 + 1.0;
+  vec4 sh = -step(h, vec4(0.0));
+  vec4 a0 = b0.xzyw + s0.xzyw*sh.xxyy;
+  vec4 a1 = b1.xzyw + s1.xzyw*sh.zzww;
+  vec3 g0 = vec3(a0.xy,h.x);
+  vec3 g1 = vec3(a0.zw,h.y);
+  vec3 g2 = vec3(a1.xy,h.z);
+  vec3 g3 = vec3(a1.zw,h.w);
   vec4 norm = taylorInvSqrt(vec4(dot(g0,g0), dot(g1,g1), 
-    dot(g2,g2), dot(g3,g3))); 
-  g0 *= norm.x; 
-  g1 *= norm.y; 
-  g2 *= norm.z; 
-  g3 *= norm.w; 
+                                 dot(g2,g2), dot(g3,g3)));
+  g0 *= norm.x;
+  g1 *= norm.y;
+  g2 *= norm.z;
+  g3 *= norm.w;
   vec4 m = max(0.6 - vec4(dot(x0,x0), dot(x1,x1),
-    dot(x2,x2), dot(x3,x3)), 0.0); 
-  m = m * m; 
+                          dot(x2,x2), dot(x3,x3)), 0.0);
+  m = m * m;
   return 42.0 * dot( m*m, vec4( dot(g0,x0), dot(g1,x1),
-    dot(g2,x2), dot(g3,x3) ) );
+                                dot(g2,x2), dot(g3,x3) ) );
 }
 
 float fbm(vec3 pos) {
@@ -346,6 +341,7 @@ float fbm(vec3 pos) {
   return total;
 }
 
+// Domain-warping helper for swirling
 vec2 swirlUV(vec2 uv, float angle, vec2 center) {
   vec2 offset = uv - center;
   float r = length(offset);
@@ -354,25 +350,41 @@ vec2 swirlUV(vec2 uv, float angle, vec2 center) {
 }
 
 void main() {
+  // Basic radial gradient for brightness
   float dist = distance(vUv, vec2(0.5));
+  // Start with more pronounced falloff
   float radial = 1.0 - smoothstep(0.2, 0.65, dist);
 
+  // Warp the UVs to create swirling patterns
   vec2 warpedUV = swirlUV(vUv, time * 0.3, vec2(0.5));
+
+  // Sample fBm with the warped UV
   float noiseVal = fbm(vec3(warpedUV * 10.0, time * 0.2));
+
+  // Combine radial + noise for base brightness
   float brightness = radial + noiseVal * 0.2;
 
+  // Mild limb darkening based on the angle between view direction and normal
   vec3 N = normalize(vWorldNormal);
   vec3 V = normalize(vViewPos);
   float NdotV = dot(N, V); 
+  // Shift the exponent or multiplier to taste
   float limb = pow(clamp(1.0 - NdotV, 0.0, 1.0), 0.6);
 
+  // Combine everything:
+  // - Baseline color from orange to yellow
+  // - Subtle dimming from limbDarkening
+  // - Optionally clamp brightness to avoid saturating whites
   vec3 baseColor = mix(vec3(1.0, 0.5, 0.0), vec3(1.0, 1.0, 0.0), brightness);
   baseColor *= (1.0 - 0.4 * limb);
 
+  // Slightly darken random "sunspot" patches
+  // if noiseVal < some threshold, we blend in a darker brown
   if (noiseVal < 0.0) {
     baseColor = mix(baseColor, vec3(0.3, 0.2, 0.05), 0.4);
   }
 
+  // Final output
   gl_FragColor = vec4(baseColor, 1.0);
 }
 `;
@@ -385,6 +397,7 @@ const Earth = React.forwardRef(
     const [texturesLoaded, setTexturesLoaded] = useState(false);
     const [textures, setTextures] = useState(null);
 
+    // Load textures asynchronously.
     useEffect(() => {
       const loadTextures = async () => {
         try {
@@ -424,6 +437,7 @@ const Earth = React.forwardRef(
       loadTextures();
     }, [onReady]);
 
+    // Pass uniforms to the shader.
     const uniforms = React.useMemo(() => {
       if (!texturesLoaded || !textures) return null;
       return {
@@ -444,6 +458,7 @@ const Earth = React.forwardRef(
       };
     }, [texturesLoaded, textures, temperature, precession, iceFactor]);
 
+    // Update sun direction relative to the Earth's current world position.
     useFrame(({ clock }) => {
       if (uniforms?.sunDirection?.value && ref.current?.parent) {
         const worldPosition = new THREE.Vector3();
@@ -455,6 +470,7 @@ const Earth = React.forwardRef(
       }
     });
 
+    // Rotate the cloud layer slowly.
     const cloudRef = useRef();
     useFrame(() => {
       if (cloudRef.current) {
@@ -466,18 +482,24 @@ const Earth = React.forwardRef(
       return null;
     }
 
+    // Create a quaternion for the axial tilt
     const tiltQuaternion = new THREE.Quaternion().setFromAxisAngle(
       new THREE.Vector3(0, 0, 1),
       THREE.MathUtils.degToRad(axialTilt)
     );
+
+    // Create a quaternion for the precession
     const precessionQuaternion = new THREE.Quaternion().setFromAxisAngle(
       new THREE.Vector3(0, 1, 0),
       THREE.MathUtils.degToRad(precession)
     );
+
+    // Combine the rotations - tilt first, then precession
     const combinedQuaternion = tiltQuaternion.multiply(precessionQuaternion);
 
     return (
       <group quaternion={combinedQuaternion}>
+        {/* Earth surface */}
         <mesh ref={ref} castShadow receiveShadow>
           <sphereGeometry args={[1, 64, 64]} />
           <shaderMaterial
@@ -488,6 +510,7 @@ const Earth = React.forwardRef(
           />
         </mesh>
 
+        {/* Cloud layer */}
         <mesh ref={cloudRef} scale={1.01}>
           <sphereGeometry args={[1, 64, 64]} />
           <meshPhongMaterial
@@ -499,6 +522,7 @@ const Earth = React.forwardRef(
           />
         </mesh>
 
+        {/* Ice overlay (grows with the ice factor) */}
         <mesh scale={1.03}>
           <sphereGeometry args={[1, 64, 64]} />
           <meshBasicMaterial
@@ -509,6 +533,7 @@ const Earth = React.forwardRef(
           />
         </mesh>
 
+        {/* Axis indicator */}
         <AxisIndicators axialTilt={axialTilt} precession={precession} />
       </group>
     );
@@ -521,12 +546,13 @@ const Earth = React.forwardRef(
 function OrbitPath({ eccentricity }) {
   const a = 20;
   const b = a * (1 - 2 * eccentricity);
-  const baselineB = a * (1 - 2 * 0.0167);
+  const baselineB = a * (1 - 2 * 0.0167); // Baseline orbit for reference
 
   const points = [];
   const baselinePoints = [];
   const seasonalMarkers = [];
 
+  // Generate orbit points and seasonal markers (every 90°)
   for (let theta = 0; theta <= Math.PI * 2; theta += 0.02) {
     const x = a * Math.cos(theta);
     const currentZ = b * Math.sin(theta);
@@ -546,9 +572,10 @@ function OrbitPath({ eccentricity }) {
 
   return (
     <group>
-      <Line
-        points={baselinePoints}
-        color="#2d4661"
+      {/* Baseline orbit with dotted/dashed lines */}
+      <Line 
+        points={baselinePoints} 
+        color="#2d4661" // Slate blue (darker)
         lineWidth={0.6}
         transparent={false}
         opacity={1}
@@ -556,9 +583,9 @@ function OrbitPath({ eccentricity }) {
         dashSize={0.15}
         gapSize={0.15}
       />
-      <Line
-        points={baselinePoints}
-        color="white"
+      <Line 
+        points={baselinePoints} 
+        color="#375a82" // Slate blue
         lineWidth={1.2}
         transparent
         opacity={0.5}
@@ -566,9 +593,9 @@ function OrbitPath({ eccentricity }) {
         dashSize={0.2}
         gapSize={0.2}
       />
-      <Line
-        points={baselinePoints}
-        color="#375a82"
+      <Line 
+        points={baselinePoints} 
+        color="#375a82" // Slate blue
         lineWidth={1.8}
         transparent
         opacity={0.2}
@@ -577,50 +604,55 @@ function OrbitPath({ eccentricity }) {
         gapSize={0.25}
       />
 
-      <Line
-        points={points}
-        color="#cdaf7d"
+      {/* Current orbit with enhanced visibility */}
+      <Line 
+        points={points} 
+        color="#cdaf7d" // Antique brass
         lineWidth={2}
         transparent={false}
         opacity={1}
       />
-      <Line
-        points={points}
-        color="#e8d0a9"
+      <Line 
+        points={points} 
+        color="#e8d0a9" // Pale gold
         lineWidth={4}
         transparent
         opacity={0.7}
       />
-      <Line
-        points={points}
-        color="#e8d0a9"
+      <Line 
+        points={points} 
+        color="#e8d0a9" // Pale gold
         lineWidth={6}
         transparent
         opacity={0.4}
       />
 
+      {/* Seasonal markers with enhanced visibility */}
       {seasonalMarkers.map((position, index) => (
         <group key={index} position={position}>
+          {/* Core sphere with solid visibility */}
           <mesh>
             <sphereGeometry args={[0.3, 16, 16]} />
-            <meshBasicMaterial
-              color={index % 2 === 0 ? "#cdaf7d" : "#e36962"}
+            <meshBasicMaterial 
+              color={index % 2 === 0 ? "#cdaf7d" : "#e36962"} // Antique brass or warm accent
               transparent={false}
               opacity={1}
             />
           </mesh>
+          {/* Inner glow */}
           <mesh scale={1.2}>
             <sphereGeometry args={[0.3, 16, 16]} />
-            <meshBasicMaterial
-              color={index % 2 === 0 ? "#cdaf7d" : "#e36962"}
+            <meshBasicMaterial 
+              color={index % 2 === 0 ? "#cdaf7d" : "#e36962"} // Antique brass or warm accent
               transparent
               opacity={0.6}
             />
           </mesh>
+          {/* Outer glow */}
           <mesh scale={1.4}>
             <sphereGeometry args={[0.3, 16, 16]} />
-            <meshBasicMaterial
-              color={index % 2 === 0 ? "#cdaf7d" : "#e36962"}
+            <meshBasicMaterial 
+              color={index % 2 === 0 ? "#cdaf7d" : "#e36962"} // Antique brass or warm accent
               transparent
               opacity={0.3}
             />
@@ -629,13 +661,13 @@ function OrbitPath({ eccentricity }) {
             <div
               style={{
                 color: "white",
-                backgroundColor: "rgba(205, 175, 125, 0.6)",
+                backgroundColor: "rgba(205, 175, 125, 0.6)", // Antique brass
                 padding: "4px 8px",
                 borderRadius: "4px",
                 fontSize: "12px",
                 whiteSpace: "nowrap",
                 backdropFilter: "blur(4px)",
-                border: "1px solid rgba(232, 208, 169, 0.8)",
+                border: "1px solid rgba(232, 208, 169, 0.8)", // Pale gold
                 textShadow: "0 0 10px rgba(232, 208, 169, 1)",
                 boxShadow: "0 0 20px rgba(205, 175, 125, 0.5)",
               }}
@@ -673,6 +705,7 @@ function OrbitingEarth({
   const markerRef = useRef();
   const [isReady, setIsReady] = useState(false);
 
+  // Animate Earth's position along its orbit.
   useFrame(({ clock }) => {
     if (!groupRef.current || !isReady) return;
     const theta = clock.getElapsedTime() * 0.1;
@@ -684,6 +717,7 @@ function OrbitingEarth({
     }
     if (markerRef.current) {
       markerRef.current.position.set(x, 0, z);
+      // Change marker color based on distance (conceptual)
       const distance = Math.sqrt(x * x + z * z);
       const markerColor =
         distance < a ? new THREE.Color(1, 0, 0) : new THREE.Color(0, 0, 1);
@@ -703,6 +737,7 @@ function OrbitingEarth({
         iceFactor={iceFactor}
         onReady={onEarthReady}
       />
+      {/* Marker sphere for Earth's current position */}
       <mesh ref={markerRef}>
         <sphereGeometry args={[0.3, 16, 16]} />
         <meshBasicMaterial color="white" />
@@ -715,124 +750,131 @@ function OrbitingEarth({
 // COMPONENT: Home – main simulation component
 // ------------------------------------------------------------------
 export default function Home() {
-  const baselineEccentricity = 0.0167;
-  const baselineAxialTilt = 23.44;
+  // Baseline orbital parameters - updated with precise historical means
+  const baselineEccentricity = 0.0167; // Current Earth value
+  const baselineAxialTilt = 23.44; // Current Earth obliquity
   const baselinePrecession = 0;
-  const realisticAmsterdamTemp = 10;
-  const sensitivity = 60;
-
+  const realisticAmsterdamTemp = 10; // °C baseline temperature
+  const sensitivity = 60; // Temperature sensitivity factor - INCREASED FROM 30 to make changes more noticeable
+  
+  // State for orbital parameters.
   const [eccentricity, setEccentricity] = useState(baselineEccentricity);
   const [axialTilt, setAxialTilt] = useState(baselineAxialTilt);
   const [precession, setPrecession] = useState(baselinePrecession);
   const [autoAnimate, setAutoAnimate] = useState(true);
   const [exaggeration, setExaggeration] = useState(0.5);
 
+  // Global temperature offset.
   const [tempOffset, setTempOffset] = useState(0);
+  // Simulated year state.
   const [simulatedYear, setSimulatedYear] = useState(0);
 
+  // Time control states.
   const [isPaused, setIsPaused] = useState(false);
   const [timeScale, setTimeScale] = useState(0.01);
 
+  // Ice factor state
   const [iceFactor, setIceFactor] = useState(0);
 
+  // Hover states for cards
   const [timeControlsHovered, setTimeControlsHovered] = useState(false);
   const [scenariosHovered, setScenariosHovered] = useState(false);
 
+  // Preset scenarios with historically accurate configurations
   const presets = {
     "Last Glacial Maximum (21,000 BP)": {
       eccentricity: 0.019,
       axialTilt: 22.99,
       precession: 114,
-      description:
-        "Peak of last ice age with extensive ice sheets. Northern Hemisphere summers occurred near aphelion, minimizing summer insolation.",
-      year: -21000,
+      description: "Peak of last ice age with extensive ice sheets. Northern Hemisphere summers occurred near aphelion, minimizing summer insolation.",
+      year: -21000
     },
     "Mid-Holocene Optimum (6,000 BP)": {
       eccentricity: 0.0187,
       axialTilt: 24.1,
       precession: 303,
-      description:
-        "Warm period with enhanced seasonal contrasts. Northern Hemisphere summers near perihelion maximized summer insolation.",
-      year: -6000,
+      description: "Warm period with enhanced seasonal contrasts. Northern Hemisphere summers near perihelion maximized summer insolation.",
+      year: -6000
     },
     "Mid-Pleistocene Transition (800,000 BP)": {
       eccentricity: 0.043,
       axialTilt: 22.3,
       precession: 275,
-      description:
-        "Transition period when glacial cycles shifted from 41,000-year to 100,000-year periods.",
-      year: -800000,
+      description: "Transition period when glacial cycles shifted from 41,000-year to 100,000-year periods.",
+      year: -800000
     },
     "PETM (56 Million BP)": {
       eccentricity: 0.052,
       axialTilt: 23.8,
       precession: 180,
-      description:
-        "Paleocene-Eocene Thermal Maximum - extreme global warming event with high CO2 levels.",
-      year: -56000000,
+      description: "Paleocene-Eocene Thermal Maximum - extreme global warming event with high CO2 levels.",
+      year: -56000000
     },
     "Future Configuration (50,000 AP)": {
       eccentricity: 0.015,
       axialTilt: 23.2,
       precession: 90,
-      description:
-        "Projected orbital configuration showing reduced seasonal contrasts.",
-      year: 50000,
-    },
+      description: "Projected orbital configuration showing reduced seasonal contrasts.",
+      year: 50000
+    }
   };
   const [preset, setPreset] = useState("");
 
+  // Additional greenhouse gas slider.
   const [co2Level, setCo2Level] = useState(280);
   const [showIntro, setShowIntro] = useState(false);
   const [hasIntroFadedOut, setHasIntroFadedOut] = useState(true);
 
+  // Smooth the displayed temperature.
   const [displayedTemp, setDisplayedTemp] = useState(realisticAmsterdamTemp);
   const [parameterPreview, setParameterPreview] = useState(null);
   const [calculatedTemp, setCalculatedTemp] = useState(realisticAmsterdamTemp);
 
+  // Calculate the final temperature
   useEffect(() => {
+    // Safety check for extreme simulatedYear values
     if (!isFinite(simulatedYear) || Math.abs(simulatedYear) > 1e21) {
       setSimulatedYear(0);
       return;
     }
-    const season = ((simulatedYear % 1) + 1) % 1;
+    
+    // Calculate the season based on the simulated year (normalized to 0-1)
+    const season = (simulatedYear % 1 + 1) % 1;
+    
+    // Calculate global temperature using our utility
     const tempData = calculateGlobalTemperature({
-      latitude: 52.37,
+      latitude: 52.37, // Amsterdam latitude
       season,
       eccentricity,
       axialTilt,
       precession,
       co2Level,
-      tempOffset,
+      tempOffset
     });
+    
+    // Update temperature and ice factor states
     setCalculatedTemp(tempData.temperature);
     setIceFactor(tempData.iceFactor);
-  }, [
-    simulatedYear,
-    eccentricity,
-    axialTilt,
-    precession,
-    co2Level,
-    tempOffset,
-  ]);
+  }, [simulatedYear, eccentricity, axialTilt, precession, co2Level, tempOffset]);
 
+  // Modify the smoothing effect to be faster and add preview
   useEffect(() => {
-    const smoothingFactor = 0.5;
+    const smoothingFactor = 0.5; // Increased from 0.25 for faster response
     const interval = setInterval(() => {
       setDisplayedTemp((prev) => {
+        // If we have a parameter preview, blend it with the orbital temperature
         if (parameterPreview) {
-          const previewWeight = 0.9;
-          const targetTemp =
-            calculatedTemp * (1 - previewWeight) +
-            parameterPreview * previewWeight;
+          const previewWeight = 0.9; // Increased from 0.7 for more immediate feedback
+          const targetTemp = calculatedTemp * (1 - previewWeight) + parameterPreview * previewWeight;
           return smoothTemperature(prev, targetTemp, smoothingFactor);
         }
         return smoothTemperature(prev, calculatedTemp, smoothingFactor);
       });
-    }, 30);
+    }, 30); // Reduced from 50ms for more frequent updates
     return () => clearInterval(interval);
   }, [calculatedTemp, parameterPreview]);
 
+  // Clear parameter preview after a delay
   useEffect(() => {
     if (parameterPreview !== null) {
       const timeout = setTimeout(() => {
@@ -842,23 +884,32 @@ export default function Home() {
     }
   }, [parameterPreview]);
 
+  // Format number with k/m/b suffix and 3 significant digits
   const formatNumber = (num) => {
+    // Handle extreme values that might result from JavaScript numeric errors
     if (!isFinite(num) || Math.abs(num) > 1e21) {
-      return "0 years";
+      return "0 years"; // Reset extreme values
     }
+    
+    // Handle negative years
     const isNegative = num < 0;
     const absNum = Math.abs(num);
-
+    
+    // Function to format a number to exactly 3 significant digits
     const formatTo3Digits = (n) => {
       if (n < 10) {
+        // e.g., 7.83
         return n.toPrecision(3);
       } else if (n < 100) {
+        // e.g., 78.3
         return n.toPrecision(3);
       } else {
+        // e.g., 783
         return Math.round(n);
       }
     };
 
+    // Special case for very small numbers (like timeScale)
     if (absNum < 1 && absNum > 0) {
       if (absNum < 0.001) {
         return "< 0.001";
@@ -872,13 +923,10 @@ export default function Home() {
       result = `${formatTo3Digits(billions)} billion years`;
     } else if (absNum >= 1000000) {
       const millions = absNum / 1000000;
-      if (isNegative) {
-        result = `${formatTo3Digits(millions)} million years BP`;
-      } else {
-        result = `${formatTo3Digits(millions)} million years`;
-      }
+      result = `${formatTo3Digits(millions)} million years`;
     } else if (absNum >= 1000) {
       const thousands = absNum / 1000;
+      // For historical years (negative), use "thousand years BP" format
       if (isNegative) {
         result = `${formatTo3Digits(thousands)} thousand years BP`;
       } else {
@@ -891,9 +939,11 @@ export default function Home() {
         result = `${Math.min(999, Math.round(absNum))} years`;
       }
     }
+    
     return isNegative ? result : result;
   };
 
+  // Main simulation loop with adjusted time scales
   useEffect(() => {
     let animationFrameId;
     let lastTime = performance.now();
@@ -901,43 +951,39 @@ export default function Home() {
       if (!isPaused) {
         const delta = time - lastTime;
         lastTime = time;
-        const yearScale = timeScale * 2000;
+        
+        // Adjusted time scaling to show orbital cycles
+        const yearScale = timeScale * 2000; // Increased from 1000 to 2000 kiloyears for faster changes
         setSimulatedYear((prev) => {
           const newYear = prev + delta * yearScale;
+          
+          // Safety checks to prevent numeric overflow/underflow
           if (!isFinite(newYear) || Math.abs(newYear) > 1e21) {
-            return 0;
+            return 0; // Reset if we reach extreme values
           }
+          
           return newYear;
         });
-
+        
         if (autoAnimate) {
           const elapsed = time;
-          const eccCycle =
-            Math.sin(elapsed * 0.00001) * 0.5 +
-            Math.sin(elapsed * 0.0000025) * 0.5;
+          // Eccentricity cycle (100,000 years)
+          const eccCycle = Math.sin(elapsed * 0.00001) * 0.5 + Math.sin(elapsed * 0.0000025) * 0.5;
           const exaggeratedEcc = 0.0167 + 0.041 * eccCycle;
+          
+          // Obliquity cycle (41,000 years)
           const tiltCycle = Math.sin(elapsed * 0.000024);
           const exaggeratedTilt = baselineAxialTilt + 1.2 * tiltCycle;
+          
+          // Precession cycle (23,000 years average)
           const exaggeratedPrec = (elapsed * 0.000043) % 360;
-
+          
           const orbitalMultiplier = 1 + tempOffset / 20;
-          const newEccentricity =
-            baselineEccentricity +
-            exaggeration *
-              (exaggeratedEcc - baselineEccentricity) *
-              orbitalMultiplier;
-          const newAxialTilt =
-            baselineAxialTilt +
-            exaggeration *
-              (exaggeratedTilt - baselineAxialTilt) *
-              orbitalMultiplier;
-          const newPrecession =
-            (baselinePrecession +
-              exaggeration *
-                (exaggeratedPrec - baselinePrecession) *
-                orbitalMultiplier) %
-            360;
-
+          const newEccentricity = baselineEccentricity + exaggeration * (exaggeratedEcc - baselineEccentricity) * orbitalMultiplier;
+          const newAxialTilt = baselineAxialTilt + exaggeration * (exaggeratedTilt - baselineAxialTilt) * orbitalMultiplier;
+          const newPrecession = (baselinePrecession + exaggeration * (exaggeratedPrec - baselinePrecession) * orbitalMultiplier) % 360;
+          
+          // Updated ranges based on actual Earth variations
           setEccentricity(Math.max(0.0034, Math.min(0.058, newEccentricity)));
           setAxialTilt(Math.max(22.1, Math.min(24.5, newAxialTilt)));
           setPrecession(newPrecession);
@@ -947,17 +993,9 @@ export default function Home() {
     };
     animationFrameId = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(animationFrameId);
-  }, [
-    isPaused,
-    timeScale,
-    autoAnimate,
-    exaggeration,
-    baselineAxialTilt,
-    baselineEccentricity,
-    baselinePrecession,
-    tempOffset,
-  ]);
+  }, [isPaused, timeScale, autoAnimate, exaggeration, baselineAxialTilt, baselineEccentricity, baselinePrecession, tempOffset]);
 
+  // Apply a preset scenario if selected.
   useEffect(() => {
     if (preset && presets[preset]) {
       const { eccentricity, axialTilt, precession, year } = presets[preset];
@@ -971,26 +1009,64 @@ export default function Home() {
     }
   }, [preset]);
 
+  // Normalize temperature value for shader tinting (0 to 1).
   const normTemp = normalizeTemperature(calculatedTemp, 0, 15);
+
+  // Handlers for manual parameter adjustments.
+  const handleManualChange = (setter) => (e) => {
+    setAutoAnimate(false);
+    setter(parseFloat(e.target.value));
+  };
 
   const handleIntroComplete = () => {
     setShowIntro(false);
+    // Add a small delay to ensure the intro has fully faded out
     setTimeout(() => {
       setHasIntroFadedOut(true);
     }, 1000);
   };
 
+  // Update the CycleComparisonPanel props to include immediate feedback
+  <CycleComparisonPanel
+    eccentricity={eccentricity}
+    axialTilt={axialTilt}
+    precession={precession}
+    baselineEccentricity={baselineEccentricity}
+    baselineAxialTilt={baselineAxialTilt}
+    baselinePrecession={baselinePrecession}
+    onEccentricityChange={(value) => {
+      setEccentricity(value);
+      setAutoAnimate(false);
+      // Immediate feedback based on eccentricity change
+      const deltaEcc = value - baselineEccentricity;
+      setParameterPreview(realisticAmsterdamTemp + deltaEcc * 100); // Scale factor for visible effect
+    }}
+    onAxialTiltChange={(value) => {
+      setAxialTilt(value);
+      setAutoAnimate(false);
+      // Immediate feedback based on tilt change
+      const deltaTilt = value - baselineAxialTilt;
+      setParameterPreview(realisticAmsterdamTemp + deltaTilt * 2); // Scale factor for visible effect
+    }}
+    onPrecessionChange={(value) => {
+      setPrecession(value);
+      setAutoAnimate(false);
+      // Immediate feedback based on precession change
+      const deltaPrecession = Math.sin(THREE.MathUtils.degToRad(value - baselinePrecession));
+      setParameterPreview(realisticAmsterdamTemp + deltaPrecession * 5); // Scale factor for visible effect
+    }}
+  />
+
   return (
     <div className="relative w-screen h-screen overflow-hidden bg-space-gradient">
       {showIntro ? (
-        <IntroOverlay
-          onStart={() => {
-            setShowIntro(false);
-            setTimeout(() => setHasIntroFadedOut(true), 1000);
-          }}
-        />
+        <IntroOverlay onStart={() => {
+          setShowIntro(false);
+          setTimeout(() => setHasIntroFadedOut(true), 1000);
+        }} />
       ) : (
         <>
+          {/* Main 3D Canvas */}
           <div className="canvas-container">
             <Canvas
               camera={{ position: [0, 20, 40], fov: 45 }}
@@ -1019,16 +1095,12 @@ export default function Home() {
               <AxisIndicators axialTilt={axialTilt} precession={precession} />
               <OrbitControls />
               <SceneEffects />
-
-                {/* FIXED ATMOSPHERIC BACKGROUND */}
-                {/* <Billboard> */}
-                  {/* <AtmosphericBackground />  */}
-                {/* </Billboard> */}
-
+              <AtmosphericBackground />
               <CosmicParticles />
             </Canvas>
           </div>
 
+          {/* Left Panel Group with enhanced positioning and animations */}
           <div className="fixed left-5 top-5 space-y-4 w-[400px] z-20 animate-fadeIn">
             <CycleComparisonPanel
               eccentricity={eccentricity}
@@ -1040,24 +1112,23 @@ export default function Home() {
               onEccentricityChange={(value) => {
                 setEccentricity(value);
                 setAutoAnimate(false);
+                // Immediate feedback based on eccentricity change
                 const deltaEcc = value - baselineEccentricity;
-                setParameterPreview(realisticAmsterdamTemp + deltaEcc * 100);
+                setParameterPreview(realisticAmsterdamTemp + deltaEcc * 100); // Scale factor for visible effect
               }}
               onAxialTiltChange={(value) => {
                 setAxialTilt(value);
                 setAutoAnimate(false);
+                // Immediate feedback based on tilt change
                 const deltaTilt = value - baselineAxialTilt;
-                setParameterPreview(realisticAmsterdamTemp + deltaTilt * 2);
+                setParameterPreview(realisticAmsterdamTemp + deltaTilt * 2); // Scale factor for visible effect
               }}
               onPrecessionChange={(value) => {
                 setPrecession(value);
                 setAutoAnimate(false);
-                const deltaPrecession = Math.sin(
-                  THREE.MathUtils.degToRad(value - baselinePrecession)
-                );
-                setParameterPreview(
-                  realisticAmsterdamTemp + deltaPrecession * 5
-                );
+                // Immediate feedback based on precession change
+                const deltaPrecession = Math.sin(THREE.MathUtils.degToRad(value - baselinePrecession));
+                setParameterPreview(realisticAmsterdamTemp + deltaPrecession * 5); // Scale factor for visible effect
               }}
             />
 
@@ -1072,9 +1143,11 @@ export default function Home() {
             />
           </div>
 
+          {/* Right Panel Group with enhanced positioning and animations */}
           <div className="fixed right-5 top-5 space-y-4 w-[400px] z-20 animate-fadeIn">
-            <ObservatoryPanel
-              title="Time Controls"
+            {/* Time Control Panel */}
+            <ObservatoryPanel 
+              title="Time Controls" 
               variant="control"
               glowing={timeControlsHovered}
               className="w-full"
@@ -1092,12 +1165,8 @@ export default function Home() {
 
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-stardust-white">
-                      Simulation Speed
-                    </span>
-                    <span className="text-sm font-mono text-pale-gold">
-                      {formatNumber(timeScale)}
-                    </span>
+                    <span className="text-sm text-stardust-white">Simulation Speed</span>
+                    <span className="text-sm font-mono text-pale-gold">{formatNumber(timeScale)}</span>
                   </div>
                   <input
                     type="range"
@@ -1112,8 +1181,9 @@ export default function Home() {
               </div>
             </ObservatoryPanel>
 
-            <ObservatoryPanel
-              title="Historical Scenarios"
+            {/* Enhanced Preset Scenarios Panel */}
+            <ObservatoryPanel 
+              title="Historical Scenarios" 
               variant="info"
               glowing={scenariosHovered}
               className="w-full"
@@ -1121,6 +1191,7 @@ export default function Home() {
               onMouseLeave={() => setScenariosHovered(false)}
             >
               <div className="space-y-4">
+                {/* Scenario Selector */}
                 <div className="relative">
                   <select
                     value={preset}
@@ -1139,34 +1210,23 @@ export default function Home() {
                   >
                     <option value="">Select a scenario...</option>
                     {Object.entries(presets).map(([name]) => (
-                      <option key={name} value={name}>
-                        {name}
-                      </option>
+                      <option key={name} value={name}>{name}</option>
                     ))}
                   </select>
                   <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                    <svg
-                      className="w-4 h-4 text-stardust-white opacity-60"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M19 9l-7 7-7-7"
-                      />
+                    <svg className="w-4 h-4 text-stardust-white opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
                   </div>
                 </div>
 
+                {/* Scenario Description */}
                 {preset && presets[preset] && (
                   <div className="space-y-4 animate-fadeIn">
                     <p className="text-sm text-stardust-white opacity-80 leading-relaxed">
                       {presets[preset].description}
                     </p>
-
+                    
                     <div className="grid grid-cols-3 gap-3 text-center">
                       <DataDisplay
                         label="Eccentricity"
@@ -1189,11 +1249,9 @@ export default function Home() {
             </ObservatoryPanel>
           </div>
 
+          {/* Bottom Graphs with enhanced positioning and animations */}
           <div className="fixed flex justify-center items-center w-[620px] h-[200px] bottom-5 right-5 animate-fadeIn">
-            <ObservatoryPanel
-              variant="data"
-              className="w-full h-full p-0 overflow-hidden"
-            >
+            <ObservatoryPanel variant="data" className="w-full h-full p-0 overflow-hidden">
               <GlobalTemperatureGraph
                 axialTilt={axialTilt}
                 eccentricity={eccentricity}
@@ -1211,10 +1269,7 @@ export default function Home() {
             </ObservatoryPanel>
           </div>
           <div className="fixed bottom-0 left-0 flex justify-center items-center w-[620px] h-[190px] animate-fadeIn">
-            <ObservatoryPanel
-              variant="data"
-              className="w-full h-full p-0 overflow-hidden"
-            >
+            <ObservatoryPanel variant="data" className="w-full h-full p-0 overflow-hidden">
               <SeasonalInsolationGraph
                 axialTilt={axialTilt}
                 eccentricity={eccentricity}
@@ -1235,34 +1290,46 @@ export default function Home() {
 
 // ------------------------------------------------------------------
 // COMPONENT: Sun
+// Enhanced with realistic solar surface effects and corona
 // ------------------------------------------------------------------
 function Sun() {
   const sunRef = useRef();
   const lensFlareRef = useRef();
   const coronaRef = useRef();
-
+  
+  // Dynamic solar flare animation
   useFrame(({ clock, camera }) => {
     const elapsedTime = clock.getElapsedTime();
-
+    
     if (sunRef.current) {
+      // Subtle pulsing effect
       const pulseFactor = 1.0 + Math.sin(elapsedTime * 0.2) * 0.02;
       sunRef.current.scale.set(pulseFactor, pulseFactor, pulseFactor);
+      
+      // Rotate the sun slowly
       sunRef.current.rotation.y = elapsedTime * 0.05;
+      
+      // Update shader time uniform
       if (sunRef.current.material.uniforms) {
         sunRef.current.material.uniforms.time.value = elapsedTime;
       }
     }
-
+    
     if (coronaRef.current) {
+      // Animate corona
       coronaRef.current.rotation.z = elapsedTime * -0.1;
+      
+      // Keep corona facing camera
       coronaRef.current.lookAt(camera.position);
     }
-
+    
     if (lensFlareRef.current) {
+      // Billboarding - keep lens flare facing camera
       lensFlareRef.current.lookAt(camera.position);
     }
   });
-
+  
+  // Create a sun shader for more realistic surface - entirely procedural
   const sunShader = {
     uniforms: {
       time: { value: 0 },
@@ -1285,9 +1352,11 @@ function Sun() {
       varying vec3 vPosition;
       varying vec3 vNormal;
       
+      // Improved noise function
       float hash(vec2 p) {
         return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453);
       }
+      
       float noise(vec2 p) {
         vec2 i = floor(p);
         vec2 f = fract(p);
@@ -1300,87 +1369,114 @@ function Sun() {
         
         return mix(mix(a, b, u.x), mix(c, d, u.x), u.y);
       }
+      
       float fbm(vec2 p) {
         float v = 0.0;
         float a = 0.5;
         vec2 shift = vec2(100.0);
+        
+        // Rotate to reduce axial bias
         mat2 rot = mat2(cos(0.5), sin(0.5), -sin(0.5), cos(0.5));
+        
         for (int i = 0; i < 5; ++i) {
           v += a * noise(p);
           p = rot * p * 2.0 + shift;
           a *= 0.5;
         }
+        
         return v;
       }
       
       void main() {
-        vec3 baseColor = vec3(1.0, 0.6, 0.1);
-        vec3 hotColor = vec3(1.0, 0.9, 0.4);
-        vec3 coolColor = vec3(0.8, 0.3, 0.0);
+        // Solar surface colors
+        vec3 baseColor = vec3(1.0, 0.6, 0.1);  // Orange
+        vec3 hotColor = vec3(1.0, 0.9, 0.4);   // Yellow-white
+        vec3 coolColor = vec3(0.8, 0.3, 0.0);  // Dark orange/red
         
+        // Create dynamic plasma effect
         vec2 uv = vUv;
         float t = time * 0.1;
         
+        // Multiple layers of noise for realistic plasma
         float noise1 = fbm(uv * 8.0 + vec2(t * 0.5, 0.0));
         float noise2 = fbm(uv * 5.0 + vec2(0.0, t * 0.7) + noise1 * 0.5);
         float noise3 = fbm(uv * 3.0 + vec2(t * 0.3, t * 0.4) + noise2 * 0.5);
         
+        // Create cell-like structures similar to solar surface
         float cells = fbm(uv * 15.0 + vec2(t * 0.2, t * 0.1));
         cells = smoothstep(0.3, 0.7, cells);
         
+        // Mix noise layers for complex pattern
         float pattern = noise1 * 0.5 + noise2 * 0.3 + noise3 * 0.2;
         
+        // Edge glow (limb darkening/brightening effect)
         float fresnel = pow(1.0 - dot(vNormal, vec3(0.0, 0.0, 1.0)), 2.0);
         
+        // Mix colors based on pattern
         vec3 color = mix(coolColor, hotColor, pattern);
+        
+        // Add cell structures
         color = mix(color, hotColor * 1.2, cells * 0.3);
         
+        // Add pulsing effect
         float pulse = sin(time * 0.5) * 0.05 + 0.95;
         color *= pulse;
         
+        // Add edge glow
         color += hotColor * fresnel * 0.5;
         
+        // Final color with heightened intensity
         gl_FragColor = vec4(color, 1.0);
       }
     `,
   };
-
+  
+  // Create the lens flare system with a procedural texture
   const LensFlareSystem = () => {
+    // Create a procedural lens flare texture
     const flareTexture = useMemo(() => {
-      const canvas = document.createElement("canvas");
+      const canvas = document.createElement('canvas');
       canvas.width = 256;
       canvas.height = 256;
-      const ctx = canvas.getContext("2d");
-      const gradient = ctx.createRadialGradient(128, 128, 0, 128, 128, 128);
-      gradient.addColorStop(0, "rgba(255, 255, 255, 1.0)");
-      gradient.addColorStop(0.1, "rgba(255, 230, 190, 0.8)");
-      gradient.addColorStop(0.5, "rgba(255, 150, 50, 0.3)");
-      gradient.addColorStop(1, "rgba(255, 100, 50, 0.0)");
+      const ctx = canvas.getContext('2d');
+      
+      // Create radial gradient for flare
+      const gradient = ctx.createRadialGradient(
+        128, 128, 0,
+        128, 128, 128
+      );
+      
+      gradient.addColorStop(0, 'rgba(255, 255, 255, 1.0)');
+      gradient.addColorStop(0.1, 'rgba(255, 230, 190, 0.8)');
+      gradient.addColorStop(0.5, 'rgba(255, 150, 50, 0.3)');
+      gradient.addColorStop(1, 'rgba(255, 100, 50, 0.0)');
+      
       ctx.fillStyle = gradient;
       ctx.fillRect(0, 0, 256, 256);
-
+      
       const texture = new THREE.CanvasTexture(canvas);
       texture.needsUpdate = true;
       return texture;
     }, []);
-
+    
     return (
       <group ref={lensFlareRef} position={[0, 0, 0]}>
+        {/* Create multiple lens flare elements with different sizes and colors */}
         <sprite position={[0, 0, 0]} scale={[2, 2, 2]}>
-          <spriteMaterial
-            attach="material"
-            map={flareTexture}
-            transparent
+          <spriteMaterial 
+            attach="material" 
+            map={flareTexture} 
+            transparent 
             opacity={0.6}
             color={0xffbb77}
             blending={THREE.AdditiveBlending}
           />
         </sprite>
         <sprite position={[0, 0, -0.2]} scale={[5, 5, 5]}>
-          <spriteMaterial
-            attach="material"
-            map={flareTexture}
-            transparent
+          <spriteMaterial 
+            attach="material" 
+            map={flareTexture} 
+            transparent 
             opacity={0.4}
             color={0xff6622}
             blending={THREE.AdditiveBlending}
@@ -1389,40 +1485,55 @@ function Sun() {
       </group>
     );
   };
-
+  
+  // Create the solar corona effect with a procedural texture
   const SolarCorona = () => {
+    // Create a procedural corona texture
     const coronaTexture = useMemo(() => {
-      const canvas = document.createElement("canvas");
+      const canvas = document.createElement('canvas');
       canvas.width = 512;
       canvas.height = 512;
-      const ctx = canvas.getContext("2d");
-      const gradient = ctx.createRadialGradient(256, 256, 100, 256, 256, 256);
-      gradient.addColorStop(0, "rgba(255, 200, 120, 0.5)");
-      gradient.addColorStop(0.3, "rgba(255, 150, 50, 0.3)");
-      gradient.addColorStop(0.7, "rgba(255, 100, 30, 0.1)");
-      gradient.addColorStop(1, "rgba(255, 50, 0, 0.0)");
+      const ctx = canvas.getContext('2d');
+      
+      // Create radial gradient for corona
+      const gradient = ctx.createRadialGradient(
+        256, 256, 100,
+        256, 256, 256
+      );
+      
+      gradient.addColorStop(0, 'rgba(255, 200, 120, 0.5)');
+      gradient.addColorStop(0.3, 'rgba(255, 150, 50, 0.3)');
+      gradient.addColorStop(0.7, 'rgba(255, 100, 30, 0.1)');
+      gradient.addColorStop(1, 'rgba(255, 50, 0, 0.0)');
+      
       ctx.fillStyle = gradient;
       ctx.fillRect(0, 0, 512, 512);
-
-      ctx.strokeStyle = "rgba(255, 220, 180, 0.15)";
+      
+      // Add corona "rays"
+      ctx.strokeStyle = 'rgba(255, 220, 180, 0.15)';
       ctx.lineWidth = 2;
+      
       for (let i = 0; i < 60; i++) {
         const angle = (i / 60) * Math.PI * 2;
         const length = 150 + Math.random() * 100;
+        
         ctx.beginPath();
-        ctx.moveTo(256 + Math.cos(angle) * 100, 256 + Math.sin(angle) * 100);
+        ctx.moveTo(
+          256 + Math.cos(angle) * 100,
+          256 + Math.sin(angle) * 100
+        );
         ctx.lineTo(
           256 + Math.cos(angle) * length,
           256 + Math.sin(angle) * length
         );
         ctx.stroke();
       }
-
+      
       const texture = new THREE.CanvasTexture(canvas);
       texture.needsUpdate = true;
       return texture;
     }, []);
-
+    
     return (
       <group ref={coronaRef} position={[0, 0, 0]}>
         <sprite scale={[4, 4, 4]}>
@@ -1438,29 +1549,41 @@ function Sun() {
       </group>
     );
   };
-
+  
   return (
     <group>
-      <pointLight
-        position={[0, 0, 0]}
-        intensity={2}
+      {/* Enhanced volumetric lighting effect */}
+      <pointLight 
+        position={[0, 0, 0]} 
+        intensity={2} 
         color={0xffffee}
         distance={100}
         decay={1.5}
         castShadow
       />
-      <pointLight
-        position={[0, 0, 0]}
-        intensity={1.5}
+      
+      {/* Atmospheric glow */}
+      <pointLight 
+        position={[0, 0, 0]} 
+        intensity={1.5} 
         color={0xff9933}
         distance={20}
         decay={2}
       />
+      
+      {/* The sun itself */}
       <mesh ref={sunRef}>
         <sphereGeometry args={[1, 64, 64]} />
-        <shaderMaterial args={[sunShader]} uniforms={sunShader.uniforms} />
+        <shaderMaterial 
+          args={[sunShader]} 
+          uniforms={sunShader.uniforms}
+        />
       </mesh>
+      
+      {/* Corona effect */}
       <SolarCorona />
+      
+      {/* Lens flare effect */}
       <LensFlareSystem />
     </group>
   );
@@ -1468,12 +1591,16 @@ function Sun() {
 
 // ------------------------------------------------------------------
 // COMPONENT: SceneEffects
+// Adds cinematic post-processing effects for an award-winning look
 // ------------------------------------------------------------------
 function SceneEffects() {
+  // Use static values for vignette effect
   const depthOfFieldRef = useRef();
-
+  
+  // Make effects responsive to camera movement
   useFrame((state) => {
     if (depthOfFieldRef.current) {
+      // Dynamic focus based on camera position
       const focusDistance = Math.abs(state.camera.position.z) * 0.75;
       depthOfFieldRef.current.focusDistance = focusDistance;
     }
@@ -1481,44 +1608,57 @@ function SceneEffects() {
 
   return (
     <EffectComposer multisampling={8}>
-      {/* <SSAO
-        samples={21}
-        radius={7}
-        intensity={20}
-        luminanceInfluence={0.6}
+      {/* SSAO for realistic depth and shadows */}
+      <SSAO 
+        samples={21} 
+        radius={7} 
+        intensity={20} 
+        luminanceInfluence={0.6} 
         color="black"
-      /> */}
-      {/* <Bloom
+      />
+      
+      {/* Enhanced Bloom with more refined parameters */}
+      <Bloom
         intensity={1.0}
         luminanceThreshold={0.45}
         luminanceSmoothing={0.9}
         height={300}
         opacity={0.8}
-      /> */}
-      {/* <DepthOfField
+      />
+      
+      {/* Sophisticated Depth of Field - selectively blurs distant objects */}
+      <DepthOfField
         ref={depthOfFieldRef}
         focusDistance={0.02}
         focalLength={0.12}
         bokehScale={6}
         height={480}
-      /> */}
+      />
+      
+      {/* Subtle film grain for cinematic quality */}
       <Noise
         premultiply
         blendFunction={BlendFunction.SOFT_LIGHT}
-        opacity={1}
+        opacity={0.06}
       />
+      
+      {/* Static vignette effect for dramatic framing */}
       <Vignette
-        offset={0.5}
-        darkness={0.5}
+        offset={0.1}
+        darkness={0.6}
         eskil={false}
         blendFunction={BlendFunction.NORMAL}
       />
-      {/* <ChromaticAberration
+      
+      {/* Subtle color aberration for depth */}
+      <ChromaticAberration
         blendFunction={BlendFunction.NORMAL}
         offset={[0.0012, 0.0012]}
         radialModulation={true}
         modulationOffset={0.15}
-      /> */}
+      />
+      
+      {/* Color grading for space-themed aesthetic */}
       <ToneMapping
         adaptive={true}
         resolution={256}
@@ -1531,168 +1671,120 @@ function SceneEffects() {
   );
 }
 
-// ------------------------------------------------------------------
-// COMPONENT: AtmosphericBackground (FIXED VERSION)
-// ------------------------------------------------------------------
-
+// Custom atmospheric space shader for enhanced realism
 function AtmosphericBackground() {
-  const meshRef = useRef();
-
-  // Animate the background
+  const atmosphereRef = useRef();
+  
   useFrame(({ clock }) => {
-    if (meshRef.current) {
-      meshRef.current.material.uniforms.uTime.value = clock.getElapsedTime();
+    if (atmosphereRef.current) {
+      atmosphereRef.current.material.uniforms.uTime.value = clock.getElapsedTime() * 0.05;
     }
   });
-
-  // A darker, more muted color palette
-  const colors = {
-    background1: new THREE.Color("#191b20"), // near-black charcoal
-    background2: new THREE.Color("#1f2228"), // slightly lighter charcoal
-    highlight1: new THREE.Color("pink"), // subtle, cool mid-tone
-    highlight2: new THREE.Color("red"), // mild, greyish highlight
+  
+  const atmosphereShader = {
+    uniforms: {
+      uTime: { value: 0 },
+      uColorA: { value: new THREE.Color(0x000420) },
+      uColorB: { value: new THREE.Color(0x0a0a2a) },
+      uColorC: { value: new THREE.Color(0x000000) },
+    },
+    vertexShader: `
+      varying vec2 vUv;
+      void main() {
+        vUv = uv;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: `
+      uniform float uTime;
+      uniform vec3 uColorA;
+      uniform vec3 uColorB;
+      uniform vec3 uColorC;
+      varying vec2 vUv;
+      
+      float noise(vec2 p) {
+        return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453);
+      }
+      
+      // Improved noise function
+      vec2 fade(vec2 t) {return t*t*t*(t*(t*6.0-15.0)+10.0);}
+      
+      float cnoise(vec2 P) {
+        vec4 Pi = floor(P.xyxy) + vec4(0.0, 0.0, 1.0, 1.0);
+        vec4 Pf = fract(P.xyxy) - vec4(0.0, 0.0, 1.0, 1.0);
+        Pi = mod(Pi, 289.0);
+        vec4 ix = Pi.xzxz;
+        vec4 iy = Pi.yyww;
+        vec4 fx = Pf.xzxz;
+        vec4 fy = Pf.yyww;
+        vec4 i = noise(Pi.xy) * 255.0;
+        vec4 j = noise(Pi.zw) * 255.0;
+        return mix(mix(i.x, i.z, fade(fx.x)), mix(i.y, i.w, fade(fx.x)), fade(fy.x));
+      }
+      
+      void main() {
+        // Nebula-like effect
+        vec2 uv = vUv;
+        
+        // Subtle moving noise patterns
+        float n1 = cnoise((uv + uTime * 0.01) * 3.0) * 0.5 + 0.5;
+        float n2 = cnoise((uv - uTime * 0.015) * 2.0) * 0.5 + 0.5;
+        
+        // Distant stars
+        float stars = smoothstep(0.95, 1.0, noise(uv * 1000.0));
+        
+        // Blend background colors with noise
+        vec3 bg = mix(uColorA, uColorB, length(uv - vec2(0.5)));
+        bg = mix(bg, uColorC, n1 * n2 * 0.6);
+        
+        // Add stars to background
+        vec3 finalColor = bg + stars * vec3(0.8, 0.8, 1.0);
+        
+        gl_FragColor = vec4(finalColor, 1.0);
+      }
+    `,
   };
-
-  // Create your custom shader
-  const shader = useMemo(() => {
-    return {
-      uniforms: {
-        uTime: { value: 0 },
-        uColor1: { value: colors.background1 },
-        uColor2: { value: colors.background2 },
-        uHighlight1: { value: colors.highlight1 },
-        uHighlight2: { value: colors.highlight2 },
-      },
-      vertexShader: `
-        uniform float uTime;
-        
-        // Simple 2D noise
-        float hash(vec2 p) {
-          return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
-        }
-        float noise(vec2 p){
-          vec2 i = floor(p);
-          vec2 f = fract(p);
-          vec2 u = f * f * (3.0 - 2.0 * f);
-          return mix(
-            mix(hash(i + vec2(0.0,0.0)), hash(i + vec2(1.0,0.0)), u.x),
-            mix(hash(i + vec2(0.0,1.0)), hash(i + vec2(1.0,1.0)), u.x),
-            u.y
-          );
-        }
-
-        // Fractional Brownian motion for smooth displacement
-        float fbm(vec2 st) {
-          float value = 0.0;
-          float amplitude = 0.5;
-          float frequency = 1.0;
-          for (int i = 0; i < 5; i++) {
-            value += amplitude * noise(st * frequency);
-            frequency *= 2.0;
-            amplitude *= 0.5;
-          }
-          return value;
-        }
-        
-        varying vec2 vUv;
-        varying float vElevation;
-        
-        void main() {
-          vUv = uv;
-          
-          // Base vertex position
-          vec3 newPosition = position;
-          
-          // More subdued amplitude for the wave
-          float displacement = fbm(uv * 2.0 + uTime * 0.1) * 0.05;
-          newPosition.z += displacement;
-          
-          // Pass displacement to the fragment for coloring
-          vElevation = displacement;
-          
-          gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);
-        }
-      `,
-      fragmentShader: `
-        uniform float uTime;
-        uniform vec3 uColor1;
-        uniform vec3 uColor2;
-        uniform vec3 uHighlight1;
-        uniform vec3 uHighlight2;
-        
-        varying vec2 vUv;
-        varying float vElevation;
-        
-        void main() {
-          // Radial-ish gradient based on distance from center
-          vec2 center = vec2(0.5, 0.5);
-          float distToCenter = distance(vUv, center);
-          
-          // Blend between two background colors
-          float gradient = smoothstep(0.0, 1.2, distToCenter * 1.2);
-          vec3 baseColor = mix(uColor1, uColor2, gradient);
-          
-          // Use the displacement to mix in a subtle highlight
-          // Keeping it toned down
-          float highlightFactor = clamp(vElevation * 10.0, 0.0, 1.0);
-          vec3 highlightColor = mix(uHighlight1, uHighlight2, highlightFactor);
-          
-          // Weighted softly so it doesn't overpower
-          vec3 finalColor = mix(baseColor, highlightColor, highlightFactor * 0.2);
-          
-          // Vignette near edges
-          float edgeDist = distance(vUv, vec2(0.5));
-          float vignette = smoothstep(0.3, 0.8, edgeDist);
-          finalColor = mix(finalColor, finalColor * 0.6, vignette * 0.4);
-          
-          gl_FragColor = vec4(finalColor, 1.0);
-        }
-      `,
-    };
-  }, [colors]);
-
+  
   return (
-    <mesh
-      ref={meshRef}
-      position={[0, 0, -200]} /* push it far behind your scene objects */
-      rotation={[0, 0, 0]}
-    >
-      {/* Make the plane large so it covers the entire camera view. */}
-      <planeGeometry args={[3000, 3000, 150, 150]} />
-      <shaderMaterial
+    <mesh ref={atmosphereRef} position={[0, 0, -10]}>
+      <planeGeometry args={[40, 40]} />
+      <shaderMaterial 
         attach="material"
-        args={[shader]}
-        side={THREE.DoubleSide}
-        transparent={false}
+        args={[atmosphereShader]}
+        transparent
         depthWrite={false}
       />
     </mesh>
   );
 }
 
-// ------------------------------------------------------------------
-// COMPONENT: CosmicParticles
-// ------------------------------------------------------------------
+// Cosmic dust and star particles for immersive space environment
 function CosmicParticles() {
   const particlesRef = useRef();
   const count = 2000;
   const mouse = useRef({ x: 0, y: 0 });
   const targetMouse = useRef({ x: 0, y: 0 });
-
+  
+  // Handle mouse movement
   useEffect(() => {
     const handleMouseMove = (event) => {
+      // Convert mouse position to normalized coordinates (-1 to 1)
       targetMouse.current.x = (event.clientX / window.innerWidth) * 2 - 1;
       targetMouse.current.y = -(event.clientY / window.innerHeight) * 2 + 1;
     };
-    window.addEventListener("mousemove", handleMouseMove);
-    return () => window.removeEventListener("mousemove", handleMouseMove);
+    
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
   }, []);
-
+  
+  // Handle mouse inertia - smooth mouse movement
   useFrame(() => {
+    // Smooth mouse following with easing
     mouse.current.x += (targetMouse.current.x - mouse.current.x) * 0.05;
     mouse.current.y += (targetMouse.current.y - mouse.current.y) * 0.05;
   });
-
+  
+  // Generate particles with varied sizes and positions
   const particles = useMemo(() => {
     const temp = [];
     for (let i = 0; i < count; i++) {
@@ -1702,90 +1794,100 @@ function CosmicParticles() {
       const x = (Math.random() - 0.5) * 60;
       const y = (Math.random() - 0.5) * 30;
       const z = (Math.random() - 0.5) * 30;
+      
+      // Interactivity factors
       const mouseRange = Math.random() * 20 + 10;
       const mouseStrength = Math.random() * 0.1 + 0.05;
+      
+      // Add different star types
       let starType = Math.random();
+      // Color based on star type (blue, white, yellow, orange, red)
       let color;
-      if (starType < 0.1) color = new THREE.Color(0x4a88ff);
-      else if (starType < 0.3) color = new THREE.Color(0xe8f1ff);
-      else if (starType < 0.6) color = new THREE.Color(0xfff4d2);
-      else if (starType < 0.8) color = new THREE.Color(0xffc982);
-      else color = new THREE.Color(0xff8a61);
-
-      temp.push({
-        size,
-        factor,
-        speed,
-        x,
-        y,
-        z,
-        color,
+      if (starType < 0.1) color = new THREE.Color(0x4a88ff); // Blue giant
+      else if (starType < 0.3) color = new THREE.Color(0xe8f1ff); // White
+      else if (starType < 0.6) color = new THREE.Color(0xfff4d2); // Yellow
+      else if (starType < 0.8) color = new THREE.Color(0xffc982); // Orange
+      else color = new THREE.Color(0xff8a61); // Red dwarf
+      
+      temp.push({ 
+        size, 
+        factor, 
+        speed, 
+        x, y, z, 
+        color, 
         mouseRange,
         mouseStrength,
-        mx: 0,
-        my: 0,
+        mx: 0, 
+        my: 0, 
         mz: 0,
         originalX: x,
         originalY: y,
-        originalZ: z,
+        originalZ: z 
       });
     }
     return temp;
   }, [count]);
-
+  
+  // Animate particles with mouse interaction
   useFrame(({ clock, camera }) => {
     const elapsedTime = clock.getElapsedTime();
+    
     if (particlesRef.current) {
       const positions = particlesRef.current.geometry.attributes.position.array;
       const scales = particlesRef.current.geometry.attributes.scale.array;
       const colors = particlesRef.current.geometry.attributes.color.array;
-
+      
       particles.forEach((p, i) => {
-        let {
-          originalX,
-          originalY,
-          originalZ,
-          factor,
-          speed,
-          color,
-          mouseRange,
-          mouseStrength,
+        let { 
+          originalX, originalY, originalZ,
+          factor, speed, color, 
+          mouseRange, mouseStrength 
         } = p;
-
-        const mouseX = mouse.current.x * 30;
+        
+        // Calculate distance to mouse in 3D space
+        const mouseX = mouse.current.x * 30; // Scale to scene size
         const mouseY = mouse.current.y * 15;
+        
+        // Vector from particle to mouse
         const dx = originalX - mouseX;
         const dy = originalY - mouseY;
         const dist = Math.sqrt(dx * dx + dy * dy);
-
+        
+        // Mouse influence based on distance
         let mouseInfluence = 0;
         if (dist < mouseRange) {
+          // Inverse square law - stronger effect when closer
           mouseInfluence = (1 - dist / mouseRange) * mouseStrength;
         }
-
+        
+        // Apply mouse repulsion
         const angle = Math.atan2(dy, dx);
         const pushX = Math.cos(angle) * mouseInfluence * mouseRange;
         const pushY = Math.sin(angle) * mouseInfluence * mouseRange;
-
+        
+        // Update positions with subtle movement + mouse interaction
         const ix = i * 3;
-        positions[ix] =
-          originalX + Math.sin(elapsedTime * speed + i * 0.1) * factor + pushX;
-        positions[ix + 1] =
-          originalY + Math.cos(elapsedTime * speed + i * 0.2) * factor + pushY;
-        positions[ix + 2] =
-          originalZ + Math.sin(elapsedTime * speed + i * 0.3) * factor * 0.5;
-
+        positions[ix] = originalX + Math.sin((elapsedTime * speed) + i * 0.1) * factor + pushX;
+        positions[ix + 1] = originalY + Math.cos((elapsedTime * speed) + i * 0.2) * factor + pushY;
+        positions[ix + 2] = originalZ + Math.sin((elapsedTime * speed) + i * 0.3) * factor * 0.5;
+        
+        // Create subtle twinkling effect for stars
         const twinkle = Math.sin(elapsedTime * 2 + i) * 0.3 + 0.7;
+        // Stars closer to mouse glow brighter
         const glow = mouseInfluence > 0 ? 1 + mouseInfluence * 2 : 1;
         scales[i] = p.size * twinkle * glow;
-
+        
+        // Transfer color to buffer - stars closer to mouse shift color
         if (mouseInfluence > 0) {
+          // Shift toward blue/white when near mouse
           const blueShift = mouseInfluence * 0.5;
           const enhancedColor = new THREE.Color().copy(color);
+          
+          // Add blue and brightness based on influence
           enhancedColor.r = Math.max(0, Math.min(1, color.r - blueShift * 0.2));
           enhancedColor.g = Math.max(0, Math.min(1, color.g + blueShift * 0.1));
           enhancedColor.b = Math.max(0, Math.min(1, color.b + blueShift * 0.5));
-
+          
           colors[ix] = enhancedColor.r;
           colors[ix + 1] = enhancedColor.g;
           colors[ix + 2] = enhancedColor.b;
@@ -1795,13 +1897,13 @@ function CosmicParticles() {
           colors[ix + 2] = color.b;
         }
       });
-
+      
       particlesRef.current.geometry.attributes.position.needsUpdate = true;
       particlesRef.current.geometry.attributes.scale.needsUpdate = true;
       particlesRef.current.geometry.attributes.color.needsUpdate = true;
     }
   });
-
+  
   return (
     <points ref={particlesRef}>
       <bufferGeometry>
@@ -1842,11 +1944,16 @@ function CosmicParticles() {
           varying vec3 vColor;
           
           void main() {
+            // Improved particle shape - softer disc with faded edges
             float r = 2.0 * length(gl_PointCoord - vec2(0.5));
             float intensity = 0.9 * (1.0 - smoothstep(0.45, 1.0, r));
+            
+            // Add subtle highlight in center
             float highlight = 1.0 - smoothstep(0.0, 0.2, r);
             intensity += highlight * 0.3;
+            
             if (intensity < 0.1) discard;
+            
             gl_FragColor = vec4(vColor, intensity);
           }
         `}

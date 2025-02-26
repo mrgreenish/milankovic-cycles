@@ -4,25 +4,48 @@
 
 @layer base {
   :root {
-    --background: 0 0% 0%;
+    /* Base theme colors */
+    --background: 222 33% 5%;
     --foreground: 0 0% 100%;
-    --card: 0 0% 0%;
+    
+    /* Celestial Observatory color system */
+    --deep-space: 230 33% 5%;
+    --midnight-blue: 220 45% 10%;
+    --cosmic-blue: 220 38% 17%;
+    
+    /* Accent colors */
+    --antique-brass: 36 60% 58%;
+    --aged-copper: 30 58% 47%;
+    --pale-gold: 35 60% 76%;
+    
+    /* Temperature gradient */
+    --temp-cold: 222 50% 36%;
+    --temp-neutral: 30 58% 47%;
+    --temp-warm: 10 65% 41%;
+    
+    /* UI Elements */
+    --stardust-white: 220 100% 97%;
+    --slate-blue: 215 32% 28%;
+    --deep-space-overlay: 230 33% 5%;
+    
+    /* Original shadcn colors - modified for our theme */
+    --card: 222 33% 5%;
     --card-foreground: 0 0% 100%;
-    --popover: 0 0% 0%;
+    --popover: 222 33% 5%;
     --popover-foreground: 0 0% 100%;
-    --primary: 221.2 83.2% 53.3%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 217.2 32.6% 17.5%;
+    --primary: 36 60% 58%;
+    --primary-foreground: 222 33% 5%;
+    --secondary: 215 32% 28%;
     --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
+    --muted: 215 32% 28%;
+    --muted-foreground: 215 20% 75%;
+    --accent: 30 58% 47%;
     --accent-foreground: 210 40% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 224.3 76.3% 48%;
+    --border: 215 32% 28%;
+    --input: 215 32% 28%;
+    --ring: 36 60% 58%;
     --radius: 0.5rem;
   }
 
@@ -54,17 +77,29 @@
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
     font-feature-settings: "kern" 1, "liga" 1, "calt" 1, "ss01" 1, "ss02" 1;
+    scroll-behavior: smooth;
   }
 
   body {
     @apply antialiased;
-    font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
+    font-family: var(--font-switzer), var(--font-inter), system-ui, -apple-system, sans-serif;
     letter-spacing: -0.015em;
+    margin: 0;
+    padding: 0;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    background: radial-gradient(
+      circle at center,
+      hsl(var(--midnight-blue)) 0%,
+      hsl(var(--deep-space)) 100%
+    );
+    color: hsl(var(--stardust-white));
   }
 
   /* Typography scale */
   h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-poppins), system-ui, -apple-system, sans-serif;
+    font-family: var(--font-playfair), system-ui, -apple-system, serif;
     @apply font-semibold tracking-tight;
     letter-spacing: -0.02em;
   }
@@ -83,9 +118,15 @@
   }
 
   p {
-    font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
+    font-family: var(--font-switzer), var(--font-inter), system-ui, -apple-system, sans-serif;
     @apply text-base leading-relaxed;
     font-feature-settings: "ss01" 1, "ss02" 1, "case" 1;
+  }
+
+  /* Monospace elements */
+  code, .mono, .data-display {
+    font-family: var(--font-space-mono), monospace;
+    @apply tracking-tight text-sm;
   }
 
   .text-balance {
@@ -93,35 +134,7 @@
   }
 }
 
-/* Enhanced base styles */
-html {
-  scroll-behavior: smooth;
-}
-
-body {
-  margin: 0;
-  padding: 0;
-  width: 100vw;
-  height: 100vh;
-  overflow: hidden;
-  background: black;
-  color: white;
-}
-
-#root {
-  width: 100vw;
-  height: 100vh;
-}
-
-@layer base {
-  * {
-    @apply border-border;
-  }
-  body {
-    @apply bg-background text-foreground;
-  }
-}
-
+/* Enhanced canvas container */
 .canvas-container {
   position: absolute !important;
   top: 0 !important;
@@ -135,16 +148,152 @@ body {
   content: '';
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.4) 100%);
+  background: radial-gradient(
+    circle at center, 
+    transparent 0%, 
+    hsla(var(--deep-space), 0.4) 100%
+  );
   pointer-events: none;
 }
 
-select {
-  @apply focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent;
+/* Custom UI Components */
+.observatory-panel {
+  @apply bg-opacity-70 backdrop-blur-md border border-opacity-30 rounded-lg;
+  background-color: hsla(var(--deep-space), 0.7);
+  border-color: hsla(var(--slate-blue), 0.3);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2), 
+              0 0 0 1px hsla(var(--antique-brass), 0.1),
+              inset 0 0 0 1px hsla(var(--stardust-white), 0.05);
 }
 
-button {
-  @apply focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background;
+.control-panel {
+  @apply observatory-panel p-4;
+}
+
+/* Custom interactive elements */
+.celestial-button {
+  @apply px-4 py-2 rounded-md transition-all duration-300 focus:outline-none;
+  background-color: hsla(var(--deep-space), 0.8);
+  border: 1px solid hsl(var(--stardust-white));
+  color: hsl(var(--stardust-white));
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2), 
+              inset 0 0 0 1px hsla(var(--stardust-white), 0.05);
+}
+
+.celestial-button:hover {
+  background-color: hsla(var(--midnight-blue), 0.8);
+  border-color: hsl(var(--stardust-white));
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3), 
+              0 0 0 1px hsla(var(--antique-brass), 0.2),
+              inset 0 0 0 1px hsla(var(--stardust-white), 0.1);
+}
+
+.celestial-button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Data display elements */
+.data-display {
+  @apply bg-opacity-60 backdrop-blur-sm p-2 rounded border border-opacity-20 text-sm;
+  background-color: hsla(var(--deep-space), 0.6);
+  border-color: hsla(var(--antique-brass), 0.2);
+  color: hsl(var(--pale-gold));
+}
+
+/* Custom slider styling */
+.celestial-slider {
+  @apply w-full h-6 appearance-none rounded-full relative;
+  background-color: transparent;
+}
+
+.celestial-slider::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 4px;
+  transform: translateY(-50%);
+  background: linear-gradient(to right, hsl(var(--antique-brass)), hsl(var(--pale-gold)));
+  border-radius: 2px;
+  box-shadow: 0 0 8px hsla(var(--antique-brass), 0.5);
+  pointer-events: none;
+  opacity: 1;
+}
+
+.celestial-slider::-webkit-slider-thumb {
+  @apply appearance-none w-5 h-5 rounded-full cursor-pointer relative z-10;
+  background: hsl(var(--antique-brass));
+  border: 2px solid hsl(var(--stardust-white));
+  box-shadow: 0 0 8px hsla(var(--antique-brass), 0.5);
+}
+
+.celestial-slider::-moz-range-track {
+  @apply h-1 rounded-full;
+  background: linear-gradient(to right, hsl(var(--antique-brass)), hsl(var(--pale-gold)));
+  box-shadow: 0 0 8px hsla(var(--antique-brass), 0.5);
+}
+
+.celestial-slider::-moz-range-thumb {
+  @apply w-5 h-5 rounded-full cursor-pointer border-0;
+  background: hsl(var(--antique-brass));
+  border: 2px solid hsl(var(--stardust-white));
+  box-shadow: 0 0 8px hsla(var(--antique-brass), 0.5);
+}
+
+/* Tooltip styling */
+.celestial-tooltip {
+  @apply absolute z-50 px-3 py-2 text-sm rounded-md shadow-lg;
+  background-color: hsla(var(--deep-space), 0.9);
+  border: 1px solid hsla(var(--antique-brass), 0.3);
+  backdrop-filter: blur(8px);
+  color: hsl(var(--stardust-white));
+  max-width: 300px;
+}
+
+/* Animation utilities */
+@keyframes orbital-rotation {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animate-orbit {
+  animation: orbital-rotation 20s linear infinite;
+}
+
+@keyframes pulse-glow {
+  0% { box-shadow: 0 0 5px hsla(var(--antique-brass), 0.3); }
+  50% { box-shadow: 0 0 15px hsla(var(--antique-brass), 0.6); }
+  100% { box-shadow: 0 0 5px hsla(var(--antique-brass), 0.3); }
+}
+
+.animate-glow {
+  animation: pulse-glow 3s ease-in-out infinite;
+}
+
+/* Responsive layout utilities */
+.observatory-layout {
+  @apply grid gap-4 p-4 w-full h-full;
+  grid-template-columns: 1fr 3fr 1fr;
+  grid-template-rows: auto 1fr auto;
+  grid-template-areas:
+    "header header header"
+    "left-panel main-view right-panel"
+    "footer footer footer";
+}
+
+@media (max-width: 1024px) {
+  .observatory-layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr auto auto;
+    grid-template-areas:
+      "header"
+      "main-view"
+      "left-panel"
+      "footer";
+  }
 }
 
 /* Slider styles */
