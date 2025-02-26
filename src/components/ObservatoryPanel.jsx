@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { gsap } from 'gsap';
 import { cn } from '@/lib/utils';
 
 /**
  * ObservatoryPanel - A styled container component for the Celestial Observatory design
- * 
+ *
  * @param {Object} props - Component props
  * @param {React.ReactNode} props.children - Child elements
  * @param {string} props.title - Panel title
@@ -30,7 +31,7 @@ export function ObservatoryPanel({
   };
 
   return (
-    <div 
+    <div
       className={cn(
         variantClasses[variant] || variantClasses.default,
         glowing && 'animate-glow',
@@ -44,9 +45,7 @@ export function ObservatoryPanel({
           <h3 className="text-lg font-serif text-stardust-white">{title}</h3>
         </div>
       )}
-      <div className="p-4">
-        {children}
-      </div>
+      <div className="p-4">{children}</div>
     </div>
   );
 }
@@ -125,7 +124,8 @@ export function ObservatorySlider({
 }
 
 /**
- * DataDisplay - A component for displaying data values in the Celestial Observatory design
+ * DataDisplay - A component for displaying data values in the Celestial Observatory design.
+ * Here we add smoothing, threshold checks, and GSAP-based animation to avoid sudden jumps.
  */
 export function DataDisplay({
   label,
@@ -134,12 +134,47 @@ export function DataDisplay({
   className,
   ...props
 }) {
+  // Store the displayedValue separately for animation/smoothing
+  const [displayedValue, setDisplayedValue] = useState(value);
+
+  // We'll use a ref to keep track of the raw numerical value we're animating
+  const animationRef = useRef({ val: parseFloat(value) || 0 });
+
+  // Threshold - if the difference is tiny, ignore the update
+  const THRESHOLD = 0.05;
+
+  // When "value" changes, animate to the new value using GSAP.
+  // Smoothing can be handled by adjusting the duration or using smaller increments.
+  useEffect(() => {
+    const newVal = parseFloat(value) || 0;
+    const oldVal = animationRef.current.val;
+
+    // Only animate if difference exceeds a small threshold
+    if (Math.abs(newVal - oldVal) > THRESHOLD) {
+      gsap.to(animationRef.current, {
+        val: newVal,
+        duration: 0.5,
+        onUpdate: () => {
+          // Round to 2 decimals or adapt as needed
+          setDisplayedValue(animationRef.current.val.toFixed(2));
+        },
+        ease: 'power1.out',
+      });
+    }
+  }, [value]);
+
   return (
     <div className={cn('data-display', className)} {...props}>
       <div className="text-xs text-stardust-white opacity-80">{label}</div>
       <div className="flex items-baseline">
-        <span className="text-lg font-mono text-pale-gold">{value}</span>
-        {unit && <span className="ml-1 text-xs text-stardust-white opacity-70">{unit}</span>}
+        <span className="text-lg font-mono text-pale-gold">
+          {displayedValue}
+        </span>
+        {unit && (
+          <span className="ml-1 text-xs text-stardust-white opacity-70">
+            {unit}
+          </span>
+        )}
       </div>
     </div>
   );
@@ -154,9 +189,9 @@ export function ObservatoryTooltip({
   className,
   ...props
 }) {
-  const [isVisible, setIsVisible] = React.useState(false);
-  const [position, setPosition] = React.useState({ x: 0, y: 0 });
-  const tooltipRef = React.useRef(null);
+  const [isVisible, setIsVisible] = useState(false);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const tooltipRef = useRef(null);
 
   const handleMouseEnter = (e) => {
     setIsVisible(true);
@@ -177,8 +212,7 @@ export function ObservatoryTooltip({
     if (tooltipRef.current) {
       const tooltipWidth = tooltipRef.current.offsetWidth;
       const tooltipHeight = tooltipRef.current.offsetHeight;
-      
-      // Position the tooltip above the cursor
+
       setPosition({
         x: Math.min(e.clientX - tooltipWidth / 2, window.innerWidth - tooltipWidth - 10),
         y: Math.max(e.clientY - tooltipHeight - 10, 10),
@@ -187,7 +221,7 @@ export function ObservatoryTooltip({
   };
 
   return (
-    <div 
+    <div
       className="relative inline-block"
       onMouseEnter={handleMouseEnter}
       onMouseMove={handleMouseMove}
@@ -196,7 +230,7 @@ export function ObservatoryTooltip({
     >
       {children}
       {isVisible && (
-        <div 
+        <div
           ref={tooltipRef}
           className={cn('celestial-tooltip', className)}
           style={{
@@ -209,4 +243,4 @@ export function ObservatoryTooltip({
       )}
     </div>
   );
-} 
+}
