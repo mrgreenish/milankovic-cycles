@@ -1,5 +1,6 @@
 import React, { useRef, useState, useEffect } from "react";
 import { Poppins } from "next/font/google";
+import { ObservatoryButton } from './ObservatoryPanel';
 
 const poppins = Poppins({ subsets: ["latin"], weight: ["400", "600"] });
 
@@ -212,92 +213,170 @@ function ParticleEffect() {
 }
 
 /* IntroOverlay component with GSAP animations */
-export default function IntroOverlay({ onStart }) {
-  const [isHovering, setIsHovering] = useState(false);
-  const [isStarting, setIsStarting] = useState(false);
-  const buttonRef = useRef(null);
+export default function IntroOverlay({ onClose, onComplete }) {
+  const [step, setStep] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
 
+  // Check if the device is mobile
   useEffect(() => {
-    const handleMouseMove = (e) => {
-      if (buttonRef.current) {
-        const rect = buttonRef.current.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-        const centerX = rect.width / 2;
-        const centerY = rect.height / 2;
-        const distanceFromCenter = Math.sqrt(
-          Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2)
-        );
-
-        if (distanceFromCenter < rect.width / 2) {
-          setIsHovering(true);
-        } else {
-          setIsHovering(false);
-        }
-      }
+    const checkIfMobile = () => {
+      setIsMobile(window.innerWidth < 768);
     };
-
-    window.addEventListener("mousemove", handleMouseMove);
-    return () => window.removeEventListener("mousemove", handleMouseMove);
+    
+    checkIfMobile();
+    window.addEventListener('resize', checkIfMobile);
+    
+    return () => window.removeEventListener('resize', checkIfMobile);
   }, []);
 
-  const handleStart = async () => {
-    setIsStarting(true);
-    // Delay to allow for animation
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    onStart();
+  const nextStep = () => {
+    if (step < steps.length - 1) {
+      setStep(step + 1);
+    } else {
+      if (onComplete) onComplete();
+      if (onClose) onClose();
+    }
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-deep-space">
-      <ParticleEffect />
-      
-      <div className="relative z-10 max-w-4xl px-6 py-12 text-center">
-        <h1 className="mb-6 text-5xl font-serif text-stardust-white animate-slideUp">
-          Milankovitch Cycles <span className="text-antique-brass">Observatory</span>
-        </h1>
-        
-        <p className="mb-8 text-lg text-stardust-white opacity-80 max-w-2xl mx-auto animate-fadeIn">
-          Explore how Earth's orbital variations influence our climate over thousands of years. 
-          This interactive simulation demonstrates the relationship between orbital mechanics and climate patterns.
+  const prevStep = () => {
+    if (step > 0) {
+      setStep(step - 1);
+    }
+  };
+
+  const steps = [
+    {
+      title: "Welcome to the Milanković Cycles Simulation",
+      content: (
+        <>
+          <p className="mb-4">
+            This interactive visualization demonstrates how Earth's orbital variations influence 
+            its climate over long time scales – a theory proposed by Serbian scientist 
+            Milutin Milanković in the early 20th century.
+          </p>
+          <p>
+            Through this simulation, you'll be able to explore how three key orbital parameters 
+            affect Earth's climate: eccentricity, obliquity (axial tilt), and precession.
+          </p>
+        </>
+      ),
+    },
+    {
+      title: "Orbital Parameters",
+      content: (
+        <>
+          <p className="mb-4">
+            <strong>Eccentricity:</strong> How elliptical Earth's orbit is (varies from 0 to 0.07).
+            A value of 0 would be a perfect circle.
+          </p>
+          <p className="mb-4">
+            <strong>Obliquity (Axial Tilt):</strong> The angle of Earth's rotational axis relative 
+            to its orbital plane (varies from 22° to 24.5°).
+          </p>
+          <p>
+            <strong>Precession:</strong> The direction of Earth's axis relative to the stars
+            (imagine the Earth wobbling like a spinning top).
+          </p>
+        </>
+      ),
+    },
+    {
+      title: "How to Use This Simulation",
+      content: (
+        <>
+          <p className="mb-4">
+            {isMobile ? (
+              <>
+                <strong>Navigation:</strong> Use the menu button in the top right to access different scenarios 
+                and information. The bottom panel provides orbital parameter controls.
+              </>
+            ) : (
+              <>
+                <strong>Controls:</strong> Use the left panels to adjust orbital parameters.
+                The right panels show time controls and climate data visualizations.
+              </>
+            )}
+          </p>
+          <p className="mb-4">
+            <strong>3D View:</strong> Drag to rotate the view, scroll to zoom in/out, and observe how 
+            Earth's position and tilt change with different parameters.
+          </p>
+          <p>
+            <strong>Data Visualization:</strong> Watch how changes in orbital parameters affect global 
+            temperature and other climate indicators in the graphs.
+          </p>
+        </>
+      ),
+    },
+    {
+      title: "Ready to Explore?",
+      content: (
+        <p>
+          You're now ready to explore the fascinating relationship between Earth's orbital 
+          mechanics and climate cycles. Adjust the parameters, observe the effects, and 
+          gain insight into how astronomical forces influence our planet's climate over thousands 
+          of years.
         </p>
-        
-        <div className="mb-12 flex justify-center animate-scaleUp">
-          <button
-            ref={buttonRef}
-            onClick={handleStart}
-            disabled={isStarting}
-            className={`celestial-button px-8 py-4 text-lg font-medium transition-all duration-500 ${
-              isHovering ? "bg-antique-brass text-deep-space" : ""
-            } ${isStarting ? "opacity-0 scale-90" : "opacity-100 scale-100"}`}
-          >
-            Enter Observatory
-          </button>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-fadeIn">
-          <div className="observatory-panel p-4">
-            <h3 className="text-lg font-serif text-antique-brass mb-2">Eccentricity</h3>
-            <p className="text-sm text-stardust-white opacity-80">
-              The shape of Earth's orbit around the Sun, varying from nearly circular to more elliptical over a 100,000-year cycle.
-            </p>
+      ),
+    },
+  ];
+
+  return (
+    <div className="fixed inset-0 bg-deep-space bg-opacity-95 z-50 flex items-center justify-center p-4">
+      <ParticleEffect />
+      <div 
+        className={`relative bg-cosmic-blue rounded-xl border border-slate-blue shadow-lg shadow-purple-900/30 w-full ${
+          isMobile 
+            ? 'max-h-[90vh] overflow-y-auto max-w-lg' 
+            : 'max-w-2xl transform transition-all duration-500 ease-out'
+        }`}
+      >
+        <div className={`p-6 ${isMobile ? 'sm:p-6' : 'p-8'}`}>
+          <h2 className="text-2xl sm:text-3xl font-serif text-stardust-white mb-2">
+            {steps[step].title}
+          </h2>
+          
+          <div className="h-1 w-full bg-slate-blue/30 mb-6 rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-antique-brass transition-all duration-300 ease-out"
+              style={{ width: `${((step + 1) / steps.length) * 100}%` }}
+            ></div>
           </div>
           
-          <div className="observatory-panel p-4">
-            <h3 className="text-lg font-serif text-antique-brass mb-2">Axial Tilt</h3>
-            <p className="text-sm text-stardust-white opacity-80">
-              The angle of Earth's axis relative to its orbital plane, oscillating between 22.1° and 24.5° over a 41,000-year cycle.
-            </p>
+          <div className="text-stardust-white space-y-2 sm:text-base text-sm mb-8">
+            {steps[step].content}
           </div>
           
-          <div className="observatory-panel p-4">
-            <h3 className="text-lg font-serif text-antique-brass mb-2">Precession</h3>
-            <p className="text-sm text-stardust-white opacity-80">
-              The wobble of Earth's axis, completing a full cycle every 26,000 years and determining which hemisphere faces the Sun at perihelion.
-            </p>
+          <div className="flex justify-between items-center">
+            <ObservatoryButton
+              variant={step > 0 ? "ghost" : "ghost"}
+              className={`px-4 py-2 ${step === 0 ? 'opacity-0 pointer-events-none' : ''}`}
+              onClick={prevStep}
+            >
+              Back
+            </ObservatoryButton>
+            
+            <ObservatoryButton
+              variant="primary"
+              className="px-6 py-2"
+              onClick={nextStep}
+            >
+              {step < steps.length - 1 ? "Next" : "Get Started"}
+            </ObservatoryButton>
           </div>
         </div>
       </div>
+      
+      {/* Skip button for mobile */}
+      {isMobile && (
+        <button 
+          onClick={onClose}
+          className="absolute top-4 right-4 text-stardust-white/70 hover:text-stardust-white p-2"
+          aria-label="Skip intro"
+        >
+          Skip
+        </button>
+      )}
     </div>
   );
 }

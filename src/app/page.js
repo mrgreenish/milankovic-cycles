@@ -43,6 +43,8 @@ import {
   ObservatoryPanel,
   ObservatoryButton,
   DataDisplay,
+  MobileCard,
+  ObservatorySlider
 } from "@/components/ObservatoryPanel";
 import { CycleComparisonPanel } from "@/components/CycleComparisonPanel";
 import { NarrativeOverlay } from "@/components/NarrativeOverlay";
@@ -50,6 +52,13 @@ import { SeasonalInsolationGraph } from "@/components/SeasonalInsolationGraph";
 import { LatitudinalInsolationGraph } from "@/components/LatitudinalInsolationGraph";
 import { TemperatureTimeline } from "@/components/TemperatureTimeline";
 import Link from "next/link";
+import { 
+  MobileNavigation, 
+  BottomSheet, 
+  MobileControlGroup,
+  MobileOnlyView,
+  DesktopOnlyView
+} from "@/components/MobileNavigation";
 
 /*
   This simulation illustrates key ideas behind Milankovitch cycles:
@@ -789,6 +798,24 @@ export default function Home() {
   const [parameterPreview, setParameterPreview] = useState(null);
   const [calculatedTemp, setCalculatedTemp] = useState(realisticAmsterdamTemp);
 
+  // Add mobile-specific state
+  const [isMobile, setIsMobile] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  
+  // Check if the device is mobile
+  useEffect(() => {
+    setMounted(true);
+    
+    const checkIfMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkIfMobile();
+    window.addEventListener('resize', checkIfMobile);
+    
+    return () => window.removeEventListener('resize', checkIfMobile);
+  }, []);
+
   useEffect(() => {
     if (!isFinite(simulatedYear) || Math.abs(simulatedYear) > 1e21) {
       setSimulatedYear(0);
@@ -980,265 +1007,291 @@ export default function Home() {
   };
 
   return (
-    <div className="relative w-screen h-screen overflow-hidden bg-space-gradient">
-      {/* About Link */}
-      <div className="fixed top-5 right-5 z-50 animate-fadeIn">
-        <Link 
-          href="/about" 
-          className="px-4 py-2 bg-slate-blue/80 hover:bg-slate-blue rounded-lg text-stardust-white transition-colors duration-300 backdrop-blur-sm border border-muted/20 shadow-lg flex items-center gap-2"
-        >
-          <span className="text-sm font-medium">About</span>
-        </Link>
-      </div>
-
-      {showIntro ? (
-        <IntroOverlay
-          onStart={() => {
-            setShowIntro(false);
-            setTimeout(() => setHasIntroFadedOut(true), 1000);
-          }}
-        />
-      ) : (
-        <>
-          <div className="canvas-container">
-            <Canvas
-              camera={{ position: [0, 20, 40], fov: 45 }}
-              dpr={[1, 2]}
-              performance={{ min: 0.5 }}
-              gl={{ antialias: true, alpha: true }}
-            >
-              <ambientLight intensity={0.2} />
-              <directionalLight
-                castShadow
-                position={[10, 20, 10]}
-                intensity={1.5}
-                shadow-mapSize-width={1024}
-                shadow-mapSize-height={1024}
-              />
-              <Sun />
-              <OrbitPath eccentricity={eccentricity} />
-              <OrbitingEarth
-                eccentricity={eccentricity}
-                axialTilt={axialTilt}
-                precession={precession}
-                temperature={calculatedTemp}
-                iceFactor={iceFactor}
-                normTemp={displayedTemp}
-              />
-              <AxisIndicators axialTilt={axialTilt} precession={precession} />
-              <OrbitControls />
-              <SceneEffects />
-
-                {/* FIXED ATMOSPHERIC BACKGROUND */}
-                {/* <Billboard> */}
-                  {/* <AtmosphericBackground />  */}
-                {/* </Billboard> */}
-
-              <CosmicParticles />
-            </Canvas>
-          </div>
-
-          <div className="fixed left-5 top-5 space-y-4 w-[400px] z-20 animate-fadeIn">
-            <CycleComparisonPanel
+    <main className="flex min-h-screen flex-col items-center justify-between">
+      
+      {/* 3D Canvas */}
+      <div className="canvas-container">
+        <Suspense fallback={null}>
+          <Canvas shadows gl={{ antialias: true }}>
+            <ambientLight intensity={0.2} />
+            <directionalLight
+              castShadow
+              position={[10, 20, 10]}
+              intensity={1.5}
+              shadow-mapSize-width={1024}
+              shadow-mapSize-height={1024}
+            />
+            <Sun />
+            <OrbitPath eccentricity={eccentricity} />
+            <OrbitingEarth
               eccentricity={eccentricity}
               axialTilt={axialTilt}
               precession={precession}
-              baselineEccentricity={baselineEccentricity}
-              baselineAxialTilt={baselineAxialTilt}
-              baselinePrecession={baselinePrecession}
-              onEccentricityChange={(value) => {
-                setEccentricity(value);
-                setAutoAnimate(false);
-                const deltaEcc = value - baselineEccentricity;
-                setParameterPreview(realisticAmsterdamTemp + deltaEcc * 100);
-              }}
-              onAxialTiltChange={(value) => {
-                setAxialTilt(value);
-                setAutoAnimate(false);
-                const deltaTilt = value - baselineAxialTilt;
-                setParameterPreview(realisticAmsterdamTemp + deltaTilt * 2);
-              }}
-              onPrecessionChange={(value) => {
-                setPrecession(value);
-                setAutoAnimate(false);
-                const deltaPrecession = Math.sin(
-                  THREE.MathUtils.degToRad(value - baselinePrecession)
-                );
-                setParameterPreview(
-                  realisticAmsterdamTemp + deltaPrecession * 5
-                );
-              }}
-            />
-
-            <NarrativeOverlay
-              simulatedYear={simulatedYear}
-              temperature={displayedTemp}
+              temperature={calculatedTemp}
               iceFactor={iceFactor}
-              eccentricity={eccentricity}
-              axialTilt={axialTilt}
-              precession={precession}
-              formatNumber={formatNumber}
+              normTemp={displayedTemp}
             />
-          </div>
+            <AxisIndicators axialTilt={axialTilt} precession={precession} />
+            <OrbitControls />
+            <SceneEffects />
+            <CosmicParticles />
+          </Canvas>
+        </Suspense>
+      </div>
+      
+      {/* Only render UI components after mounted to avoid hydration mismatch */}
+      {mounted && (
+        <>
+          {/* Intro Overlay - positioned at the top level to work for both mobile and desktop */}
+          {showIntro && (
+            <IntroOverlay 
+              onClose={() => setShowIntro(false)} 
+              onComplete={handleIntroComplete} 
+            />
+          )}
+        
+          {/* Desktop UI Layout */}
+          <DesktopOnlyView>
+            {/* Left Panel Group with enhanced positioning and animations */}
+            <div className="fixed left-5 top-5 space-y-4 w-[400px] z-20 animate-fadeIn">
+              <ObservatoryPanel
+                variant="control"
+                title="Orbital Parameters"
+                className="w-full"
+              >
+                <CycleComparisonPanel
+                  eccentricity={eccentricity}
+                  axialTilt={axialTilt}
+                  precession={precession}
+                  baselineEccentricity={baselineEccentricity}
+                  baselineAxialTilt={baselineAxialTilt}
+                  baselinePrecession={baselinePrecession}
+                  onEccentricityChange={(value) => {
+                    setEccentricity(value);
+                    setAutoAnimate(false);
+                    const deltaEcc = value - baselineEccentricity;
+                    setParameterPreview(realisticAmsterdamTemp + deltaEcc * 100);
+                  }}
+                  onAxialTiltChange={(value) => {
+                    setAxialTilt(value);
+                    setAutoAnimate(false);
+                    const deltaTilt = value - baselineAxialTilt;
+                    setParameterPreview(realisticAmsterdamTemp + deltaTilt * 2);
+                  }}
+                  onPrecessionChange={(value) => {
+                    setPrecession(value);
+                    setAutoAnimate(false);
+                    const deltaPrecession = Math.sin(
+                      THREE.MathUtils.degToRad(value - baselinePrecession)
+                    );
+                    setParameterPreview(realisticAmsterdamTemp + deltaPrecession * 5);
+                  }}
+                />
+              </ObservatoryPanel>
 
-          <div className="fixed right-5 top-5 space-y-4 w-[400px] z-20 animate-fadeIn">
-            <ObservatoryPanel
-              title="Time Controls"
-              variant="control"
-              glowing={timeControlsHovered}
-              className="w-full"
-              onMouseEnter={() => setTimeControlsHovered(true)}
-              onMouseLeave={() => setTimeControlsHovered(false)}
-            >
-              <div className="space-y-6">
-                <ObservatoryButton
-                  onClick={() => setIsPaused((prev) => !prev)}
-                  className="w-full"
-                  variant="primary"
-                >
-                  {isPaused ? "Play" : "Pause"}
-                </ObservatoryButton>
-
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-stardust-white">
-                      Simulation Speed
-                    </span>
-                    <span className="text-sm font-mono text-pale-gold">
-                      {formatNumber(timeScale)}
-                    </span>
-                  </div>
-                  <input
-                    type="range"
-                    value={timeScale}
-                    onChange={(e) => setTimeScale(parseFloat(e.target.value))}
-                    min={0.001}
-                    max={1000000}
-                    step={100}
-                    className="celestial-slider w-full"
-                  />
-                </div>
-              </div>
-            </ObservatoryPanel>
-
-            <ObservatoryPanel
-              title="Historical Scenarios"
-              variant="info"
-              glowing={scenariosHovered}
-              className="w-full"
-              onMouseEnter={() => setScenariosHovered(true)}
-              onMouseLeave={() => setScenariosHovered(false)}
-            >
-              <div className="space-y-4">
-                <div className="relative">
-                  <select
-                    value={preset}
-                    onChange={(e) => {
-                      const selectedPreset = e.target.value;
-                      setPreset(selectedPreset);
-                      if (selectedPreset && presets[selectedPreset]) {
-                        const config = presets[selectedPreset];
-                        setEccentricity(config.eccentricity);
-                        setAxialTilt(config.axialTilt);
-                        setPrecession(config.precession);
-                        setAutoAnimate(false);
-                      }
-                    }}
-                    className="w-full bg-deep-space bg-opacity-40 text-stardust-white border border-slate-blue border-opacity-30 rounded-lg px-4 py-2 appearance-none hover:border-antique-brass transition-colors duration-200 focus:outline-none focus:border-antique-brass"
-                  >
-                    <option value="">Select a scenario...</option>
-                    {Object.entries(presets).map(([name]) => (
-                      <option key={name} value={name}>
-                        {name}
-                      </option>
-                    ))}
-                  </select>
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                    <svg
-                      className="w-4 h-4 text-stardust-white opacity-60"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M19 9l-7 7-7-7"
-                      />
-                    </svg>
-                  </div>
-                </div>
-
-                {preset && presets[preset] && (
-                  <div className="space-y-4 animate-fadeIn">
-                    <p className="text-sm text-stardust-white opacity-80 leading-relaxed">
-                      {presets[preset].description}
-                    </p>
-
-                    <div className="grid grid-cols-3 gap-3 text-center">
-                      <DataDisplay
-                        label="Eccentricity"
-                        value={presets[preset].eccentricity.toFixed(4)}
-                      />
-                      <DataDisplay
-                        label="Axial Tilt"
-                        value={presets[preset].axialTilt.toFixed(1)}
-                        unit="°"
-                      />
-                      <DataDisplay
-                        label="Precession"
-                        value={presets[preset].precession.toFixed(0)}
-                        unit="°"
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
-            </ObservatoryPanel>
-          </div>
-
-          <div className="fixed flex justify-center items-center w-[620px] h-[200px] bottom-5 right-5 animate-fadeIn">
-            <ObservatoryPanel
-              variant="data"
-              className="w-full h-full p-0 overflow-hidden"
-            >
-              <GlobalTemperatureGraph
-                axialTilt={axialTilt}
-                eccentricity={eccentricity}
-                precession={precession}
+              <NarrativeOverlay
+                simulatedYear={simulatedYear}
                 temperature={displayedTemp}
                 iceFactor={iceFactor}
-                co2Level={co2Level}
-                simulatedYear={simulatedYear}
-                formatNumber={formatNumber}
-                style={{
-                  width: "100%",
-                  height: "100%",
-                }}
-              />
-            </ObservatoryPanel>
-          </div>
-          <div className="fixed bottom-0 left-0 flex justify-center items-center w-[620px] h-[190px] animate-fadeIn">
-            <ObservatoryPanel
-              variant="data"
-              className="w-full h-full p-0 overflow-hidden"
-            >
-              <SeasonalInsolationGraph
-                axialTilt={axialTilt}
                 eccentricity={eccentricity}
+                axialTilt={axialTilt}
                 precession={precession}
-                style={{
-                  zIndex: 10,
-                  width: "100%",
-                  height: "100%",
-                }}
+                formatNumber={formatNumber}
               />
-            </ObservatoryPanel>
-          </div>
+            </div>
+
+            {/* Right Panel Group */}
+            <div className="fixed right-5 top-5 space-y-4 w-[400px] z-20 animate-fadeIn">
+              {/* Time Controls Panel */}
+              <ObservatoryPanel 
+                title="Time Controls" 
+                variant="control"
+                glowing={timeControlsHovered}
+                className="w-full"
+                onMouseEnter={() => setTimeControlsHovered(true)}
+                onMouseLeave={() => setTimeControlsHovered(false)}
+              >
+                <div className="space-y-6">
+                  <ObservatoryButton
+                    onClick={() => setIsPaused((prev) => !prev)}
+                    className="w-full"
+                    variant="primary"
+                  >
+                    {isPaused ? "Play" : "Pause"}
+                  </ObservatoryButton>
+
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-stardust-white">Simulation Speed</span>
+                      <span className="text-sm font-mono text-pale-gold">{formatNumber(timeScale)}</span>
+                    </div>
+                    <input
+                      type="range"
+                      value={timeScale}
+                      onChange={(e) => setTimeScale(parseFloat(e.target.value))}
+                      min={0.001}
+                      max={1000000}
+                      step={100}
+                      className="celestial-slider w-full"
+                    />
+                  </div>
+                </div>
+              </ObservatoryPanel>
+
+              {/* Climate Data Panel */}
+              <ObservatoryPanel
+                variant="data"
+                title="Climate Data"
+                className="w-full"
+              >
+                <GlobalTemperatureGraph
+                  axialTilt={axialTilt}
+                  eccentricity={eccentricity}
+                  precession={precession}
+                  temperature={displayedTemp}
+                  iceFactor={iceFactor}
+                  co2Level={co2Level}
+                  simulatedYear={simulatedYear}
+                  formatNumber={formatNumber}
+                  style={{ width: "100%", height: "300px" }}
+                />
+              </ObservatoryPanel>
+            </div>
+          </DesktopOnlyView>
+          
+          {/* Mobile UI Layout */}
+          <MobileOnlyView>
+            {/* Mobile Navigation Menu */}
+            <MobileNavigation>
+              <div className="px-4 py-2 border-b border-slate-blue border-opacity-20">
+                <h2 className="text-xl font-serif mb-1">Milanković Cycles</h2>
+                <p className="text-sm opacity-70">Climate Model Visualization</p>
+              </div>
+              
+              <MobileControlGroup title="Information">
+                <ObservatoryButton 
+                  variant="mobile" 
+                  className="w-full justify-start"
+                  onClick={() => setShowIntro(true)}
+                >
+                  How to Use
+                </ObservatoryButton>
+                <ObservatoryButton 
+                  variant="mobile" 
+                  className="w-full justify-start"
+                >
+                  <Link href="/about" className="w-full text-left">
+                    About the Project
+                  </Link>
+                </ObservatoryButton>
+              </MobileControlGroup>
+              
+              <MobileControlGroup title="Preset Scenarios">
+                <div className="grid grid-cols-2 gap-2">
+                  {/* ... existing scenario buttons with mobile styling ... */}
+                </div>
+              </MobileControlGroup>
+              
+              <MobileControlGroup title="Visualization Options">
+                <div className="space-y-3">
+                  {/* ... existing visualization options with mobile styling ... */}
+                </div>
+              </MobileControlGroup>
+            </MobileNavigation>
+            
+            {/* Mobile Bottom Control Sheet */}
+            <BottomSheet title="Orbital Controls">
+              <div className="space-y-4">
+                <ObservatorySlider
+                  label="Eccentricity"
+                  value={eccentricity}
+                  onChange={(e) => setEccentricity(parseFloat(e.target.value))}
+                  min={0.0}
+                  max={0.07}
+                  step={0.001}
+                  valueDisplay={
+                    <span className="text-sm font-mono text-pale-gold">
+                      {eccentricity.toFixed(3)}
+                    </span>
+                  }
+                />
+                
+                <ObservatorySlider
+                  label="Obliquity (Tilt)"
+                  value={axialTilt}
+                  onChange={(e) => setAxialTilt(parseFloat(e.target.value))}
+                  min={22.0}
+                  max={24.5}
+                  step={0.1}
+                  valueDisplay={
+                    <span className="text-sm font-mono text-pale-gold">
+                      {axialTilt.toFixed(1)}°
+                    </span>
+                  }
+                />
+                
+                <ObservatorySlider
+                  label="Precession"
+                  value={precession}
+                  onChange={(e) => setPrecession(parseFloat(e.target.value))}
+                  min={0}
+                  max={360}
+                  step={1}
+                  valueDisplay={
+                    <span className="text-sm font-mono text-pale-gold">
+                      {precession.toFixed(0)}°
+                    </span>
+                  }
+                />
+              </div>
+            </BottomSheet>
+            
+            {/* Mobile Quick Data Display */}
+            <div className="fixed top-16 left-0 w-full px-4 z-50 pointer-events-none">
+              <MobileCard className="w-full">
+                <div className="grid grid-cols-2 gap-4">
+                  <DataDisplay
+                    label="Global Temperature"
+                    value={displayedTemp.toFixed(2)}
+                    unit="°C"
+                  />
+                  
+                  <DataDisplay
+                    label="Ice Coverage"
+                    value={(iceFactor * 100).toFixed(0)}
+                    unit="%"
+                  />
+                </div>
+              </MobileCard>
+            </div>
+            
+            {/* Mobile Playback Controls - Fixed bottom */}
+            <div className="fixed bottom-20 left-0 w-full flex justify-center px-4 z-40">
+              <div className="bg-deep-space bg-opacity-70 backdrop-blur-sm rounded-full p-2 flex space-x-2">
+                <ObservatoryButton
+                  onClick={() => setIsPaused((prev) => !prev)}
+                  className="w-12 h-12 flex items-center justify-center rounded-full"
+                  aria-label={isPaused ? "Pause" : "Play"}
+                >
+                  {isPaused ? "⏸" : "▶"}
+                </ObservatoryButton>
+                
+                <ObservatoryButton
+                  onClick={() => setAutoAnimate((prev) => !prev)}
+                  className={cn(
+                    "w-12 h-12 flex items-center justify-center rounded-full",
+                    autoAnimate && "bg-antique-brass text-deep-space"
+                  )}
+                  aria-label="Toggle Auto-Rotate"
+                >
+                  🔄
+                </ObservatoryButton>
+              </div>
+            </div>
+          </MobileOnlyView>
         </>
       )}
-    </div>
+    </main>
   );
 }
 
@@ -1671,7 +1724,6 @@ function AtmosphericBackground() {
         args={[shader]}
         side={THREE.DoubleSide}
         transparent={false}
-        depthWrite={false}
       />
     </mesh>
   );
