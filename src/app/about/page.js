@@ -17,7 +17,7 @@ export default function AboutPage() {
         <Link 
           href="/" 
           className="text-stardust-white hover:text-pale-gold transition-colors duration-300 flex items-center gap-2"
-          prefetch={false} // Only prefetch on hover for better performance
+          // prefetch={false} // Only prefetch on hover for better performance
         >
           <span className="text-xl font-medium">← Home</span>
         </Link>

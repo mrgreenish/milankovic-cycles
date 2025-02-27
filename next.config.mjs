@@ -25,34 +25,34 @@ const nextConfig = {
   poweredByHeader: false, // Remove the X-Powered-By header
 };
 
-export default withTM({
-  ...nextConfig,
-  // This ensures all pages use ISR with a 6-hour revalidation period
-  async headers() {
-    return [
-      {
-        source: '/:path*',
-        headers: [
-          {
-            key: 'Cache-Control',
-            value: 'public, max-age=3600, s-maxage=21600, stale-while-revalidate=86400',
-          },
-          {
-            key: 'X-Content-Type-Options',
-            value: 'nosniff',
-          },
-        ],
-      },
-      // Add special caching for static assets
-      {
-        source: '/(.*)\\.(jpg|jpeg|png|gif|webp|svg|ico|woff2|woff|ttf)',
-        headers: [
-          {
-            key: 'Cache-Control',
-            value: 'public, max-age=31536000, immutable',
-          },
-        ],
-      },
-    ];
-  },
-});
+// export default withTM({
+//   ...nextConfig,
+//   // This ensures all pages use ISR with a 6-hour revalidation period
+//   async headers() {
+//     return [
+//       {
+//         source: '/:path*',
+//         headers: [
+//           {
+//             key: 'Cache-Control',
+//             value: 'public, max-age=3600, s-maxage=21600, stale-while-revalidate=86400',
+//           },
+//           {
+//             key: 'X-Content-Type-Options',
+//             value: 'nosniff',
+//           },
+//         ],
+//       },
+//       // Add special caching for static assets
+//       {
+//         source: '/(.*)\\.(jpg|jpeg|png|gif|webp|svg|ico|woff2|woff|ttf)',
+//         headers: [
+//           {
+//             key: 'Cache-Control',
+//             value: 'public, max-age=31536000, immutable',
+//           },
+//         ],
+//       },
+//     ];
+//   },
+// });
