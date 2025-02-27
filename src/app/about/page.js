@@ -6,6 +6,9 @@ export const metadata = {
   description: 'About Filip van Harreveld and his connection to Milutin Milanković',
 };
 
+// Set revalidation time to 6 hours (21600 seconds)
+export const revalidate = 21600;
+
 export default function AboutPage() {
   return (
     <main className="min-h-screen w-full bg-gradient-to-b from-deep-space to-midnight-blue">
@@ -14,6 +17,7 @@ export default function AboutPage() {
         <Link 
           href="/" 
           className="text-stardust-white hover:text-pale-gold transition-colors duration-300 flex items-center gap-2"
+          prefetch={false} // Only prefetch on hover for better performance
         >
           <span className="text-xl font-medium">← Home</span>
         </Link>
@@ -32,6 +36,7 @@ export default function AboutPage() {
                 className="object-cover"
                 priority
                 sizes="(max-width: 768px) 100vw, 50vw"
+                quality={85}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-deep-space/80 to-transparent"></div>
             </div>
@@ -80,6 +85,7 @@ export default function AboutPage() {
           <Link 
             href="/" 
             className="inline-block bg-slate-blue hover:bg-slate-blue/80 text-stardust-white px-8 py-3 rounded-lg transition-colors duration-300 shadow-lg"
+            prefetch={false}
           >
             Explore the Visualization
           </Link>

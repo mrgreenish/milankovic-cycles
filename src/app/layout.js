@@ -3,6 +3,9 @@ import localFont from 'next/font/local';
 import { Analytics } from "@vercel/analytics/react";
 import './globals.css';
 
+// Set revalidation time to 6 hours (21600 seconds) for all pages
+export const revalidate = 21600;
+
 // Define our fonts
 const playfair = Playfair_Display({
   subsets: ['latin'],
