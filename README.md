@@ -34,3 +34,40 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## SEO Implementation
+
+This project includes comprehensive SEO optimization for better search engine visibility and social sharing:
+
+### Implemented SEO Features
+
+- **Metadata Configuration**: Enhanced title, description, and keywords in `layout.js`
+- **Open Graph Protocol**: Custom tags for better sharing on Facebook, LinkedIn, etc.
+- **Twitter Cards**: Optimized sharing experience on Twitter
+- **Sitemap**: Automatic sitemap generation via `sitemap.js`
+- **Robots.txt**: Search engine crawling instructions via `robots.js`
+- **Web App Manifest**: PWA capabilities via `manifest.json`
+- **Structured Data**: Semantically rich content for search engines
+
+### How to Maintain SEO
+
+1. **Update Metadata**: Keep the metadata in `src/app/layout.js` current with your content
+2. **Add New Routes**: When adding new pages, update the sitemap in `src/app/sitemap.js`
+3. **Images Optimization**: Maintain proper image sizes for OG and Twitter cards
+4. **Monitor Performance**: Use tools like Lighthouse to check SEO performance
+
+### Apple Icon Generation
+
+To generate the apple-icon.png for iOS devices:
+
+1. Install Sharp:
+   ```bash
+   npm install sharp --save-dev
+   ```
+
+2. Run the generation script:
+   ```bash
+   node scripts/generate-apple-icon.js
+   ```
+
+This will create the properly sized apple-icon.png in your public directory.

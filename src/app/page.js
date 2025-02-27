@@ -49,6 +49,7 @@ import { NarrativeOverlay } from "@/components/NarrativeOverlay";
 import { SeasonalInsolationGraph } from "@/components/SeasonalInsolationGraph";
 import { LatitudinalInsolationGraph } from "@/components/LatitudinalInsolationGraph";
 import { TemperatureTimeline } from "@/components/TemperatureTimeline";
+import Link from "next/link";
 
 /*
   This simulation illustrates key ideas behind Milankovitch cycles:
@@ -980,6 +981,16 @@ export default function Home() {
 
   return (
     <div className="relative w-screen h-screen overflow-hidden bg-space-gradient">
+      {/* About Link */}
+      <div className="fixed top-5 right-5 z-50 animate-fadeIn">
+        <Link 
+          href="/about" 
+          className="px-4 py-2 bg-slate-blue/80 hover:bg-slate-blue rounded-lg text-stardust-white transition-colors duration-300 backdrop-blur-sm border border-muted/20 shadow-lg flex items-center gap-2"
+        >
+          <span className="text-sm font-medium">About</span>
+        </Link>
+      </div>
+
       {showIntro ? (
         <IntroOverlay
           onStart={() => {
@@ -1301,11 +1312,10 @@ function Sun() {
       float fbm(vec2 p) {
         float v = 0.0;
         float a = 0.5;
-        vec2 shift = vec2(100.0);
-        mat2 rot = mat2(cos(0.5), sin(0.5), -sin(0.5), cos(0.5));
+        float frequency = 1.0;
         for (int i = 0; i < 5; ++i) {
-          v += a * noise(p);
-          p = rot * p * 2.0 + shift;
+          v += a * noise(p * frequency);
+          frequency *= 2.0;
           a *= 0.5;
         }
         return v;
@@ -1574,8 +1584,7 @@ function AtmosphericBackground() {
           vec2 u = f * f * (3.0 - 2.0 * f);
           return mix(
             mix(hash(i + vec2(0.0,0.0)), hash(i + vec2(1.0,0.0)), u.x),
-            mix(hash(i + vec2(0.0,1.0)), hash(i + vec2(1.0,1.0)), u.x),
-            u.y
+            mix(hash(i + vec2(0.0,1.0)), hash(i + vec2(1.0,1.0)), u.x), u.y
           );
         }
 
