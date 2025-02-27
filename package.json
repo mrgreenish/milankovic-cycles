@@ -17,7 +17,7 @@
     "milankovitch",
     "orbital",
     "model"
-  ],  
+  ],
   "author": "Filip van Harreveld",
   "license": "MIT",
   "dependencies": {
@@ -28,6 +28,7 @@
     "@react-three/drei": "^9.121.4",
     "@react-three/fiber": "^8.17.14",
     "@react-three/postprocessing": "^2.19.1",
+    "@vercel/analytics": "^1.5.0",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
     "gsap": "^3.12.7",
@@ -50,5 +51,3 @@
     "tailwindcss": "^3.4.1"
   }
 }
-
-

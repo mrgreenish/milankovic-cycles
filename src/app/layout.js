@@ -1,5 +1,6 @@
-import { Inter, Poppins, Space_Mono, Playfair_Display } from 'next/font/google';
+import { Inter, Space_Mono, Playfair_Display } from 'next/font/google';
 import localFont from 'next/font/local';
+import { Analytics } from "@vercel/analytics/react";
 import './globals.css';
 
 // Define our fonts
@@ -42,8 +43,14 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className={`${playfair.variable} ${spaceMono.variable} ${inter.variable} ${switzer.variable}`}>
-      <body className="font-sans antialiased">{children}</body>
+    <html
+      lang="en"
+      className={`${playfair.variable} ${spaceMono.variable} ${inter.variable} ${switzer.variable}`}
+    >
+      <body className="font-sans antialiased">
+        {children}
+        <Analytics />
+      </body>
     </html>
   );
 }
