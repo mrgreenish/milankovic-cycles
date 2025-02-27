@@ -1013,6 +1013,13 @@ export default function Home() {
       <div className="canvas-container">
         <Suspense fallback={null}>
           <Canvas shadows gl={{ antialias: true }}>
+            <PerspectiveCamera 
+              makeDefault 
+              position={[0, 30, 60]} 
+              fov={50}
+              near={0.1}
+              far={1000}
+            />
             <ambientLight intensity={0.2} />
             <directionalLight
               castShadow
@@ -1032,7 +1039,23 @@ export default function Home() {
               normTemp={displayedTemp}
             />
             <AxisIndicators axialTilt={axialTilt} precession={precession} />
-            <OrbitControls />
+            <OrbitControls 
+              enableDamping={true}
+              dampingFactor={0.05}
+              minDistance={20}
+              maxDistance={100}
+              enablePan={true}
+              enableZoom={true}
+              zoomSpeed={0.8}
+              rotateSpeed={0.5}
+              minPolarAngle={Math.PI * 0.1}
+              maxPolarAngle={Math.PI * 0.9}
+              enableTouchRotate={true}
+              enableTouchZoom={true}
+              enableTouchPan={true}
+              touchRotateSpeed={0.5}
+              touchZoomSpeed={1.5}
+            />
             <SceneEffects />
             <CosmicParticles />
           </Canvas>
