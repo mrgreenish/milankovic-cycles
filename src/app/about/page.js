@@ -1,17 +1,38 @@
+"use client";
 import Link from 'next/link';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+import { deleteCookie } from '@/lib/cookieUtils';
+import { useEffect } from 'react';
 
-export const metadata = {
-  title: 'About | Milanković Cycles Simulation',
-  description: 'About Filip van Harreveld and his connection to Milutin Milanković',
-};
-
-// Set revalidation time to 6 hours (21600 seconds)
-export const revalidate = 21600;
+// Metadata needs to be moved to a separate file in app router when using 'use client'
+// We'll handle this with default values for now
 
 export default function AboutPage() {
+  const router = useRouter();
+
+  // Function to reset the intro cookie and navigate to home
+  const handleViewIntro = () => {
+    deleteCookie('introShown');
+    router.push('/');
+  };
+
+  // Enable scrolling for the about page
+  useEffect(() => {
+    // Save the original overflow style
+    const originalOverflow = document.body.style.overflow;
+    
+    // Enable scrolling
+    document.body.style.overflow = 'auto';
+    
+    // Restore original overflow style when component unmounts
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, []);
+
   return (
-    <main className="min-h-screen w-full bg-gradient-to-b from-deep-space to-midnight-blue">
+    <main className="min-h-screen w-full bg-gradient-to-b from-deep-space to-midnight-blue overflow-y-auto">
       {/* Navigation */}
       <nav className="absolute top-0 left-0 right-0 p-6 flex justify-between items-center z-50">
         <Link 
@@ -82,13 +103,21 @@ export default function AboutPage() {
           <p className="text-lg text-stardust-white/80 leading-relaxed mb-8">
             This interactive visualization explores the Milanković cycles — the collective effects of changes in the Earth's movements on its climate over thousands of years. The visualization aims to make these complex astronomical concepts more accessible through digital design and interactive elements.
           </p>
-          <Link 
-            href="/" 
-            className="inline-block bg-slate-blue hover:bg-slate-blue/80 text-stardust-white px-8 py-3 rounded-lg transition-colors duration-300 shadow-lg"
-            prefetch={false}
-          >
-            Explore the Visualization
-          </Link>
+          <div className="flex flex-col sm:flex-row justify-center gap-4">
+            <Link 
+              href="/" 
+              className="inline-block bg-slate-blue hover:bg-slate-blue/80 text-stardust-white px-8 py-3 rounded-lg transition-colors duration-300 shadow-lg"
+              prefetch={false}
+            >
+              Explore the Visualization
+            </Link>
+            <button 
+              onClick={handleViewIntro}
+              className="inline-block bg-antique-brass hover:bg-antique-brass/80 text-deep-space px-8 py-3 rounded-lg transition-colors duration-300 shadow-lg"
+            >
+              View Intro Tutorial
+            </button>
+          </div>
         </div>
       </div>
 

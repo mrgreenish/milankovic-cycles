@@ -802,6 +802,32 @@ export default function Home() {
   // Add mobile-specific state
   const [isMobile, setIsMobile] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [isTouchingSlider, setIsTouchingSlider] = useState(false);
+  
+  // Function to handle slider touch events
+  const handleSliderTouchStart = (e) => {
+    e.stopPropagation();
+    setIsTouchingSlider(true);
+    // Store the current autoAnimate state
+    if (autoAnimate) {
+      // We'll temporarily disable autoAnimate while touching the slider
+      setAutoAnimate(false);
+    }
+  };
+  
+  const handleSliderTouchEnd = () => {
+    setIsTouchingSlider(false);
+  };
+  
+  // Add global touch end event listener
+  useEffect(() => {
+    const handleTouchEnd = () => {
+      setIsTouchingSlider(false);
+    };
+    
+    window.addEventListener('touchend', handleTouchEnd);
+    return () => window.removeEventListener('touchend', handleTouchEnd);
+  }, []);
   
   // Check if the device is mobile
   useEffect(() => {
@@ -929,7 +955,7 @@ export default function Home() {
     let animationFrameId;
     let lastTime = performance.now();
     const animate = (time) => {
-      if (!isPaused) {
+      if (!isPaused && !isTouchingSlider) {
         const delta = time - lastTime;
         lastTime = time;
         const yearScale = timeScale * 2000;
@@ -973,6 +999,9 @@ export default function Home() {
           setAxialTilt(Math.max(22.1, Math.min(24.5, newAxialTilt)));
           setPrecession(newPrecession);
         }
+      } else {
+        // Update lastTime to prevent large delta on resume
+        lastTime = time;
       }
       animationFrameId = requestAnimationFrame(animate);
     };
@@ -980,6 +1009,7 @@ export default function Home() {
     return () => cancelAnimationFrame(animationFrameId);
   }, [
     isPaused,
+    isTouchingSlider,
     timeScale,
     autoAnimate,
     exaggeration,
@@ -1059,9 +1089,9 @@ export default function Home() {
               rotateSpeed={0.5}
               minPolarAngle={Math.PI * 0.1}
               maxPolarAngle={Math.PI * 0.9}
-              enableTouchRotate={true}
-              enableTouchZoom={true}
-              enableTouchPan={true}
+              enableTouchRotate={!isPaused && isMobile}
+              enableTouchZoom={!isPaused && isMobile}
+              enableTouchPan={!isPaused && isMobile}
               touchRotateSpeed={0.5}
               touchZoomSpeed={1.5}
             />
@@ -1172,11 +1202,16 @@ export default function Home() {
                     <input
                       type="range"
                       value={timeScale}
-                      onChange={(e) => setTimeScale(parseFloat(e.target.value))}
+                      onChange={(e) => {
+                        const newValue = parseFloat(e.target.value);
+                        setTimeScale(newValue);
+                      }}
                       min={0.001}
                       max={1000000}
                       step={100}
                       className="celestial-slider w-full"
+                      onTouchStart={handleSliderTouchStart}
+                      onTouchEnd={handleSliderTouchEnd}
                     />
                   </div>
                 </div>
@@ -1249,7 +1284,11 @@ export default function Home() {
                 <ObservatorySlider
                   label="Eccentricity"
                   value={eccentricity}
-                  onChange={(e) => setEccentricity(parseFloat(e.target.value))}
+                  onChange={(e) => {
+                    const newValue = parseFloat(e.target.value);
+                    setEccentricity(newValue);
+                    setAutoAnimate(false);
+                  }}
                   min={0.0}
                   max={0.07}
                   step={0.001}
@@ -1258,12 +1297,18 @@ export default function Home() {
                       {eccentricity.toFixed(3)}
                     </span>
                   }
+                  onTouchStart={handleSliderTouchStart}
+                  onTouchEnd={handleSliderTouchEnd}
                 />
                 
                 <ObservatorySlider
                   label="Obliquity (Tilt)"
                   value={axialTilt}
-                  onChange={(e) => setAxialTilt(parseFloat(e.target.value))}
+                  onChange={(e) => {
+                    const newValue = parseFloat(e.target.value);
+                    setAxialTilt(newValue);
+                    setAutoAnimate(false);
+                  }}
                   min={22.0}
                   max={24.5}
                   step={0.1}
@@ -1272,12 +1317,18 @@ export default function Home() {
                       {axialTilt.toFixed(1)}°
                     </span>
                   }
+                  onTouchStart={handleSliderTouchStart}
+                  onTouchEnd={handleSliderTouchEnd}
                 />
                 
                 <ObservatorySlider
                   label="Precession"
                   value={precession}
-                  onChange={(e) => setPrecession(parseFloat(e.target.value))}
+                  onChange={(e) => {
+                    const newValue = parseFloat(e.target.value);
+                    setPrecession(newValue);
+                    setAutoAnimate(false);
+                  }}
                   min={0}
                   max={360}
                   step={1}
@@ -1286,6 +1337,8 @@ export default function Home() {
                       {precession.toFixed(0)}°
                     </span>
                   }
+                  onTouchStart={handleSliderTouchStart}
+                  onTouchEnd={handleSliderTouchEnd}
                 />
               </div>
             </BottomSheet>

@@ -131,6 +131,20 @@ export function ObservatorySlider({
   valueDisplay,
   ...props
 }) {
+  // Handle touch events to prevent them from being captured by the canvas
+  const handleTouchStart = (e) => {
+    // Stop propagation to prevent the touch event from reaching the canvas
+    e.stopPropagation();
+    
+    // If there's an onTouchStart prop, call it
+    if (props.onTouchStart) {
+      props.onTouchStart(e);
+    }
+  };
+  
+  // Create a new props object without onTouchStart to avoid duplicate handlers
+  const { onTouchStart, ...otherProps } = props;
+
   return (
     <div className={cn('space-y-2', className)}>
       <div className="flex justify-between items-center">
@@ -149,7 +163,8 @@ export function ObservatorySlider({
         max={max}
         step={step}
         className="celestial-slider"
-        {...props}
+        onTouchStart={handleTouchStart}
+        {...otherProps}
       />
     </div>
   );

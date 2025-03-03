@@ -10,6 +10,12 @@ const Slider = React.forwardRef(({ className, value, defaultValue, onValueChange
   const valueArray = Array.isArray(value) ? value : [value]
   const defaultValueArray = Array.isArray(defaultValue) ? defaultValue : [defaultValue]
 
+  // Handle touch events to prevent them from being captured by the canvas
+  const handleTouchStart = (e) => {
+    // Stop propagation to prevent the touch event from reaching the canvas
+    e.stopPropagation();
+  };
+
   return (
     <SliderPrimitive.Root
       ref={ref}
@@ -20,6 +26,7 @@ const Slider = React.forwardRef(({ className, value, defaultValue, onValueChange
       value={valueArray}
       defaultValue={defaultValueArray}
       onValueChange={onValueChange}
+      onTouchStart={handleTouchStart}
       {...props}
     >
       <SliderPrimitive.Track className="relative h-2 w-full rounded-full celestial-slider">

@@ -71,6 +71,14 @@ export function MobileNavigation({ children, className, ...props }) {
 export function BottomSheet({ children, className, title, ...props }) {
   const [isExpanded, setIsExpanded] = useState(false);
   
+  // Prevent touch events from propagating to the canvas when interacting with the bottom sheet
+  const handleTouchStart = (e) => {
+    // Don't stop propagation for the handle itself
+    if (!e.target.classList.contains('control-panel-handle')) {
+      e.stopPropagation();
+    }
+  };
+  
   return (
     <div 
       className={cn(
@@ -78,6 +86,7 @@ export function BottomSheet({ children, className, title, ...props }) {
         isExpanded && 'expanded',
         className
       )}
+      onTouchStart={handleTouchStart}
       {...props}
     >
       <div 

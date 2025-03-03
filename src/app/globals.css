@@ -206,6 +206,9 @@
 .celestial-slider {
   @apply w-full h-6 appearance-none rounded-full relative;
   background-color: transparent;
+  touch-action: none; /* Prevent default touch actions */
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .celestial-slider::before {
@@ -427,8 +430,20 @@
   [role="button"],
   [type="button"],
   [type="reset"],
-  [type="submit"] {
+  [type="submit"],
+  input[type="range"] {
     -webkit-tap-highlight-color: transparent;
+  }
+  
+  /* Improve touch target size for sliders on mobile */
+  input[type="range"]::-webkit-slider-thumb {
+    width: 24px !important;
+    height: 24px !important;
+  }
+  
+  input[type="range"]::-moz-range-thumb {
+    width: 24px !important;
+    height: 24px !important;
   }
 }
 
@@ -687,4 +702,26 @@
   );
   background-size: 1000px 100%;
   animation: shimmer 2s infinite linear;
+}
+
+/* Mobile-specific slider improvements */
+@media (max-width: 768px) {
+  .celestial-slider {
+    height: 44px; /* Larger touch target */
+    margin: 0 -10px; /* Extend beyond container for easier touch */
+    width: calc(100% + 20px);
+    padding: 0 10px;
+  }
+  
+  .celestial-slider::-webkit-slider-thumb {
+    width: 28px !important;
+    height: 28px !important;
+    transform: scale(1.2);
+  }
+  
+  .celestial-slider::-moz-range-thumb {
+    width: 28px !important;
+    height: 28px !important;
+    transform: scale(1.2);
+  }
 }
