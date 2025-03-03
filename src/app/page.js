@@ -725,10 +725,20 @@ function OrbitingEarth({
 // ------------------------------------------------------------------
 export default function Home() {
   const baselineEccentricity = 0.0167;
-  const baselineAxialTilt = 23.44;
+  const baselineAxialTilt = 23.5;
   const baselinePrecession = 0;
-  const realisticAmsterdamTemp = 10;
-  const sensitivity = 60;
+  const realisticAmsterdamTemp = 10; // °C
+  const sensitivity = 30; // degrees per unit insolation difference
+
+  // Ref for mobile menu
+  const mobileMenuRef = useRef(null);
+  
+  // Function to close mobile menu
+  const closeMobileMenu = useCallback(() => {
+    if (mobileMenuRef.current) {
+      mobileMenuRef.current.classList.remove('open');
+    }
+  }, []);
 
   const [eccentricity, setEccentricity] = useState(baselineEccentricity);
   const [axialTilt, setAxialTilt] = useState(baselineAxialTilt);
@@ -1217,6 +1227,47 @@ export default function Home() {
                 </div>
               </ObservatoryPanel>
 
+              {/* Preset Scenarios Panel */}
+              <ObservatoryPanel
+                title="Historical Scenarios"
+                variant="info"
+                className="w-full"
+                collapsible={true}
+                initialCollapsed={false}
+              >
+                <div className="space-y-2">
+                  <div className="grid grid-cols-3 gap-1">
+                    {Object.entries(presets).map(([name, config]) => (
+                      <ObservatoryButton
+                        key={name}
+                        variant="default"
+                        className="text-xs py-1 px-2 text-center h-auto"
+                        onClick={() => {
+                          setPreset(name);
+                          setEccentricity(config.eccentricity);
+                          setAxialTilt(config.axialTilt);
+                          setPrecession(config.precession);
+                          setAutoAnimate(false);
+                        }}
+                      >
+                        {name.split(' ')[0]} <span className="opacity-80">{name.split(' ')[1]}</span>
+                      </ObservatoryButton>
+                    ))}
+                  </div>
+                  
+                  {preset && presets[preset] && (
+                    <div className="animate-fadeIn">
+                      <p className="text-xs text-stardust-white opacity-80 leading-tight">
+                        {presets[preset].description}
+                      </p>
+                      <div className="text-xs text-pale-gold mt-1">
+                        Year: {formatNumber(presets[preset].year)}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </ObservatoryPanel>
+
               {/* Climate Data Panel */}
               <ObservatoryPanel
                 variant="data"
@@ -1241,7 +1292,7 @@ export default function Home() {
           {/* Mobile UI Layout */}
           <MobileOnlyView>
             {/* Mobile Navigation Menu */}
-            <MobileNavigation>
+            <MobileNavigation menuRef={mobileMenuRef}>
               <div className="px-4 py-2 border-b border-slate-blue border-opacity-20">
                 <h2 className="text-xl font-serif mb-1">Milanković Cycles</h2>
                 <p className="text-sm opacity-70">Climate Model Visualization</p>
@@ -1266,14 +1317,101 @@ export default function Home() {
               </MobileControlGroup>
               
               <MobileControlGroup title="Preset Scenarios">
-                <div className="grid grid-cols-2 gap-2">
-                  {/* ... existing scenario buttons with mobile styling ... */}
+                <div className="grid grid-cols-3 gap-1">
+                  {Object.entries(presets).map(([name, config]) => (
+                    <ObservatoryButton
+                      key={name}
+                      variant="mobile"
+                      className="text-[10px] py-1 px-1 text-center h-auto flex flex-col items-center justify-center"
+                      onClick={(e) => {
+                        setPreset(name);
+                        setEccentricity(config.eccentricity);
+                        setAxialTilt(config.axialTilt);
+                        setPrecession(config.precession);
+                        setAutoAnimate(false);
+                        
+                        // Close the mobile menu using direct DOM manipulation
+                        const mobileMenu = document.querySelector('.mobile-menu');
+                        if (mobileMenu) {
+                          mobileMenu.classList.remove('open');
+                        }
+                      }}
+                      onTouchEnd={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setPreset(name);
+                        setEccentricity(config.eccentricity);
+                        setAxialTilt(config.axialTilt);
+                        setPrecession(config.precession);
+                        setAutoAnimate(false);
+                        
+                        // Close the mobile menu using direct DOM manipulation
+                        const mobileMenu = document.querySelector('.mobile-menu');
+                        if (mobileMenu) {
+                          mobileMenu.classList.remove('open');
+                        }
+                      }}
+                    >
+                      <span className="font-medium leading-tight">{name.split(' ')[0]}</span>
+                      <span className="leading-tight text-[8px]">{name.split(' ')[1]}</span>
+                    </ObservatoryButton>
+                  ))}
                 </div>
+                
+                {preset && presets[preset] && (
+                  <div className="mt-2 p-1 bg-deep-space bg-opacity-40 rounded-md text-[10px]">
+                    <p className="text-stardust-white opacity-80 leading-tight">
+                      {presets[preset].description}
+                    </p>
+                  </div>
+                )}
               </MobileControlGroup>
               
               <MobileControlGroup title="Visualization Options">
-                <div className="space-y-3">
-                  {/* ... existing visualization options with mobile styling ... */}
+                <div className="space-y-2">
+                  <div className="space-y-1">
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs text-stardust-white">CO₂ Level</span>
+                      <span className="text-xs font-mono text-pale-gold">{co2Level} ppm</span>
+                    </div>
+                    <input
+                      type="range"
+                      value={co2Level}
+                      onChange={(e) => setCo2Level(parseInt(e.target.value))}
+                      min={180}
+                      max={1000}
+                      step={10}
+                      className="celestial-slider w-full"
+                      onTouchStart={handleSliderTouchStart}
+                      onTouchEnd={handleSliderTouchEnd}
+                    />
+                  </div>
+                  
+                  <div className="space-y-1">
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs text-stardust-white">Visual Exaggeration</span>
+                      <span className="text-xs font-mono text-pale-gold">{(exaggeration * 100).toFixed(0)}%</span>
+                    </div>
+                    <input
+                      type="range"
+                      value={exaggeration}
+                      onChange={(e) => setExaggeration(parseFloat(e.target.value))}
+                      min={0.1}
+                      max={1.0}
+                      step={0.1}
+                      className="celestial-slider w-full"
+                      onTouchStart={handleSliderTouchStart}
+                      onTouchEnd={handleSliderTouchEnd}
+                    />
+                  </div>
+                  
+                  <ObservatoryButton
+                    onClick={() => setShowIntro(true)}
+                    className="w-full mt-1"
+                    variant="secondary"
+                  >
+                    Show Tutorial
+                  </ObservatoryButton>
                 </div>
               </MobileControlGroup>
             </MobileNavigation>

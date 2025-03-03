@@ -6,9 +6,14 @@ import { ObservatoryButton } from './ObservatoryPanel';
  * MobileNavigation - A mobile-specific navigation component
  * This component provides a hamburger menu and slide-out navigation for mobile devices
  */
-export function MobileNavigation({ children, className, ...props }) {
+export function MobileNavigation({ children, className, menuRef, ...props }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+  
+  // Function to close the menu that can be passed to children
+  const closeMenu = () => {
+    setIsMenuOpen(false);
+  };
   
   // Close menu on escape key
   useEffect(() => {
@@ -49,9 +54,24 @@ export function MobileNavigation({ children, className, ...props }) {
       </div>
       
       {/* Mobile menu */}
-      <div className={cn('mobile-menu', isMenuOpen && 'open')}>
+      <div 
+        ref={menuRef}
+        className={cn('mobile-menu', isMenuOpen && 'open')}
+        onTouchStart={(e) => {
+          // Only stop propagation for the menu background, not for buttons or other interactive elements
+          if (e.target === e.currentTarget || e.target.classList.contains('space-y-4')) {
+            e.stopPropagation();
+          }
+        }}
+      >
         <div className="space-y-4">
-          {children}
+          {React.Children.map(children, child => {
+            // Add closeMenu prop to all children
+            if (React.isValidElement(child)) {
+              return React.cloneElement(child, { closeMenu });
+            }
+            return child;
+          })}
         </div>
       </div>
       
@@ -145,7 +165,7 @@ function HamburgerIcon({ isOpen }) {
 /**
  * MobileControlGroup - A component for grouping mobile controls
  */
-export function MobileControlGroup({ children, className, title, ...props }) {
+export function MobileControlGroup({ children, className, title, closeMenu, ...props }) {
   return (
     <div className={cn('space-y-3 mb-4', className)} {...props}>
       {title && (
@@ -154,7 +174,13 @@ export function MobileControlGroup({ children, className, title, ...props }) {
         </h4>
       )}
       <div className="space-y-2">
-        {children}
+        {React.Children.map(children, child => {
+          // Add closeMenu prop to all children
+          if (React.isValidElement(child)) {
+            return React.cloneElement(child, { closeMenu });
+          }
+          return child;
+        })}
       </div>
     </div>
   );

@@ -109,6 +109,16 @@ export function ObservatoryButton({
         'flex items-center justify-center',
         className
       )}
+      onTouchStart={(e) => {
+        // Ensure touch events on buttons are captured properly
+        if (variant === 'mobile') {
+          e.stopPropagation();
+        }
+        // Call the original onTouchStart if provided
+        if (props.onTouchStart) {
+          props.onTouchStart(e);
+        }
+      }}
       {...props}
     >
       {icon && <span className="mr-2">{icon}</span>}
