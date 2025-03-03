@@ -323,7 +323,7 @@ export default function IntroOverlay({ onClose, onComplete }) {
 
   return (
     <div className="fixed inset-0 bg-deep-space bg-opacity-95 z-50 flex items-center justify-center p-4">
-      <ParticleEffect />
+      {!isMobile && <ParticleEffect />}
       <div 
         className={`relative bg-cosmic-blue rounded-xl border border-slate-blue shadow-lg shadow-purple-900/30 w-full ${
           isMobile 

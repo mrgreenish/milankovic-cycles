@@ -59,6 +59,7 @@ import {
   MobileOnlyView,
   DesktopOnlyView
 } from "@/components/MobileNavigation";
+import { setCookie, hasCookie } from '../lib/cookieUtils';
 
 /*
   This simulation illustrates key ideas behind Milankovitch cycles:
@@ -791,7 +792,7 @@ export default function Home() {
   const [preset, setPreset] = useState("");
 
   const [co2Level, setCo2Level] = useState(280);
-  const [showIntro, setShowIntro] = useState(true);
+  const [showIntro, setShowIntro] = useState(false);
   const [hasIntroFadedOut, setHasIntroFadedOut] = useState(true);
 
   const [displayedTemp, setDisplayedTemp] = useState(realisticAmsterdamTemp);
@@ -811,9 +812,13 @@ export default function Home() {
     };
     
     checkIfMobile();
-    window.addEventListener('resize', checkIfMobile);
+    window.addEventListener("resize", checkIfMobile);
     
-    return () => window.removeEventListener('resize', checkIfMobile);
+    // Check for intro cookie on component mount
+    const hasSeenIntro = hasCookie('introShown');
+    setShowIntro(!hasSeenIntro);
+    
+    return () => window.removeEventListener("resize", checkIfMobile);
   }, []);
 
   useEffect(() => {
@@ -1001,6 +1006,10 @@ export default function Home() {
 
   const handleIntroComplete = () => {
     setShowIntro(false);
+    // Set cookie to expire in 2 hours
+    if (typeof window !== 'undefined') {
+      setCookie('introShown', 'true', 2);
+    }
     setTimeout(() => {
       setHasIntroFadedOut(true);
     }, 1000);
@@ -1075,6 +1084,18 @@ export default function Home() {
         
           {/* Desktop UI Layout */}
           <DesktopOnlyView>
+            {/* About button in top right corner */}
+            <div className="fixed right-5 top-5 z-50 animate-fadeIn">
+              <ObservatoryButton
+                className="flex items-center space-x-2"
+                aria-label="About the Project"
+              >
+                <Link href="/about" className="w-full text-center">
+                  About
+                </Link>
+              </ObservatoryButton>
+            </div>
+            
             {/* Left Panel Group with enhanced positioning and animations */}
             <div className="fixed left-5 top-5 space-y-4 w-[400px] z-20 animate-fadeIn">
               <ObservatoryPanel
