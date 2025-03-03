@@ -79,7 +79,7 @@ export default function AboutPage() {
               </p>
               
               <p className="text-lg text-stardust-white/80 leading-relaxed mb-6">
-                While my expertise lies in development and design, I wanted to create something that honors his work in a way that fits my own skillset. This project is my way of bringing his ideas into a new digital space, making them more accessible and visually engaging for a modern audience.
+                Born in Serbia, Milanković's groundbreaking theories on astronomical climate forcing have influenced generations of scientists. While my expertise lies in development and design, I wanted to create something that honors his work in a way that fits my own skillset. This project is my way of bringing his ideas into a new digital space, making them more accessible and visually engaging for a modern audience.
               </p>
 
               <div className="mt-12 border-t border-slate-blue pt-8">
@@ -111,6 +111,22 @@ export default function AboutPage() {
           <p className="text-lg text-stardust-white/80 leading-relaxed mb-8">
             This interactive visualization explores the Milanković cycles — the collective effects of changes in the Earth's movements on its climate over thousands of years. The visualization aims to make these complex astronomical concepts more accessible through digital design and interactive elements.
           </p>
+          
+          <div className="mt-8 mb-12 p-6 bg-slate-blue/20 rounded-lg border border-slate-blue/30">
+            <h3 className="text-xl font-playfair text-antique-brass mb-4">Contact</h3>
+            <p className="text-stardust-white/80 mb-4">
+              If you notice any inaccuracies or have suggestions for improvement, please feel free to reach out.
+            </p>
+            <p className="text-stardust-white/90 font-mono">
+              <span>contact</span>
+              <span> [at] </span>
+              <span>f.vanharreveld</span>
+              <span>gmail</span>
+              <span> [dot] </span>
+              <span>com</span>
+            </p>
+          </div>
+          
           <div className="flex flex-col sm:flex-row justify-center gap-4">
             <Link 
               href="/" 
