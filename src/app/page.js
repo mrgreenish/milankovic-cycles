@@ -766,6 +766,7 @@ export default function Home() {
       description:
         "Peak of last ice age with extensive ice sheets. Northern Hemisphere summers occurred near aphelion, minimizing summer insolation.",
       year: -21000,
+      co2Level: 180, // Lower CO2 during ice age
     },
     "Mid-Holocene Optimum (6,000 BP)": {
       eccentricity: 0.0187,
@@ -774,6 +775,7 @@ export default function Home() {
       description:
         "Warm period with enhanced seasonal contrasts. Northern Hemisphere summers near perihelion maximized summer insolation.",
       year: -6000,
+      co2Level: 265, // Lower than pre-industrial CO2
     },
     "Mid-Pleistocene Transition (800,000 BP)": {
       eccentricity: 0.043,
@@ -782,6 +784,7 @@ export default function Home() {
       description:
         "Transition period when glacial cycles shifted from 41,000-year to 100,000-year periods.",
       year: -800000,
+      co2Level: 240, // Lower than pre-industrial CO2
     },
     "PETM (56 Million BP)": {
       eccentricity: 0.052,
@@ -790,6 +793,7 @@ export default function Home() {
       description:
         "Paleocene-Eocene Thermal Maximum - extreme global warming event with high CO2 levels.",
       year: -56000000,
+      co2Level: 1500, // Very high CO2 level
     },
     "Future Configuration (50,000 AP)": {
       eccentricity: 0.015,
@@ -798,6 +802,7 @@ export default function Home() {
       description:
         "Projected orbital configuration showing reduced seasonal contrasts.",
       year: 50000,
+      co2Level: 280, // Pre-industrial CO2 level
     },
   };
   const [preset, setPreset] = useState("");
@@ -1032,12 +1037,15 @@ export default function Home() {
 
   useEffect(() => {
     if (preset && presets[preset]) {
-      const { eccentricity, axialTilt, precession, year } = presets[preset];
+      const { eccentricity, axialTilt, precession, year, co2Level: presetCO2 } = presets[preset];
       setEccentricity(eccentricity);
       setAxialTilt(axialTilt);
       setPrecession(precession);
       if (year !== undefined) {
         setSimulatedYear(year);
+      }
+      if (presetCO2 !== undefined) {
+        setCo2Level(presetCO2);
       }
       setAutoAnimate(false);
     }
