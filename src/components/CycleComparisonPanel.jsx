@@ -1,5 +1,5 @@
 import React from 'react';
-import { ObservatoryPanel, ObservatorySlider, ObservatoryTooltip } from './ObservatoryPanel';
+import { ObservatorySlider, ObservatoryTooltip } from './ObservatoryPanel';
 
 /**
  * CycleComparisonPanel - A component that displays and controls Milankovitch cycle parameters
@@ -21,11 +21,7 @@ export function CycleComparisonPanel({
   const precessionDiff = precession - baselinePrecession;
   
   return (
-    <ObservatoryPanel 
-      title="Orbital Parameters" 
-      variant="control"
-      className="w-full"
-    >
+    <>
       <div className="space-y-6">
         <ObservatorySlider
           label="Eccentricity"
@@ -100,6 +96,6 @@ export function CycleComparisonPanel({
       <div className="mt-6 text-sm text-stardust-white opacity-80">
         <p>These orbital variations, known as Milankovitch cycles, affect how much solar radiation Earth receives and its distribution across latitudes and seasons.</p>
       </div>
-    </ObservatoryPanel>
+    </>
   );
 } 

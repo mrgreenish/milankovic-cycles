@@ -60,6 +60,7 @@ import {
   DesktopOnlyView
 } from "@/components/MobileNavigation";
 import { setCookie, hasCookie } from '../lib/cookieUtils';
+import { GuidedTour, TourButton } from "@/components/GuidedTour";
 
 /*
   This simulation illustrates key ideas behind Milankovitch cycles:
@@ -802,7 +803,7 @@ export default function Home() {
       description:
         "Paleocene-Eocene Thermal Maximum - extreme global warming event with high CO2 levels.",
       year: -56000000,
-      co2Level: 1500, // Very high CO2 during PETM (estimated 1000-2000 ppm)
+      co2Level: 1000, // Extremely high CO2 during PETM
     },
     "Future Configuration (50,000 AP)": {
       eccentricity: 0.015,
@@ -829,6 +830,10 @@ export default function Home() {
   const [mounted, setMounted] = useState(false);
   const [isTouchingSlider, setIsTouchingSlider] = useState(false);
   
+  // Guided tour state
+  const [showTour, setShowTour] = useState(false);
+  const [currentTourStep, setCurrentTourStep] = useState(0);
+  
   // Function to handle slider touch events
   const handleSliderTouchStart = (e) => {
     e.stopPropagation();
@@ -842,6 +847,58 @@ export default function Home() {
   
   const handleSliderTouchEnd = () => {
     setIsTouchingSlider(false);
+  };
+  
+  // Function to show parameter change indicator
+  const showParameterChangeIndicator = (type, oldValue, newValue) => {
+    // Create indicator element
+    const feedbackEl = document.createElement('div');
+    feedbackEl.className = 'parameter-change-indicator';
+    
+    // Set content based on parameter type
+    if (type === 'eccentricity') {
+      // Create simplified SVG for changing orbit
+      feedbackEl.innerHTML = `
+        <svg width="80" height="80" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+          <ellipse cx="40" cy="40" rx="35" ry="${35 * (1 - 2 * newValue)}" 
+            fill="none" stroke="${newValue > oldValue ? '#ff6464' : '#64c8ff'}" 
+            stroke-width="3" />
+          <circle cx="40" cy="40" r="5" fill="${newValue > oldValue ? '#ff6464' : '#64c8ff'}" />
+        </svg>
+      `;
+    } else if (type === 'axialTilt') {
+      // Create simplified SVG for tilted Earth
+      feedbackEl.innerHTML = `
+        <svg width="80" height="80" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="40" cy="40" r="30" fill="${newValue > oldValue ? '#ff6464' : '#64c8ff'}" opacity="0.7" />
+          <line x1="40" y1="10" x2="40" y2="70" stroke="#ffffff" stroke-width="2" 
+            transform="rotate(${newValue}, 40, 40)" />
+          <line x1="40" y1="10" x2="40" y2="70" stroke="#ffffff" stroke-width="1" stroke-dasharray="2,2"
+            transform="rotate(${oldValue}, 40, 40)" opacity="0.5" />
+          <text x="40" y="40" text-anchor="middle" dominant-baseline="middle" fill="#ffffff" font-size="20">
+            ${newValue > oldValue ? '↗' : '↙'}
+          </text>
+        </svg>
+      `;
+    } else if (type === 'precession') {
+      // Create simplified SVG for precession
+      feedbackEl.innerHTML = `
+        <svg width="80" height="80" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="40" cy="40" r="30" fill="#1a2a3a" stroke="#ffffff" stroke-width="1" />
+          <circle cx="40" cy="40" r="5" fill="${newValue > oldValue ? '#ff6464' : '#64c8ff'}" />
+          <path d="M 40 10 A 30 30 0 0 1 70 40" fill="none" stroke="#ffffff" stroke-width="2" stroke-dasharray="5,5" />
+          <path d="M 40 10 A 30 30 0 0 1 70 40" fill="none" stroke="#ffffff" stroke-width="2" 
+            transform="rotate(${newValue - oldValue}, 40, 40)" />
+          <text x="40" y="40" text-anchor="middle" dominant-baseline="middle" fill="#ffffff" font-size="20">
+            ${Math.abs(newValue - oldValue) > 180 ? '↺' : '↻'}
+          </text>
+        </svg>
+      `;
+    }
+    
+    // Add to DOM and remove after animation
+    document.body.appendChild(feedbackEl);
+    setTimeout(() => document.body.removeChild(feedbackEl), 800);
   };
   
   // Add global touch end event listener
@@ -1138,11 +1195,62 @@ export default function Home() {
     console.log(`Skipped to season: ${nextSeason.toFixed(2)}, new year: ${newSimulatedYear.toFixed(2)}`);
   };
 
+  // Guided tour steps
+  const tourSteps = [
+    {
+      target: "orbital-parameters",
+      title: "Orbital Parameters",
+      content: "Adjust these sliders to change Earth's orbit. Eccentricity affects how elliptical the orbit is, axial tilt changes seasonal intensity, and precession shifts when seasons occur.",
+      position: "right"
+    },
+    {
+      target: "time-controls",
+      title: "Time Controls",
+      content: "Control the simulation speed or pause it. The logarithmic slider lets you speed up or slow down time dramatically.",
+      position: "right"
+    },
+    {
+      target: "historical-scenarios",
+      title: "Historical Scenarios",
+      content: "Jump to key periods in Earth's climate history to see how Milankovitch cycles influenced past climates.",
+      position: "right"
+    },
+    {
+      target: "climate-data",
+      title: "Climate Data",
+      content: "This graph shows how temperature changes based on the orbital parameters you've set.",
+      position: "right"
+    },
+    {
+      target: "3d-visualization",
+      title: "3D Visualization",
+      content: "This model shows Earth's orbit and rotation. Notice how the parameters you change affect the orbit shape and Earth's tilt.",
+      position: "bottom"
+    }
+  ];
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'p') setIsPaused((prev) => !prev);
+      if (e.key === 'f') handleFastForward();
+      if (e.key === 'n') skipToNextSeason();
+      if (e.key === 'r') setAutoAnimate((prev) => !prev);
+      if (e.key === 't') setShowTour((prev) => !prev);
+      if (e.key === 'Escape' && showTour) {
+        setShowTour(false);
+        setCurrentTourStep(0);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showTour]);
+
   return (
     <main className="flex min-h-screen flex-col items-center justify-between">
       
       {/* 3D Canvas */}
-      <div className="canvas-container">
+      <div className="canvas-container" id="3d-visualization">
         <Suspense fallback={null}>
           <Canvas 
             shadows={false} 
@@ -1218,7 +1326,8 @@ export default function Home() {
           {/* Desktop UI Layout */}
           <DesktopOnlyView>
             {/* About button in top right corner */}
-            <div className="fixed right-5 top-5 z-50 animate-fadeIn">
+            <div className="fixed right-5 top-5 z-50 animate-fadeIn flex space-x-2">
+              <TourButton onClick={() => setShowTour(true)} />
               <ObservatoryButton
                 className="flex items-center space-x-2"
                 aria-label="About the Project"
@@ -1248,12 +1357,14 @@ export default function Home() {
                     setAutoAnimate(false);
                     const deltaEcc = value - baselineEccentricity;
                     setParameterPreview(realisticAmsterdamTemp + deltaEcc * 100);
+                    showParameterChangeIndicator('eccentricity', baselineEccentricity, value);
                   }}
                   onAxialTiltChange={(value) => {
                     setAxialTilt(value);
                     setAutoAnimate(false);
                     const deltaTilt = value - baselineAxialTilt;
                     setParameterPreview(realisticAmsterdamTemp + deltaTilt * 2);
+                    showParameterChangeIndicator('axialTilt', baselineAxialTilt, value);
                   }}
                   onPrecessionChange={(value) => {
                     setPrecession(value);
@@ -1262,6 +1373,7 @@ export default function Home() {
                       THREE.MathUtils.degToRad(value - baselinePrecession)
                     );
                     setParameterPreview(realisticAmsterdamTemp + deltaPrecession * 5);
+                    showParameterChangeIndicator('precession', baselinePrecession, value);
                   }}
                 />
               </ObservatoryPanel>
@@ -1285,6 +1397,7 @@ export default function Home() {
                 variant="control"
                 glowing={timeControlsHovered}
                 className="w-full"
+                id="time-controls"
                 onMouseEnter={() => setTimeControlsHovered(true)}
                 onMouseLeave={() => setTimeControlsHovered(false)}
               >
@@ -1356,6 +1469,7 @@ export default function Home() {
                 className="w-full"
                 collapsible={true}
                 initialCollapsed={false}
+                id="historical-scenarios"
               >
                 <div className="space-y-2">
                   <div className="grid grid-cols-3 gap-1">
@@ -1395,6 +1509,7 @@ export default function Home() {
                 variant="data"
                 title="Climate Data"
                 className="w-full"
+                id="climate-data"
               >
                 <GlobalTemperatureGraph
                   axialTilt={axialTilt}
@@ -1548,6 +1663,7 @@ export default function Home() {
                     const newValue = parseFloat(e.target.value);
                     setEccentricity(newValue);
                     setAutoAnimate(false);
+                    showParameterChangeIndicator('eccentricity', baselineEccentricity, newValue);
                   }}
                   min={0.0}
                   max={0.07}
@@ -1568,6 +1684,7 @@ export default function Home() {
                     const newValue = parseFloat(e.target.value);
                     setAxialTilt(newValue);
                     setAutoAnimate(false);
+                    showParameterChangeIndicator('axialTilt', baselineAxialTilt, newValue);
                   }}
                   min={22.0}
                   max={24.5}
@@ -1588,6 +1705,7 @@ export default function Home() {
                     const newValue = parseFloat(e.target.value);
                     setPrecession(newValue);
                     setAutoAnimate(false);
+                    showParameterChangeIndicator('precession', baselinePrecession, newValue);
                   }}
                   min={0}
                   max={360}
@@ -1676,6 +1794,19 @@ export default function Home() {
           </MobileOnlyView>
         </>
       )}
+
+      {/* Guided Tour */}
+      <GuidedTour 
+        steps={tourSteps}
+        currentStep={currentTourStep}
+        onNext={() => setCurrentTourStep(prev => Math.min(prev + 1, tourSteps.length - 1))}
+        onPrev={() => setCurrentTourStep(prev => Math.max(prev - 1, 0))}
+        onClose={() => {
+          setShowTour(false);
+          setCurrentTourStep(0);
+        }}
+        isOpen={showTour}
+      />
     </main>
   );
 }

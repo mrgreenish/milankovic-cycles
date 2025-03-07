@@ -55,13 +55,26 @@ export function GuidedTour({ steps, currentStep, onNext, onPrev, onClose, isOpen
   if (targetEl) {
     const rect = targetEl.getBoundingClientRect();
     
+    // Check if this is a right panel (positioned on the right side of the screen)
+    const isRightPanel = rect.left > window.innerWidth / 2;
+    
     switch (currentTourStep.position) {
       case 'right':
-        position = {
-          top: `${rect.top + rect.height/2}px`,
-          left: `${rect.right + 20}px`,
-          transform: 'translateY(-50%)'
-        };
+        if (isRightPanel) {
+          // For right-side panels, position the tour to the left of the panel
+          position = {
+            top: `${rect.top + rect.height/2}px`,
+            left: `${rect.left - 320}px`,
+            transform: 'translateY(-50%)'
+          };
+        } else {
+          // For left-side panels, position the tour to the right of the panel
+          position = {
+            top: `${rect.top + rect.height/2}px`,
+            left: `${rect.right + 20}px`,
+            transform: 'translateY(-50%)'
+          };
+        }
         break;
       case 'left':
         position = {
