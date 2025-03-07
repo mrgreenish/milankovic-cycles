@@ -92,37 +92,32 @@ export function ObservatoryButton({
   icon,
   ...props
 }) {
-  // Define variant-specific classes
   const variantClasses = {
-    default: 'celestial-button',
-    primary: 'celestial-button bg-antique-brass text-deep-space hover:bg-pale-gold',
-    secondary: 'celestial-button bg-slate-blue hover:bg-opacity-90',
-    ghost: 'celestial-button bg-transparent border-transparent hover:bg-deep-space hover:bg-opacity-50',
-    mobile: 'celestial-button min-h-[44px] px-4 py-2',
+    default: "bg-deep-space hover:bg-slate-blue text-stardust-white border border-slate-blue",
+    primary: "bg-pale-gold hover:bg-pale-gold-bright text-deep-space font-medium",
+    secondary: "bg-transparent hover:bg-slate-blue/20 text-stardust-white border border-slate-blue/50",
+    danger: "bg-supernova-red hover:bg-supernova-red-bright text-stardust-white",
+    mobile: "bg-transparent hover:bg-slate-blue/20 text-stardust-white py-2 border-b border-slate-blue/30",
+    menu: "bg-transparent text-stardust-white py-2 rounded-md hover:text-pale-gold flex items-center px-3",
   };
 
   return (
     <button
       className={cn(
-        variantClasses[variant] || variantClasses.default,
-        glowing && 'animate-glow',
-        'flex items-center justify-center',
+        "px-4 py-2 rounded-md transition-all duration-200 text-sm focus:outline-none relative overflow-hidden",
+        variantClasses[variant],
+        glowing && "shadow-glow animate-pulse",
         className
       )}
-      onTouchStart={(e) => {
-        // Ensure touch events on buttons are captured properly
-        if (variant === 'mobile') {
-          e.stopPropagation();
-        }
-        // Call the original onTouchStart if provided
-        if (props.onTouchStart) {
-          props.onTouchStart(e);
-        }
-      }}
       {...props}
     >
-      {icon && <span className="mr-2">{icon}</span>}
-      {children}
+      <div className="relative z-10 flex items-center justify-center">
+        {icon && <span className="mr-2">{icon}</span>}
+        {children}
+      </div>
+      
+      {/* Optional subtle animation effect on hover */}
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-stardust-white/5 to-transparent -translate-x-full hover:animate-shimmer" />
     </button>
   );
 }

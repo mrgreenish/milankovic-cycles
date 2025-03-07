@@ -40,9 +40,30 @@ const switzer = localFont({
 });
 
 export const metadata = {
-  title: 'Milanković Cycles Simulation | Climate Model Visualization',
-  description: 'Interactive visualization of Milutin Milanković\'s astronomical theory of climate changes, demonstrating how Earth\'s orbital variations influence long-term climate patterns.',
-  keywords: ['Milanković cycles', 'orbital forcing', 'climate model', 'Milutin Milanković', 'Earth climate', 'astronomical theory', 'paleoclimatology'],
+  title: 'Milanković Cycles Simulation | Interactive Climate Model Visualization',
+  description: 'Interactive 3D visualization of Milutin Milanković\'s astronomical theory of climate changes. Explore how Earth\'s orbital variations (eccentricity, axial tilt, and precession) influence long-term climate patterns and ice ages over thousands of years.',
+  keywords: [
+    'Milanković cycles', 
+    'Milankovitch cycles', 
+    'orbital forcing', 
+    'climate model', 
+    'Milutin Milanković', 
+    'Earth climate', 
+    'astronomical theory', 
+    'paleoclimatology', 
+    'eccentricity', 
+    'axial tilt', 
+    'precession', 
+    'climate change', 
+    'astronomical cycles', 
+    'climate simulation', 
+    'ice ages', 
+    'orbital variations', 
+    'Earth orbit',
+    'insolation',
+    'climate history',
+    'orbital mechanics'
+  ],
   authors: [{ name: 'Filip van Harreveld' }],
   creator: 'Filip van Harreveld',
   publisher: 'Filip van Harreveld',
@@ -51,8 +72,8 @@ export const metadata = {
     canonical: '/',
   },
   openGraph: {
-    title: 'Milanković Cycles Simulation | Climate Model Visualization',
-    description: 'Interactive visualization of Milutin Milanković\'s astronomical theory of climate changes, demonstrating how Earth\'s orbital variations influence long-term climate patterns.',
+    title: 'Milanković Cycles Simulation | Interactive Climate Model Visualization',
+    description: 'Interactive 3D visualization of Milutin Milanković\'s astronomical theory of climate changes. Explore how Earth\'s orbital variations influence long-term climate patterns and ice ages over thousands of years.',
     url: 'https://milankovic-cycles.vercel.app',
     siteName: 'Milanković Cycles Simulation',
     images: [
@@ -68,8 +89,8 @@ export const metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Milanković Cycles Simulation',
-    description: 'Interactive visualization of Milanković cycles and their effects on Earth\'s climate',
+    title: 'Milanković Cycles Simulation | Interactive Climate Model',
+    description: 'Explore how Earth\'s orbital variations (eccentricity, axial tilt, and precession) influence long-term climate patterns through an interactive 3D visualization.',
     images: ['/miltin-milankovic.jpg'],
     creator: '@yourtwitterhandle',
   },
@@ -104,6 +125,37 @@ export default function RootLayout({ children }) {
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        
+        {/* Structured data for improved SEO */}
+        <script type="application/ld+json" dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "EducationalApplication",
+            "name": "Milanković Cycles Simulation",
+            "description": "Interactive 3D visualization of Milutin Milanković's astronomical theory of climate changes and how Earth's orbital variations influence long-term climate patterns.",
+            "applicationCategory": "Scientific",
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "USD"
+            },
+            "author": {
+              "@type": "Person",
+              "name": "Filip van Harreveld"
+            },
+            "about": {
+              "@type": "Thing",
+              "name": "Milanković cycles",
+              "description": "Periodic changes in Earth's orbit that affect the amount of solar radiation received by Earth, influencing climate patterns over thousands of years.",
+              "sameAs": "https://en.wikipedia.org/wiki/Milankovitch_cycles"
+            },
+            "educationalUse": ["Interactive Simulation", "Research", "Teaching"],
+            "keywords": "Milanković cycles, orbital forcing, climate model, eccentricity, axial tilt, precession, Earth climate, paleoclimatology",
+            "learningResourceType": "Simulation",
+            "url": "https://milankovic-cycles.vercel.app",
+            "inLanguage": "en-US"
+          })
+        }} />
       </head>
       <body className="font-sans antialiased">
         {children}

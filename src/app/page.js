@@ -61,6 +61,8 @@ import {
 } from "@/components/MobileNavigation";
 import { setCookie, hasCookie } from '../lib/cookieUtils';
 import { GuidedTour, TourButton } from "@/components/GuidedTour";
+import { MilankovicFAQ } from "@/components/MilankovicFAQ";
+import { NavigationMenu } from "@/components/NavigationMenu";
 
 /*
   This simulation illustrates key ideas behind Milankovitch cycles:
@@ -1327,21 +1329,13 @@ export default function Home() {
         
           {/* Desktop UI Layout */}
           <DesktopOnlyView>
-            {/* About button in top right corner */}
-            <div className="fixed right-5 top-5 z-50 animate-fadeIn flex space-x-2">
-              <TourButton onClick={() => setShowTour(true)} />
-              <ObservatoryButton
-                className="flex items-center space-x-2"
-                aria-label="About the Project"
-              >
-                <Link href="/about" className="w-full text-center">
-                  About
-                </Link>
-              </ObservatoryButton>
+            {/* Replace the current buttons with the new navigation menu */}
+            <div className="fixed left-5 top-5 z-50 animate-fadeIn">
+              <NavigationMenu onTourClick={() => setShowTour(true)} />
             </div>
             
             {/* Left Panel Group with enhanced positioning and animations */}
-            <div className="fixed left-5 top-5 space-y-4 w-[400px] z-20 animate-fadeIn">
+            <div className="fixed left-5 top-[60px] space-y-4 w-[400px] z-20 animate-fadeIn">
               <ObservatoryPanel
                 variant="control"
                 title="Orbital Parameters"
@@ -1415,63 +1409,26 @@ export default function Home() {
                     <ObservatoryButton
                       onClick={handleFastForward}
                       variant="secondary"
-                      disabled={isFastForwarding}
-                      className="flex-1"
                     >
-                      {isFastForwarding ? "Fast Forwarding..." : "Fast Forward"}
+                      Fast Forward
                     </ObservatoryButton>
                     
-                    <ObservatoryButton
-                      onClick={skipToNextSeason}
-                      variant="secondary"
-                      className="flex-1"
-                    >
-                      Skip to Next Season
+                    <ObservatoryButton onClick={skipToNextSeason} variant="secondary">
+                      Skip Season
                     </ObservatoryButton>
                   </div>
-
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-stardust-white">Simulation Speed</span>
-                      <span className="text-sm font-mono text-pale-gold">{formatNumber(timeScale)}</span>
-                    </div>
-                    <input
-                      type="range"
-                      value={Math.log10(timeScale) * 100}
-                      onChange={(e) => {
-                        const logValue = parseFloat(e.target.value) / 100;
-                        const newValue = Math.pow(10, logValue);
-                        setTimeScale(newValue);
-                      }}
-                      min={-300}
-                      max={800}
-                      step={10}
-                      className="celestial-slider w-full"
-                      onTouchStart={handleSliderTouchStart}
-                      onTouchEnd={handleSliderTouchEnd}
-                    />
-                    <div className="flex justify-between text-xs text-stardust-white opacity-60">
-                      <span>Slower</span>
-                      <span>Faster</span>
-                    </div>
-                    
-                    {/* Season indicator */}
-                    <div className="flex justify-between items-center mt-2">
-                      <span className="text-sm text-stardust-white">Current Season:</span>
-                      <span className="text-sm font-mono text-pale-gold">{currentSeason}</span>
-                    </div>
+                  
+                  <div className="flex items-center space-x-2">
+                    <div className="text-pale-gold font-mono text-sm text-center">{currentSeason}</div>
                   </div>
                 </div>
               </ObservatoryPanel>
-
-              {/* Preset Scenarios Panel */}
-              <ObservatoryPanel
-                title="Historical Scenarios"
-                variant="info"
+              
+              {/* Presets Panel */}
+              <ObservatoryPanel 
+                title="Presets"
+                variant="control"
                 className="w-full"
-                collapsible={true}
-                initialCollapsed={false}
-                id="historical-scenarios"
               >
                 <div className="space-y-2">
                   <div className="grid grid-cols-3 gap-1">
@@ -1538,21 +1495,14 @@ export default function Home() {
               </div>
               
               <MobileControlGroup title="Information">
-                <ObservatoryButton 
-                  variant="mobile" 
-                  className="w-full justify-start"
-                  onClick={() => setShowIntro(true)}
-                >
-                  How to Use
-                </ObservatoryButton>
-                <ObservatoryButton 
-                  variant="mobile" 
-                  className="w-full justify-start"
-                >
-                  <Link href="/about" className="w-full text-left">
-                    About the Project
-                  </Link>
-                </ObservatoryButton>
+                <NavigationMenu onTourClick={() => {
+                  setShowIntro(true);
+                  // Close the mobile menu using direct DOM manipulation
+                  const mobileMenu = document.querySelector('.mobile-menu');
+                  if (mobileMenu) {
+                    mobileMenu.classList.remove('open');
+                  }
+                }} />
               </MobileControlGroup>
               
               <MobileControlGroup title="Preset Scenarios">
@@ -1563,21 +1513,6 @@ export default function Home() {
                       variant="mobile"
                       className="text-[10px] py-1 px-1 text-center h-auto flex flex-col items-center justify-center"
                       onClick={(e) => {
-                        setPreset(name);
-                        setEccentricity(config.eccentricity);
-                        setAxialTilt(config.axialTilt);
-                        setPrecession(config.precession);
-                        setAutoAnimate(false);
-                        
-                        // Close the mobile menu using direct DOM manipulation
-                        const mobileMenu = document.querySelector('.mobile-menu');
-                        if (mobileMenu) {
-                          mobileMenu.classList.remove('open');
-                        }
-                      }}
-                      onTouchEnd={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
                         setPreset(name);
                         setEccentricity(config.eccentricity);
                         setAxialTilt(config.axialTilt);
