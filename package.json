@@ -12,6 +12,7 @@
     "test:additional": "node src/examples/additional-feedbacks.js",
     "test:regional": "node src/examples/regional-visualization.js",
     "test:validate": "node scripts/validate-parameters.js",
+    "test:scene": "node src/tests/scene-scientific-test.js",
     "fix:presets": "node scripts/fix-presets.js"
   },
   "keywords": [

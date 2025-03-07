@@ -89,7 +89,7 @@ export default function AboutPage() {
                   </div>
                   <div>
                     <h3 className="text-xl font-playfair text-stardust-white">Filip van Harreveld</h3>
-                    <p className="text-sm text-stardust-white/70 mt-1">Developer</p>
+                    <p className="text-sm text-stardust-white/70 mt-1">Creative developer</p>
                     <a 
                       href="https://filipvanharreveld.com" 
                       target="_blank" 
