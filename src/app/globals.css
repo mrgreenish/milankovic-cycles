@@ -725,3 +725,44 @@
     transform: scale(1.2);
   }
 }
+
+/* Parameter change indicator */
+.parameter-change-indicator {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 5rem;
+  font-weight: bold;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0;
+  animation: fadeInOut 0.8s ease-in-out;
+  text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.parameter-change-indicator svg {
+  width: 100px;
+  height: 100px;
+  filter: drop-shadow(0 0 5px rgba(0, 0, 0, 0.5));
+}
+
+@keyframes fadeInOut {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+  50% { opacity: 0.8; transform: translate(-50%, -50%) scale(1.2); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(1.5); }
+}
+
+/* Tour highlight effect */
+.tour-highlight {
+  position: relative;
+  z-index: 40;
+  box-shadow: 0 0 0 4px rgba(205, 175, 125, 0.8), 0 0 20px rgba(205, 175, 125, 0.5);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 4px rgba(205, 175, 125, 0.8), 0 0 20px rgba(205, 175, 125, 0.5); }
+  50% { box-shadow: 0 0 0 8px rgba(205, 175, 125, 0.6), 0 0 30px rgba(205, 175, 125, 0.3); }
+  100% { box-shadow: 0 0 0 4px rgba(205, 175, 125, 0.8), 0 0 20px rgba(205, 175, 125, 0.5); }
+}

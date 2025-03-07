@@ -60,6 +60,7 @@ import {
   DesktopOnlyView
 } from "@/components/MobileNavigation";
 import { setCookie, hasCookie } from '../lib/cookieUtils';
+import { GuidedTour, TourButton } from "@/components/GuidedTour";
 
 /*
   This simulation illustrates key ideas behind Milankovitch cycles:
@@ -757,6 +758,9 @@ export default function Home() {
 
   const [timeControlsHovered, setTimeControlsHovered] = useState(false);
   const [scenariosHovered, setScenariosHovered] = useState(false);
+  const [showTour, setShowTour] = useState(false);
+  const [currentTourStep, setCurrentTourStep] = useState(0);
+  const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false);
 
   const presets = {
     "Last Glacial Maximum (21,000 BP)": {
@@ -860,8 +864,61 @@ export default function Home() {
     const hasSeenIntro = hasCookie('introShown');
     setShowIntro(!hasSeenIntro);
     
-    return () => window.removeEventListener("resize", checkIfMobile);
-  }, []);
+    // Add keyboard shortcuts
+    const handleKeyDown = (e) => {
+      // Don't trigger shortcuts if user is typing in an input
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+        return;
+      }
+      
+      switch (e.key) {
+        case ' ': // Space bar to toggle play/pause
+          e.preventDefault();
+          setIsPaused(prev => !prev);
+          break;
+        case 'ArrowRight': // Speed up simulation
+          e.preventDefault();
+          setTimeScale(prev => Math.min(prev * 2, 1000000));
+          break;
+        case 'ArrowLeft': // Slow down simulation
+          e.preventDefault();
+          setTimeScale(prev => Math.max(prev / 2, 0.001));
+          break;
+        case 'r': // Reset to default parameters
+          e.preventDefault();
+          setEccentricity(baselineEccentricity);
+          setAxialTilt(baselineAxialTilt);
+          setPrecession(baselinePrecession);
+          break;
+        case 't': // Toggle tour
+          e.preventDefault();
+          setShowTour(prev => !prev);
+          setCurrentTourStep(0);
+          break;
+        case 'k': // Toggle keyboard shortcuts
+          e.preventDefault();
+          setShowKeyboardShortcuts(prev => !prev);
+          break;
+        case 'Escape': // Close tour and keyboard shortcuts
+          if (showTour) {
+            e.preventDefault();
+            setShowTour(false);
+          }
+          if (showKeyboardShortcuts) {
+            e.preventDefault();
+            setShowKeyboardShortcuts(false);
+          }
+          break;
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    
+    return () => {
+      window.removeEventListener("resize", checkIfMobile);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [baselineEccentricity, baselineAxialTilt, baselinePrecession, showTour, showKeyboardShortcuts]);
 
   useEffect(() => {
     if (!isFinite(simulatedYear) || Math.abs(simulatedYear) > 1e21) {
@@ -1064,6 +1121,51 @@ export default function Home() {
     }, 1000);
   };
 
+  // Tour steps
+  const tourSteps = [
+    {
+      target: "orbital-parameters",
+      title: "Orbital Parameters",
+      content: "Adjust these sliders to change Earth's orbit. Eccentricity affects how elliptical the orbit is, axial tilt changes seasonal intensity, and precession shifts when seasons occur.",
+      position: "right"
+    },
+    {
+      target: "time-controls",
+      title: "Time Controls",
+      content: "Control the simulation speed or pause it. The logarithmic slider lets you speed up or slow down time dramatically.",
+      position: "left"
+    },
+    {
+      target: "historical-scenarios",
+      title: "Historical Scenarios",
+      content: "Jump to key periods in Earth's climate history to see how Milankovitch cycles influenced past climates.",
+      position: "left"
+    },
+    {
+      target: "climate-data",
+      title: "Climate Data",
+      content: "This graph shows how temperature changes based on the orbital parameters you've set.",
+      position: "left"
+    },
+    {
+      target: "3d-visualization",
+      title: "3D Visualization",
+      content: "This model shows Earth's orbit and rotation. Notice how the parameters you change affect the orbit shape and Earth's tilt.",
+      position: "bottom"
+    }
+  ];
+
+  // Keyboard shortcuts
+  const keyboardShortcuts = [
+    { key: 'Space', description: 'Play/Pause simulation' },
+    { key: '→', description: 'Speed up simulation' },
+    { key: '←', description: 'Slow down simulation' },
+    { key: 'R', description: 'Reset to default parameters' },
+    { key: 'T', description: 'Start guided tour' },
+    { key: 'K', description: 'Show/hide keyboard shortcuts' },
+    { key: 'Esc', description: 'Close panels/tour' },
+  ];
+
   return (
     <main className="flex min-h-screen flex-col items-center justify-between">
       
@@ -1160,6 +1262,7 @@ export default function Home() {
                 variant="control"
                 title="Orbital Parameters"
                 className="w-full"
+                id="orbital-parameters"
               >
                 <CycleComparisonPanel
                   eccentricity={eccentricity}
@@ -1173,12 +1276,48 @@ export default function Home() {
                     setAutoAnimate(false);
                     const deltaEcc = value - baselineEccentricity;
                     setParameterPreview(realisticAmsterdamTemp + deltaEcc * 100);
+                    
+                    // Add visual feedback with simplified orbit shape
+                    const feedbackEl = document.createElement('div');
+                    feedbackEl.className = 'parameter-change-indicator';
+                    
+                    // Create simplified SVG for changing orbit
+                    feedbackEl.innerHTML = `
+                      <svg width="80" height="80" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+                        <ellipse cx="40" cy="40" rx="35" ry="${35 * Math.sqrt(1 - value * value)}" 
+                          fill="none" stroke="${value > eccentricity ? '#ff6464' : '#64c8ff'}" 
+                          stroke-width="3" />
+                        <circle cx="40" cy="40" r="5" fill="${value > eccentricity ? '#ff6464' : '#64c8ff'}" />
+                      </svg>
+                    `;
+                    
+                    document.body.appendChild(feedbackEl);
+                    setTimeout(() => document.body.removeChild(feedbackEl), 800);
                   }}
                   onAxialTiltChange={(value) => {
                     setAxialTilt(value);
                     setAutoAnimate(false);
                     const deltaTilt = value - baselineAxialTilt;
                     setParameterPreview(realisticAmsterdamTemp + deltaTilt * 2);
+                    
+                    // Add visual feedback with simplified Earth tilt
+                    const feedbackEl = document.createElement('div');
+                    feedbackEl.className = 'parameter-change-indicator';
+                    
+                    // Create simplified SVG for tilted Earth
+                    feedbackEl.innerHTML = `
+                      <svg width="80" height="80" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="40" cy="40" r="30" fill="${value > axialTilt ? '#ff6464' : '#64c8ff'}" opacity="0.7" />
+                        <line x1="40" y1="10" x2="40" y2="70" stroke="#ffffff" stroke-width="2" 
+                          transform="rotate(${value > axialTilt ? value - axialTilt : axialTilt - value}, 40, 40)" />
+                        <text x="40" y="40" text-anchor="middle" dominant-baseline="middle" fill="#ffffff" font-size="20">
+                          ${value > axialTilt ? '↗' : '↙'}
+                        </text>
+                      </svg>
+                    `;
+                    
+                    document.body.appendChild(feedbackEl);
+                    setTimeout(() => document.body.removeChild(feedbackEl), 800);
                   }}
                   onPrecessionChange={(value) => {
                     setPrecession(value);
@@ -1187,6 +1326,15 @@ export default function Home() {
                       THREE.MathUtils.degToRad(value - baselinePrecession)
                     );
                     setParameterPreview(realisticAmsterdamTemp + deltaPrecession * 5);
+                    
+                    // Simple text-based feedback
+                    const feedbackEl = document.createElement('div');
+                    feedbackEl.className = 'parameter-change-indicator';
+                    feedbackEl.textContent = '↻';
+                    feedbackEl.style.color = '#c8c864';
+                    
+                    document.body.appendChild(feedbackEl);
+                    setTimeout(() => document.body.removeChild(feedbackEl), 800);
                   }}
                 />
               </ObservatoryPanel>
@@ -1210,6 +1358,7 @@ export default function Home() {
                 variant="control"
                 glowing={timeControlsHovered}
                 className="w-full"
+                id="time-controls"
                 onMouseEnter={() => setTimeControlsHovered(true)}
                 onMouseLeave={() => setTimeControlsHovered(false)}
               >
@@ -1229,18 +1378,23 @@ export default function Home() {
                     </div>
                     <input
                       type="range"
-                      value={timeScale}
+                      value={Math.log10(timeScale) * 100}
                       onChange={(e) => {
-                        const newValue = parseFloat(e.target.value);
+                        const logValue = parseFloat(e.target.value) / 100;
+                        const newValue = Math.pow(10, logValue);
                         setTimeScale(newValue);
                       }}
-                      min={0.001}
-                      max={1000000}
-                      step={100}
+                      min={-300}
+                      max={600}
+                      step={10}
                       className="celestial-slider w-full"
                       onTouchStart={handleSliderTouchStart}
                       onTouchEnd={handleSliderTouchEnd}
                     />
+                    <div className="flex justify-between text-xs text-stardust-white opacity-60">
+                      <span>Slower</span>
+                      <span>Faster</span>
+                    </div>
                   </div>
                 </div>
               </ObservatoryPanel>
@@ -1250,6 +1404,7 @@ export default function Home() {
                 title="Historical Scenarios"
                 variant="info"
                 className="w-full"
+                id="historical-scenarios"
                 collapsible={true}
                 initialCollapsed={false}
               >
@@ -1291,6 +1446,7 @@ export default function Home() {
                 variant="data"
                 title="Climate Data"
                 className="w-full"
+                id="climate-data"
               >
                 <GlobalTemperatureGraph
                   axialTilt={axialTilt}
@@ -1320,7 +1476,7 @@ export default function Home() {
                 <ObservatoryButton 
                   variant="mobile" 
                   className="w-full justify-start"
-                  onClick={() => setShowIntro(true)}
+                  onClick={() => setShowTour(true)}
                 >
                   How to Use
                 </ObservatoryButton>
@@ -1384,166 +1540,210 @@ export default function Home() {
                   </div>
                 )}
               </MobileControlGroup>
-              
-              <MobileControlGroup title="Visualization Options">
-                <div className="space-y-2">
-                  <div className="space-y-1">
-                    <div className="flex justify-between items-center">
-                      <span className="text-xs text-stardust-white">CO₂ Level</span>
-                      <span className="text-xs font-mono text-pale-gold">{co2Level} ppm</span>
+            </MobileNavigation>
+            
+            {/* Improved Mobile Bottom Sheet */}
+            <BottomSheet title="Simulation Controls">
+              <div className="space-y-4">
+                {/* Play/Pause and Speed Controls */}
+                <div className="flex items-center space-x-3">
+                  <ObservatoryButton
+                    onClick={() => setIsPaused((prev) => !prev)}
+                    className="flex-shrink-0"
+                    variant="primary"
+                  >
+                    {isPaused ? "Play" : "Pause"}
+                  </ObservatoryButton>
+                  
+                  <div className="flex-grow">
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-xs text-stardust-white">Speed</span>
+                      <span className="text-xs font-mono text-pale-gold">{formatNumber(timeScale)}</span>
                     </div>
                     <input
                       type="range"
-                      value={co2Level}
-                      onChange={(e) => setCo2Level(parseInt(e.target.value))}
-                      min={180}
-                      max={1000}
+                      value={Math.log10(timeScale) * 100}
+                      onChange={(e) => {
+                        const logValue = parseFloat(e.target.value) / 100;
+                        const newValue = Math.pow(10, logValue);
+                        setTimeScale(newValue);
+                      }}
+                      min={-300}
+                      max={600}
                       step={10}
                       className="celestial-slider w-full"
                       onTouchStart={handleSliderTouchStart}
                       onTouchEnd={handleSliderTouchEnd}
                     />
                   </div>
-                  
-                  <div className="space-y-1">
-                    <div className="flex justify-between items-center">
-                      <span className="text-xs text-stardust-white">Visual Exaggeration</span>
-                      <span className="text-xs font-mono text-pale-gold">{(exaggeration * 100).toFixed(0)}%</span>
+                </div>
+                
+                {/* Parameter Controls */}
+                <div className="grid grid-cols-3 gap-2">
+                  <div>
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-xs text-stardust-white">Eccentricity</span>
+                      <span className="text-xs font-mono text-pale-gold">{eccentricity.toFixed(4)}</span>
                     </div>
                     <input
                       type="range"
-                      value={exaggeration}
-                      onChange={(e) => setExaggeration(parseFloat(e.target.value))}
-                      min={0.1}
-                      max={1.0}
-                      step={0.1}
+                      value={eccentricity}
+                      onChange={(e) => {
+                        const value = parseFloat(e.target.value);
+                        setEccentricity(value);
+                        setAutoAnimate(false);
+                      }}
+                      min={0}
+                      max={0.1}
+                      step={0.001}
                       className="celestial-slider w-full"
                       onTouchStart={handleSliderTouchStart}
                       onTouchEnd={handleSliderTouchEnd}
                     />
                   </div>
                   
-                  <ObservatoryButton
-                    onClick={() => setShowIntro(true)}
-                    className="w-full mt-1"
-                    variant="secondary"
-                  >
-                    Show Tutorial
-                  </ObservatoryButton>
+                  <div>
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-xs text-stardust-white">Axial Tilt</span>
+                      <span className="text-xs font-mono text-pale-gold">{axialTilt.toFixed(1)}°</span>
+                    </div>
+                    <input
+                      type="range"
+                      value={axialTilt}
+                      onChange={(e) => {
+                        const value = parseFloat(e.target.value);
+                        setAxialTilt(value);
+                        setAutoAnimate(false);
+                      }}
+                      min={0}
+                      max={45}
+                      step={0.5}
+                      className="celestial-slider w-full"
+                      onTouchStart={handleSliderTouchStart}
+                      onTouchEnd={handleSliderTouchEnd}
+                    />
+                  </div>
+                  
+                  <div>
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-xs text-stardust-white">Precession</span>
+                      <span className="text-xs font-mono text-pale-gold">{precession.toFixed(0)}°</span>
+                    </div>
+                    <input
+                      type="range"
+                      value={precession}
+                      onChange={(e) => {
+                        const value = parseFloat(e.target.value);
+                        setPrecession(value);
+                        setAutoAnimate(false);
+                      }}
+                      min={0}
+                      max={360}
+                      step={1}
+                      className="celestial-slider w-full"
+                      onTouchStart={handleSliderTouchStart}
+                      onTouchEnd={handleSliderTouchEnd}
+                    />
+                  </div>
                 </div>
-              </MobileControlGroup>
-            </MobileNavigation>
-            
-            {/* Mobile Bottom Control Sheet */}
-            <BottomSheet title="Orbital Controls">
-              <div className="space-y-4">
-                <ObservatorySlider
-                  label="Eccentricity"
-                  value={eccentricity}
-                  onChange={(e) => {
-                    const newValue = parseFloat(e.target.value);
-                    setEccentricity(newValue);
-                    setAutoAnimate(false);
-                  }}
-                  min={0.0}
-                  max={0.07}
-                  step={0.001}
-                  valueDisplay={
-                    <span className="text-sm font-mono text-pale-gold">
-                      {eccentricity.toFixed(3)}
-                    </span>
-                  }
-                  onTouchStart={handleSliderTouchStart}
-                  onTouchEnd={handleSliderTouchEnd}
-                />
                 
-                <ObservatorySlider
-                  label="Obliquity (Tilt)"
-                  value={axialTilt}
-                  onChange={(e) => {
-                    const newValue = parseFloat(e.target.value);
-                    setAxialTilt(newValue);
-                    setAutoAnimate(false);
-                  }}
-                  min={22.0}
-                  max={24.5}
-                  step={0.1}
-                  valueDisplay={
-                    <span className="text-sm font-mono text-pale-gold">
-                      {axialTilt.toFixed(1)}°
-                    </span>
-                  }
-                  onTouchStart={handleSliderTouchStart}
-                  onTouchEnd={handleSliderTouchEnd}
-                />
+                {/* Temperature Display */}
+                <div className="bg-deep-space bg-opacity-40 p-2 rounded-md">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-stardust-white">Global Temperature</span>
+                    <span className="text-lg font-mono text-pale-gold">{displayedTemp.toFixed(1)}°C</span>
+                  </div>
+                  <div className="w-full h-2 bg-slate-blue bg-opacity-30 rounded-full mt-1 overflow-hidden">
+                    <div 
+                      className="h-full rounded-full" 
+                      style={{
+                        width: `${normalizeTemperature(displayedTemp, -30, 30) * 100}%`,
+                        background: `linear-gradient(90deg, rgb(100, 200, 255) 0%, rgb(200, 200, 100) 50%, rgb(255, 100, 100) 100%)`
+                      }}
+                    />
+                  </div>
+                </div>
                 
-                <ObservatorySlider
-                  label="Precession"
-                  value={precession}
-                  onChange={(e) => {
-                    const newValue = parseFloat(e.target.value);
-                    setPrecession(newValue);
+                {/* Reset Button */}
+                <ObservatoryButton
+                  onClick={() => {
+                    setEccentricity(baselineEccentricity);
+                    setAxialTilt(baselineAxialTilt);
+                    setPrecession(baselinePrecession);
                     setAutoAnimate(false);
                   }}
-                  min={0}
-                  max={360}
-                  step={1}
-                  valueDisplay={
-                    <span className="text-sm font-mono text-pale-gold">
-                      {precession.toFixed(0)}°
-                    </span>
-                  }
-                  onTouchStart={handleSliderTouchStart}
-                  onTouchEnd={handleSliderTouchEnd}
-                />
+                  variant="ghost"
+                  className="w-full"
+                >
+                  Reset to Default Parameters
+                </ObservatoryButton>
               </div>
             </BottomSheet>
-            
-            {/* Mobile Quick Data Display */}
-            <div className="fixed top-16 left-0 w-full px-4 z-50 pointer-events-none">
-              <MobileCard className="w-full">
-                <div className="grid grid-cols-2 gap-4">
-                  <DataDisplay
-                    label="Global Temperature"
-                    value={displayedTemp.toFixed(2)}
-                    unit="°C"
-                  />
-                  
-                  <DataDisplay
-                    label="Ice Coverage"
-                    value={(iceFactor * 100).toFixed(0)}
-                    unit="%"
-                  />
-                </div>
-              </MobileCard>
-            </div>
-            
-            {/* Mobile Playback Controls - Fixed bottom */}
-            <div className="fixed bottom-20 left-0 w-full flex justify-center px-4 z-40">
-              <div className="bg-deep-space bg-opacity-70 backdrop-blur-sm rounded-full p-2 flex space-x-2">
-                <ObservatoryButton
-                  onClick={() => setIsPaused((prev) => !prev)}
-                  className="w-12 h-12 flex items-center justify-center rounded-full"
-                  aria-label={isPaused ? "Pause" : "Play"}
-                >
-                  {isPaused ? "⏸" : "▶"}
-                </ObservatoryButton>
-                
-                <ObservatoryButton
-                  onClick={() => setAutoAnimate((prev) => !prev)}
-                  className={cn(
-                    "w-12 h-12 flex items-center justify-center rounded-full",
-                    autoAnimate && "bg-antique-brass text-deep-space"
-                  )}
-                  aria-label="Toggle Auto-Rotate"
-                >
-                  🔄
-                </ObservatoryButton>
-              </div>
-            </div>
           </MobileOnlyView>
         </>
       )}
+      
+      {/* Help button in bottom right */}
+      <div className="fixed bottom-5 right-5 z-30 flex space-x-2">
+        <ObservatoryButton
+          onClick={() => setShowKeyboardShortcuts(prev => !prev)}
+          variant="ghost"
+          className="flex items-center space-x-1"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect>
+            <path d="M6 8h.01"></path>
+            <path d="M10 8h.01"></path>
+            <path d="M14 8h.01"></path>
+            <path d="M18 8h.01"></path>
+            <path d="M8 12h.01"></path>
+            <path d="M12 12h.01"></path>
+            <path d="M16 12h.01"></path>
+            <path d="M7 16h10"></path>
+          </svg>
+          <span>Shortcuts</span>
+        </ObservatoryButton>
+        <TourButton onClick={() => setShowTour(true)} />
+      </div>
+      
+      {/* Keyboard Shortcuts Panel */}
+      {showKeyboardShortcuts && (
+        <div className="fixed bottom-20 right-5 z-30 w-80 bg-deep-space bg-opacity-95 border border-aged-copper rounded-md p-4 shadow-lg backdrop-blur-md animate-fadeIn">
+          <div className="flex justify-between items-center mb-3">
+            <h3 className="text-lg font-serif text-pale-gold">Keyboard Shortcuts</h3>
+            <button 
+              onClick={() => setShowKeyboardShortcuts(false)}
+              className="text-stardust-white opacity-70 hover:opacity-100"
+            >
+              ×
+            </button>
+          </div>
+          
+          <div className="space-y-2">
+            {keyboardShortcuts.map((shortcut, index) => (
+              <div key={index} className="flex justify-between items-center">
+                <kbd className="px-2 py-1 bg-slate-blue bg-opacity-30 rounded text-xs text-stardust-white border border-slate-blue">
+                  {shortcut.key}
+                </kbd>
+                <span className="text-sm text-stardust-white">{shortcut.description}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+      
+      {/* Guided Tour */}
+      <GuidedTour 
+        steps={tourSteps}
+        currentStep={currentTourStep}
+        onNext={() => setCurrentTourStep(prev => Math.min(prev + 1, tourSteps.length - 1))}
+        onPrev={() => setCurrentTourStep(prev => Math.max(prev - 1, 0))}
+        onClose={() => {
+          setShowTour(false);
+          setCurrentTourStep(0);
+        }}
+        isOpen={showTour}
+      />
     </main>
   );
 }
