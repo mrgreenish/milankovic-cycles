@@ -126,7 +126,8 @@ const vertexShader = `
   
   void main() {
     vUv = uv;
-    vec3 displacedPosition = position + normal * (sin(10.0 * uv.x) * cos(10.0 * uv.y) * displacementScale);
+    // Simplified displacement calculation
+    vec3 displacedPosition = position;
     vec4 worldPosition = modelMatrix * vec4(displacedPosition, 1.0);
     vWorldPosition = worldPosition.xyz;
     
@@ -488,7 +489,7 @@ const Earth = React.forwardRef(
     return (
       <group quaternion={combinedQuaternion}>
         <mesh ref={ref} castShadow receiveShadow>
-          <sphereGeometry args={[1, 64, 64]} />
+          <sphereGeometry args={[1, 48, 48]} />
           <shaderMaterial
             fragmentShader={fragmentShader}
             vertexShader={vertexShader}
@@ -498,7 +499,7 @@ const Earth = React.forwardRef(
         </mesh>
 
         <mesh ref={cloudRef} scale={1.01}>
-          <sphereGeometry args={[1, 64, 64]} />
+          <sphereGeometry args={[1, 32, 32]} />
           <meshPhongMaterial
             map={textures.cloudMap}
             transparent={true}
@@ -509,7 +510,7 @@ const Earth = React.forwardRef(
         </mesh>
 
         <mesh scale={1.03}>
-          <sphereGeometry args={[1, 64, 64]} />
+          <sphereGeometry args={[1, 32, 32]} />
           <meshBasicMaterial
             color="#a8d0e6"
             transparent={true}
@@ -1061,7 +1062,16 @@ export default function Home() {
       {/* 3D Canvas */}
       <div className="canvas-container">
         <Suspense fallback={null}>
-          <Canvas shadows gl={{ antialias: true }}>
+          <Canvas 
+            shadows={false} 
+            gl={{ 
+              antialias: true,
+              powerPreference: 'high-performance',
+              precision: 'mediump' // Use medium precision for better performance
+            }}
+            dpr={[1, 1.5]} // Limit pixel ratio for better performance
+            performance={{ min: 0.5 }} // Add performance optimization
+          >
             <PerspectiveCamera 
               makeDefault 
               position={[0, 30, 60]} 
@@ -1071,11 +1081,11 @@ export default function Home() {
             />
             <ambientLight intensity={0.2} />
             <directionalLight
-              castShadow
+              castShadow={false} // Disable shadow casting for better performance
               position={[10, 20, 10]}
               intensity={1.5}
-              shadow-mapSize-width={1024}
-              shadow-mapSize-height={1024}
+              shadow-mapSize-width={512} // Reduced from 1024 to 512
+              shadow-mapSize-height={512} // Reduced from 1024 to 512
             />
             <Sun />
             <OrbitPath eccentricity={eccentricity} />
@@ -1536,27 +1546,10 @@ export default function Home() {
 function Sun() {
   const sunRef = useRef();
   const lensFlareRef = useRef();
-  const coronaRef = useRef();
 
-  useFrame(({ clock, camera }) => {
-    const elapsedTime = clock.getElapsedTime();
-
+  useFrame(({ clock }) => {
     if (sunRef.current) {
-      const pulseFactor = 1.0 + Math.sin(elapsedTime * 0.2) * 0.02;
-      sunRef.current.scale.set(pulseFactor, pulseFactor, pulseFactor);
-      sunRef.current.rotation.y = elapsedTime * 0.05;
-      if (sunRef.current.material.uniforms) {
-        sunRef.current.material.uniforms.time.value = elapsedTime;
-      }
-    }
-
-    if (coronaRef.current) {
-      coronaRef.current.rotation.z = elapsedTime * -0.1;
-      coronaRef.current.lookAt(camera.position);
-    }
-
-    if (lensFlareRef.current) {
-      lensFlareRef.current.lookAt(camera.position);
+      sunRef.current.material.uniforms.time.value = clock.getElapsedTime() * 0.2;
     }
   });
 
@@ -1582,54 +1575,24 @@ function Sun() {
       varying vec3 vPosition;
       varying vec3 vNormal;
       
+      // Simplified noise function for better performance
       float hash(vec2 p) {
         return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453);
-      }
-      float noise(vec2 p) {
-        vec2 i = floor(p);
-        vec2 f = fract(p);
-        vec2 u = f * f * (3.0 - 2.0 * f);
-        
-        float a = hash(i);
-        float b = hash(i + vec2(1.0, 0.0));
-        float c = hash(i + vec2(0.0, 1.0));
-        float d = hash(i + vec2(1.0, 1.0));
-        
-        return mix(mix(a, b, u.x), mix(c, d, u.x), u.y);
-      }
-      float fbm(vec2 p) {
-        float v = 0.0;
-        float a = 0.5;
-        float frequency = 1.0;
-        for (int i = 0; i < 5; ++i) {
-          v += a * noise(p * frequency);
-          frequency *= 2.0;
-          a *= 0.5;
-        }
-        return v;
       }
       
       void main() {
         vec3 baseColor = vec3(1.0, 0.6, 0.1);
         vec3 hotColor = vec3(1.0, 0.9, 0.4);
-        vec3 coolColor = vec3(0.8, 0.3, 0.0);
         
         vec2 uv = vUv;
         float t = time * 0.1;
         
-        float noise1 = fbm(uv * 8.0 + vec2(t * 0.5, 0.0));
-        float noise2 = fbm(uv * 5.0 + vec2(0.0, t * 0.7) + noise1 * 0.5);
-        float noise3 = fbm(uv * 3.0 + vec2(t * 0.3, t * 0.4) + noise2 * 0.5);
-        
-        float cells = fbm(uv * 15.0 + vec2(t * 0.2, t * 0.1));
-        cells = smoothstep(0.3, 0.7, cells);
-        
-        float pattern = noise1 * 0.5 + noise2 * 0.3 + noise3 * 0.2;
+        // Simplified pattern calculation
+        float pattern = hash(uv * 8.0 + vec2(t * 0.5, t * 0.7));
         
         float fresnel = pow(1.0 - dot(vNormal, vec3(0.0, 0.0, 1.0)), 2.0);
         
-        vec3 color = mix(coolColor, hotColor, pattern);
-        color = mix(color, hotColor * 1.2, cells * 0.3);
+        vec3 color = mix(baseColor, hotColor, pattern);
         
         float pulse = sin(time * 0.5) * 0.05 + 0.95;
         color *= pulse;
@@ -1644,16 +1607,16 @@ function Sun() {
   const LensFlareSystem = () => {
     const flareTexture = useMemo(() => {
       const canvas = document.createElement("canvas");
-      canvas.width = 256;
-      canvas.height = 256;
+      canvas.width = 128; // Reduced from 256 to 128
+      canvas.height = 128; // Reduced from 256 to 128
       const ctx = canvas.getContext("2d");
-      const gradient = ctx.createRadialGradient(128, 128, 0, 128, 128, 128);
+      const gradient = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
       gradient.addColorStop(0, "rgba(255, 255, 255, 1.0)");
       gradient.addColorStop(0.1, "rgba(255, 230, 190, 0.8)");
       gradient.addColorStop(0.5, "rgba(255, 150, 50, 0.3)");
       gradient.addColorStop(1, "rgba(255, 100, 50, 0.0)");
       ctx.fillStyle = gradient;
-      ctx.fillRect(0, 0, 256, 256);
+      ctx.fillRect(0, 0, 128, 128);
 
       const texture = new THREE.CanvasTexture(canvas);
       texture.needsUpdate = true;
@@ -1686,55 +1649,6 @@ function Sun() {
     );
   };
 
-  const SolarCorona = () => {
-    const coronaTexture = useMemo(() => {
-      const canvas = document.createElement("canvas");
-      canvas.width = 512;
-      canvas.height = 512;
-      const ctx = canvas.getContext("2d");
-      const gradient = ctx.createRadialGradient(256, 256, 100, 256, 256, 256);
-      gradient.addColorStop(0, "rgba(255, 200, 120, 0.5)");
-      gradient.addColorStop(0.3, "rgba(255, 150, 50, 0.3)");
-      gradient.addColorStop(0.7, "rgba(255, 100, 30, 0.1)");
-      gradient.addColorStop(1, "rgba(255, 50, 0, 0.0)");
-      ctx.fillStyle = gradient;
-      ctx.fillRect(0, 0, 512, 512);
-
-      ctx.strokeStyle = "rgba(255, 220, 180, 0.15)";
-      ctx.lineWidth = 2;
-      for (let i = 0; i < 60; i++) {
-        const angle = (i / 60) * Math.PI * 2;
-        const length = 150 + Math.random() * 100;
-        ctx.beginPath();
-        ctx.moveTo(256 + Math.cos(angle) * 100, 256 + Math.sin(angle) * 100);
-        ctx.lineTo(
-          256 + Math.cos(angle) * length,
-          256 + Math.sin(angle) * length
-        );
-        ctx.stroke();
-      }
-
-      const texture = new THREE.CanvasTexture(canvas);
-      texture.needsUpdate = true;
-      return texture;
-    }, []);
-
-    return (
-      <group ref={coronaRef} position={[0, 0, 0]}>
-        <sprite scale={[4, 4, 4]}>
-          <spriteMaterial
-            attach="material"
-            map={coronaTexture}
-            transparent
-            opacity={0.7}
-            color={0xffaa77}
-            blending={THREE.AdditiveBlending}
-          />
-        </sprite>
-      </group>
-    );
-  };
-
   return (
     <group>
       <pointLight
@@ -1743,20 +1657,16 @@ function Sun() {
         color={0xffffee}
         distance={100}
         decay={1.5}
-        castShadow
-      />
-      <pointLight
-        position={[0, 0, 0]}
-        intensity={1.5}
-        color={0xff9933}
-        distance={20}
-        decay={2}
+        castShadow={false} // Disabled shadow casting for better performance
       />
       <mesh ref={sunRef}>
-        <sphereGeometry args={[1, 64, 64]} />
-        <shaderMaterial args={[sunShader]} uniforms={sunShader.uniforms} />
+        <sphereGeometry args={[1, 32, 32]} /> 
+        {/* Reduced geometry complexity from default to 32 segments */}
+        <shaderMaterial
+          args={[sunShader]}
+          uniforms={sunShader.uniforms}
+        />
       </mesh>
-      <SolarCorona />
       <LensFlareSystem />
     </group>
   );
@@ -1776,48 +1686,25 @@ function SceneEffects() {
   });
 
   return (
-    <EffectComposer multisampling={8}>
-      {/* <SSAO
-        samples={21}
-        radius={7}
-        intensity={20}
-        luminanceInfluence={0.6}
-        color="black"
-      /> */}
-      {/* <Bloom
-        intensity={1.0}
-        luminanceThreshold={0.45}
-        luminanceSmoothing={0.9}
-        height={300}
-        opacity={0.8}
-      /> */}
-      {/* <DepthOfField
-        ref={depthOfFieldRef}
-        focusDistance={0.02}
-        focalLength={0.12}
-        bokehScale={6}
-        height={480}
-      /> */}
+    <EffectComposer multisampling={4}>
+      {/* Reduced multisampling from 8 to 4 */}
       <Noise
         premultiply
         blendFunction={BlendFunction.SOFT_LIGHT}
-        opacity={1}
+        opacity={0.5} 
+        /* Reduced opacity from 1 to 0.5 */
       />
       <Vignette
         offset={0.5}
-        darkness={0.5}
+        darkness={0.4} 
+        /* Reduced darkness from 0.5 to 0.4 */
         eskil={false}
         blendFunction={BlendFunction.NORMAL}
       />
-      {/* <ChromaticAberration
-        blendFunction={BlendFunction.NORMAL}
-        offset={[0.0012, 0.0012]}
-        radialModulation={true}
-        modulationOffset={0.15}
-      /> */}
       <ToneMapping
         adaptive={true}
-        resolution={256}
+        resolution={128} 
+        /* Reduced resolution from 256 to 128 */
         middleGrey={0.8}
         maxLuminance={16.0}
         averageLuminance={1.0}
@@ -1969,7 +1856,8 @@ function AtmosphericBackground() {
 // ------------------------------------------------------------------
 function CosmicParticles() {
   const particlesRef = useRef();
-  const count = 2000;
+  // Reduce particle count from 2000 to 1000 for better performance
+  const count = 1000;
   const mouse = useRef({ x: 0, y: 0 });
   const targetMouse = useRef({ x: 0, y: 0 });
 
@@ -2027,7 +1915,16 @@ function CosmicParticles() {
     return temp;
   }, [count]);
 
+  // Optimize frame update by using a throttled update frequency
+  const frameCount = useRef(0);
+  const updateFrequency = 2; // Only update every 2 frames
+
   useFrame(({ clock, camera }) => {
+    frameCount.current += 1;
+    
+    // Skip updates to reduce CPU load
+    if (frameCount.current % updateFrequency !== 0) return;
+    
     const elapsedTime = clock.getElapsedTime();
     if (particlesRef.current) {
       const positions = particlesRef.current.geometry.attributes.position.array;
@@ -2073,16 +1970,11 @@ function CosmicParticles() {
         const glow = mouseInfluence > 0 ? 1 + mouseInfluence * 2 : 1;
         scales[i] = p.size * twinkle * glow;
 
+        // Simplified color update logic
         if (mouseInfluence > 0) {
-          const blueShift = mouseInfluence * 0.5;
-          const enhancedColor = new THREE.Color().copy(color);
-          enhancedColor.r = Math.max(0, Math.min(1, color.r - blueShift * 0.2));
-          enhancedColor.g = Math.max(0, Math.min(1, color.g + blueShift * 0.1));
-          enhancedColor.b = Math.max(0, Math.min(1, color.b + blueShift * 0.5));
-
-          colors[ix] = enhancedColor.r;
-          colors[ix + 1] = enhancedColor.g;
-          colors[ix + 2] = enhancedColor.b;
+          colors[ix] = Math.max(0, Math.min(1, color.r - mouseInfluence * 0.1));
+          colors[ix + 1] = Math.max(0, Math.min(1, color.g + mouseInfluence * 0.05));
+          colors[ix + 2] = Math.max(0, Math.min(1, color.b + mouseInfluence * 0.25));
         } else {
           colors[ix] = color.r;
           colors[ix + 1] = color.g;
