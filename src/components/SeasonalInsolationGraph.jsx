@@ -112,7 +112,7 @@ export function SeasonalInsolationGraph({
     ctx.font = '10px "Space Mono", monospace';
     
     // Season labels
-    ['Winter', 'Spring', 'Summer', 'Fall'].forEach((season, i) => {
+    ['Winter', 'Spring', 'Summer', 'Autumn'].forEach((season, i) => {
       const x = (width * (i + 0.5) / 4) - 15;
       ctx.fillText(season, x, height - 5);
     });
