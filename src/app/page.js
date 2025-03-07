@@ -538,22 +538,24 @@ function OrbitPath({ eccentricity }) {
   const baselinePoints = [];
   const seasonalMarkers = [];
 
+  // Generate orbit points
   for (let theta = 0; theta <= Math.PI * 2; theta += 0.02) {
     const x = a * Math.cos(theta);
     const currentZ = b * Math.sin(theta);
     const baselineZ = baselineB * Math.sin(theta);
     points.push(new THREE.Vector3(x, 0, currentZ));
     baselinePoints.push(new THREE.Vector3(x, 0, baselineZ));
-
-    if (
-      Math.abs(theta - Math.PI / 2) < 0.02 ||
-      Math.abs(theta - Math.PI) < 0.02 ||
-      Math.abs(theta - (3 * Math.PI) / 2) < 0.02 ||
-      Math.abs(theta) < 0.02
-    ) {
-      seasonalMarkers.push(new THREE.Vector3(x, 0, currentZ));
-    }
   }
+  
+  // Create seasonal markers in the correct order
+  // Winter (0 radians)
+  seasonalMarkers.push(new THREE.Vector3(a, 0, 0));
+  // Spring (π/2 radians)
+  seasonalMarkers.push(new THREE.Vector3(0, 0, b));
+  // Summer (π radians)
+  seasonalMarkers.push(new THREE.Vector3(-a, 0, 0));
+  // Fall (3π/2 radians)
+  seasonalMarkers.push(new THREE.Vector3(0, 0, -b));
 
   return (
     <group>
@@ -654,10 +656,10 @@ function OrbitPath({ eccentricity }) {
               {index === 0
                 ? "Winter (N. Hemisphere)"
                 : index === 1
-                ? "Spring"
+                ? "Spring (N. Hemisphere)"
                 : index === 2
                 ? "Summer (N. Hemisphere)"
-                : "Fall"}
+                : "Fall (N. Hemisphere)"}
             </div>
           </Html>
         </group>
