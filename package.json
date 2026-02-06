@@ -36,7 +36,7 @@
     "clsx": "^2.1.0",
     "gsap": "^3.12.7",
     "lucide-react": "^0.358.0",
-    "next": "^14.0.0",
+    "next": "14.2.35",
     "next-transpile-modules": "^10.0.1",
     "postprocessing": "^6.36.7",
     "react": "^18.2.0",
