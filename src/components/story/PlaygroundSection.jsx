@@ -67,6 +67,7 @@ export function PlaygroundSection({
   const [challengeComplete, setChallengeComplete] = useState(false);
   const [showGraph, setShowGraph] = useState(false);
   const hasInitialized = useRef(false);
+  const presetAnimationRef = useRef(null);
 
   // Lazy-load graph and apply initial preset only when section becomes visible
   const handleInView = (id) => {
@@ -82,17 +83,51 @@ export function PlaygroundSection({
     }
   };
 
+  const cancelPresetAnimation = () => {
+    if (presetAnimationRef.current) {
+      cancelAnimationFrame(presetAnimationRef.current);
+      presetAnimationRef.current = null;
+    }
+  };
+
   const applyPreset = (name) => {
-    const p = PRESETS[name];
-    onEccentricityChange(p.eccentricity);
-    onAxialTiltChange(p.axialTilt);
-    onPrecessionChange(p.precession);
+    cancelPresetAnimation();
+    const target = PRESETS[name];
+    const startEcc = eccentricity;
+    const startTilt = axialTilt;
+    const startPrec = precession;
+    const duration = 800; // ms
+    const startTime = performance.now();
     setActivePreset(name);
+
+    const animate = (now) => {
+      const elapsed = now - startTime;
+      const t = Math.min(elapsed / duration, 1);
+      // Ease-out cubic for smooth deceleration
+      const ease = 1 - Math.pow(1 - t, 3);
+
+      onEccentricityChange(startEcc + (target.eccentricity - startEcc) * ease);
+      onAxialTiltChange(startTilt + (target.axialTilt - startTilt) * ease);
+      onPrecessionChange(startPrec + (target.precession - startPrec) * ease);
+
+      if (t < 1) {
+        presetAnimationRef.current = requestAnimationFrame(animate);
+      } else {
+        presetAnimationRef.current = null;
+      }
+    };
+
+    presetAnimationRef.current = requestAnimationFrame(animate);
   };
 
   const resetToToday = () => {
     applyPreset("Today");
   };
+
+  // Cleanup animation on unmount
+  useEffect(() => {
+    return () => cancelPresetAnimation();
+  }, []);
 
   // Check challenges
   useEffect(() => {
@@ -147,6 +182,7 @@ export function PlaygroundSection({
             scienceName="Eccentricity"
             value={eccentricity}
             onChange={(v) => {
+              cancelPresetAnimation();
               onEccentricityChange(v);
               setActivePreset(null);
             }}
@@ -160,6 +196,7 @@ export function PlaygroundSection({
             scienceName="Obliquity"
             value={axialTilt}
             onChange={(v) => {
+              cancelPresetAnimation();
               onAxialTiltChange(v);
               setActivePreset(null);
             }}
@@ -173,6 +210,7 @@ export function PlaygroundSection({
             scienceName="Precession"
             value={precession}
             onChange={(v) => {
+              cancelPresetAnimation();
               onPrecessionChange(v);
               setActivePreset(null);
             }}
