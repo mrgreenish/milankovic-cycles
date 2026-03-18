@@ -89,11 +89,19 @@ export function StoryContainer() {
   useEffect(() => {
     let frame;
     const tick = () => {
-      const next = smoothTemperature(displayedTempRef.current, temperature, 0.5);
-      if (Math.abs(next - displayedTempRef.current) > 0.1) {
-        displayedTempRef.current = next;
-        setDisplayedTemp(next);
+      const gap = Math.abs(temperature - displayedTempRef.current);
+      // Snap to target when close enough to avoid permanent lag
+      if (gap < 0.05) {
+        if (displayedTempRef.current !== temperature) {
+          displayedTempRef.current = temperature;
+          setDisplayedTemp(temperature);
+        }
+        frame = requestAnimationFrame(tick);
+        return;
       }
+      const next = smoothTemperature(displayedTempRef.current, temperature, 0.5);
+      displayedTempRef.current = next;
+      setDisplayedTemp(next);
       frame = requestAnimationFrame(tick);
     };
     frame = requestAnimationFrame(tick);

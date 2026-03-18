@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, lazy, Suspense } from "react";
+import React, { useState, useEffect, useRef, lazy, Suspense } from "react";
 import { StorySection } from "./StorySection";
 import { StorySlider } from "./StorySlider";
 import { TemperatureIndicator } from "./TemperatureIndicator";
@@ -66,19 +66,20 @@ export function PlaygroundSection({
   const [activeChallenge, setActiveChallenge] = useState(null);
   const [challengeComplete, setChallengeComplete] = useState(false);
   const [showGraph, setShowGraph] = useState(false);
+  const hasInitialized = useRef(false);
 
-  // Start with "Today" preset selected on mount
-  useEffect(() => {
-    const p = PRESETS["Today"];
-    onEccentricityChange(p.eccentricity);
-    onAxialTiltChange(p.axialTilt);
-    onPrecessionChange(p.precession);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Lazy-load graph after section is visible
+  // Lazy-load graph and apply initial preset only when section becomes visible
   const handleInView = (id) => {
     onInView(id);
     setShowGraph(true);
+    // Apply "Today" preset only the first time the playground comes into view
+    if (!hasInitialized.current) {
+      hasInitialized.current = true;
+      const p = PRESETS["Today"];
+      onEccentricityChange(p.eccentricity);
+      onAxialTiltChange(p.axialTilt);
+      onPrecessionChange(p.precession);
+    }
   };
 
   const applyPreset = (name) => {
