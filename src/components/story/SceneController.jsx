@@ -47,7 +47,7 @@ const SCENE_CONFIGS = {
     showOrbit: true,
     showAxis: true,
   },
-  6: { // Playground - initial position, then user takes over via OrbitControls
+  6: { // Playground - user controls camera via OrbitControls
     camera: [0, 30, 60],
     lookAt: [0, 0, 0],
     showSun: true,
@@ -69,21 +69,24 @@ export function SceneController({ currentSection, onSceneConfig }) {
   const targetLookAt = useRef(new THREE.Vector3(0, 0, 0));
   const currentLookAt = useRef(new THREE.Vector3(0, 0, 0));
   const prevSection = useRef(currentSection);
-  // Track whether we've finished the initial transition into the playground
-  const playgroundSettled = useRef(false);
 
   useEffect(() => {
     const config = SCENE_CONFIGS[currentSection] || SCENE_CONFIGS[0];
     targetPos.current.set(...config.camera);
     targetLookAt.current.set(...config.lookAt);
 
-    // Reset settled flag when entering playground so we lerp to initial position first
+    // When entering playground (section 6), snap camera to position once
+    // then let OrbitControls take over completely — no lerping, no fighting
     if (currentSection === 6 && prevSection.current !== 6) {
-      playgroundSettled.current = false;
+      camera.position.set(...config.camera);
+      currentLookAt.current.set(...config.lookAt);
+      camera.lookAt(currentLookAt.current);
     }
-    // Reset when leaving playground
-    if (currentSection !== 6) {
-      playgroundSettled.current = false;
+
+    // When leaving playground, sync currentLookAt to wherever the user left the camera
+    // so the lerp back to the next section starts from the right place
+    if (currentSection !== 6 && prevSection.current === 6) {
+      currentLookAt.current.set(0, 0, 0); // Reset lookAt to origin
     }
 
     prevSection.current = currentSection;
@@ -96,25 +99,11 @@ export function SceneController({ currentSection, onSceneConfig }) {
         showAxis: config.showAxis,
       });
     }
-  }, [currentSection, onSceneConfig]);
+  }, [currentSection, onSceneConfig, camera]);
 
   useFrame(() => {
-    // In playground section, stop controlling camera once we've settled
-    // so OrbitControls can take over
-    if (currentSection === 6) {
-      if (!playgroundSettled.current) {
-        // Lerp to initial playground position
-        camera.position.lerp(targetPos.current, 0.03);
-        currentLookAt.current.lerp(targetLookAt.current, 0.03);
-        camera.lookAt(currentLookAt.current);
-        // Check if close enough to settle
-        if (camera.position.distanceTo(targetPos.current) < 0.5) {
-          playgroundSettled.current = true;
-        }
-      }
-      // Once settled, do nothing — OrbitControls handles camera
-      return;
-    }
+    // Completely yield camera control in playground — OrbitControls owns it
+    if (currentSection === 6) return;
 
     // For all other sections, smoothly interpolate camera position
     camera.position.lerp(targetPos.current, 0.03);
