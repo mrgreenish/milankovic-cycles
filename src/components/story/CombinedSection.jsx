@@ -4,6 +4,20 @@ import { StorySection } from "./StorySection";
 
 const ICE_AGE = { eccentricity: 0.019, axialTilt: 22.99, precession: 114 };
 const TODAY = { eccentricity: 0.0167, axialTilt: 23.44, precession: 0 };
+const DURATION = 6000;
+const PAUSE = 2000;
+
+function easeInOut(p) {
+  return p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
+}
+
+function lerpParams(from, to, t) {
+  return {
+    eccentricity: from.eccentricity + (to.eccentricity - from.eccentricity) * t,
+    axialTilt: from.axialTilt + (to.axialTilt - from.axialTilt) * t,
+    precession: from.precession + (to.precession - from.precession) * t,
+  };
+}
 
 export function CombinedSection({ onParamsChange, onInView, temperature }) {
   const [isAnimating, setIsAnimating] = useState(false);
@@ -15,80 +29,52 @@ export function CombinedSection({ onParamsChange, onInView, temperature }) {
   useEffect(() => {
     if (!isAnimating) return;
 
-    const startTime = performance.now();
-    const duration = 6000;
+    let cancelled = false;
 
-    const animate = (time) => {
-      const elapsed = time - startTime;
-      const p = Math.min(elapsed / duration, 1);
-      // Ease in-out
-      const eased =
-        p < 0.5
-          ? 2 * p * p
-          : 1 - Math.pow(-2 * p + 2, 2) / 2;
+    // Single reusable function that starts one ice-age → today cycle,
+    // then schedules the next after a pause. Uses a fresh startTime
+    // each invocation so the closure is never stale.
+    function startCycle() {
+      if (cancelled) return;
 
-      const params = {
-        eccentricity:
-          ICE_AGE.eccentricity +
-          (TODAY.eccentricity - ICE_AGE.eccentricity) * eased,
-        axialTilt:
-          ICE_AGE.axialTilt +
-          (TODAY.axialTilt - ICE_AGE.axialTilt) * eased,
-        precession:
-          ICE_AGE.precession +
-          (TODAY.precession - ICE_AGE.precession) * eased,
-      };
+      onParamsChange(ICE_AGE);
+      setCurrentParams(ICE_AGE);
+      setProgress(0);
 
-      onParamsChange(params);
-      setCurrentParams(params);
-      setProgress(eased);
+      const startTime = performance.now();
 
-      if (p < 1) {
-        animationRef.current = requestAnimationFrame(animate);
-      } else {
-        // Loop back
-        timeoutRef.current = setTimeout(() => {
-          onParamsChange(ICE_AGE);
-          setCurrentParams(ICE_AGE);
-          setProgress(0);
-          const newStart = performance.now();
-          const animateLoop = (t) => {
-            const el = t - newStart;
-            const lp = Math.min(el / duration, 1);
-            const le = lp < 0.5 ? 2 * lp * lp : 1 - Math.pow(-2 * lp + 2, 2) / 2;
-            const lParams = {
-              eccentricity: ICE_AGE.eccentricity + (TODAY.eccentricity - ICE_AGE.eccentricity) * le,
-              axialTilt: ICE_AGE.axialTilt + (TODAY.axialTilt - ICE_AGE.axialTilt) * le,
-              precession: ICE_AGE.precession + (TODAY.precession - ICE_AGE.precession) * le,
-            };
-            onParamsChange(lParams);
-            setCurrentParams(lParams);
-            setProgress(le);
-            if (lp < 1) {
-              animationRef.current = requestAnimationFrame(animateLoop);
-            } else {
-              timeoutRef.current = setTimeout(() => {
-                onParamsChange(ICE_AGE);
-                setCurrentParams(ICE_AGE);
-                setProgress(0);
-                animationRef.current = requestAnimationFrame(animateLoop);
-              }, 2000);
-            }
-          };
-          animationRef.current = requestAnimationFrame(animateLoop);
-        }, 2000);
+      function tick(now) {
+        if (cancelled) return;
+
+        const elapsed = now - startTime;
+        const p = Math.min(elapsed / DURATION, 1);
+        const eased = easeInOut(p);
+
+        const params = lerpParams(ICE_AGE, TODAY, eased);
+        onParamsChange(params);
+        setCurrentParams(params);
+        setProgress(eased);
+
+        if (p < 1) {
+          animationRef.current = requestAnimationFrame(tick);
+        } else {
+          // Pause at "today", then loop
+          timeoutRef.current = setTimeout(startCycle, PAUSE);
+        }
       }
-    };
 
-    // Start at ice age
-    onParamsChange(ICE_AGE);
-    setCurrentParams(ICE_AGE);
-    setProgress(0);
-    timeoutRef.current = setTimeout(() => {
-      animationRef.current = requestAnimationFrame(animate);
-    }, 1500);
+      // Brief pause at ice-age state before animating
+      timeoutRef.current = setTimeout(() => {
+        if (!cancelled) {
+          animationRef.current = requestAnimationFrame(tick);
+        }
+      }, PAUSE);
+    }
+
+    startCycle();
 
     return () => {
+      cancelled = true;
       if (animationRef.current) cancelAnimationFrame(animationRef.current);
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
     };

@@ -70,29 +70,3 @@ export const earthFragmentShader = `
   }
 `;
 
-// Particle shaders
-export const particleVertexShader = `
-  attribute float scale;
-  attribute vec3 color;
-  varying vec3 vColor;
-
-  void main() {
-    vColor = color;
-    vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-    gl_PointSize = scale * (300.0 / -mvPosition.z);
-    gl_Position = projectionMatrix * mvPosition;
-  }
-`;
-
-export const particleFragmentShader = `
-  varying vec3 vColor;
-
-  void main() {
-    float r = 2.0 * length(gl_PointCoord - vec2(0.5));
-    float intensity = 0.9 * (1.0 - smoothstep(0.45, 1.0, r));
-    float highlight = 1.0 - smoothstep(0.0, 0.2, r);
-    intensity += highlight * 0.3;
-    if (intensity < 0.1) discard;
-    gl_FragColor = vec4(vColor, intensity);
-  }
-`;

@@ -5,8 +5,10 @@ export function StorySlider({ label, scienceName, value, onChange, min, max, ste
   const percentage = ((value - min) / (max - min)) * 100;
   const lastUpdate = useRef(0);
 
-  // Throttle onChange to ~60fps to prevent excess re-renders
-  const throttledOnChange = useCallback(
+  // Single throttled handler for both onInput and onChange.
+  // In React, range input onChange maps to the native 'input' event and fires
+  // continuously during drag — so we throttle to ~60fps on the only handler.
+  const handleInput = useCallback(
     (e) => {
       const now = performance.now();
       if (now - lastUpdate.current > 16) {
@@ -17,8 +19,9 @@ export function StorySlider({ label, scienceName, value, onChange, min, max, ste
     [onChange]
   );
 
-  // Always fire on pointerUp for final value
-  const handleChange = useCallback(
+  // Commit final value on pointerUp/mouseUp to ensure we never miss the
+  // last position (the throttle may have skipped it).
+  const handleCommit = useCallback(
     (e) => {
       onChange(parseFloat(e.target.value));
     },
@@ -54,8 +57,9 @@ export function StorySlider({ label, scienceName, value, onChange, min, max, ste
         <input
           type="range"
           value={value}
-          onInput={throttledOnChange}
-          onChange={handleChange}
+          onChange={handleInput}
+          onPointerUp={handleCommit}
+          onKeyUp={handleCommit}
           min={min}
           max={max}
           step={step}
