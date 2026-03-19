@@ -1,26 +1,34 @@
 "use client";
-import React, { useRef } from "react";
+import React, { useEffect, useMemo } from "react";
 import * as THREE from "three";
 import { Html } from "@react-three/drei";
 
-export function AxisIndicators({ axialTilt, precession }) {
-  const arrowRef = useRef();
+export const AxisIndicators = React.memo(function AxisIndicators() {
+  const arrow = useMemo(
+    () =>
+      new THREE.ArrowHelper(
+        new THREE.Vector3(0, 1, 0),
+        new THREE.Vector3(0, 0, 0),
+        5,
+        0xffffff,
+        0.8,
+        0.5
+      ),
+    []
+  );
+
+  useEffect(() => {
+    return () => {
+      arrow.line.geometry.dispose();
+      arrow.line.material.dispose();
+      arrow.cone.geometry.dispose();
+      arrow.cone.material.dispose();
+    };
+  }, [arrow]);
 
   return (
     <group>
-      <primitive
-        object={
-          new THREE.ArrowHelper(
-            new THREE.Vector3(0, 1, 0),
-            new THREE.Vector3(0, 0, 0),
-            5,
-            0xffffff,
-            0.8,
-            0.5
-          )
-        }
-        ref={arrowRef}
-      />
+      <primitive object={arrow} />
       <Html position={[0, 5.2, 0]} center>
         <div
           style={{
@@ -39,4 +47,4 @@ export function AxisIndicators({ axialTilt, precession }) {
       </Html>
     </group>
   );
-}
+});

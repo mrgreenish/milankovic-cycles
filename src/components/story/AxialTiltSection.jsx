@@ -16,14 +16,13 @@ export function AxialTiltSection({ axialTilt, onAxialTiltChange, temperature, on
           </div>
 
           <p className="text-base text-stardust-white opacity-80 leading-relaxed">
-            Earth doesn't spin straight up — it leans to one side. This lean changes
+            Earth does not spin straight up. Its axis leans, and that lean shifts
             between 22.1° and 24.5° over about <strong className="text-pale-gold">41,000 years</strong>.
           </p>
 
           <p className="text-sm text-stardust-white opacity-60 leading-relaxed italic">
-            Imagine tilting a lamp over your desk — the more you tilt it, the more one
-            side gets bright light while the other side gets less. That's what happens
-            with Earth's seasons.
+            More lean makes summers and winters more intense. Less lean softens the
+            seasons. Today, Earth sits near <strong className="text-pale-gold not-italic">23.4°</strong>.
           </p>
 
           <StorySlider
@@ -34,16 +33,19 @@ export function AxialTiltSection({ axialTilt, onAxialTiltChange, temperature, on
             min={22.1}
             max={24.5}
             step={0.1}
-            hint="Watch Earth's axis tilt in the 3D view"
+            hint="Watch the white axis line lean farther from vertical"
+            minLabel="Less tilt, milder seasons"
+            maxLabel="More tilt, stronger seasons"
+            formatValue={(nextValue) => `${nextValue.toFixed(1)}°`}
           />
 
           <TemperatureIndicator temperature={temperature} />
 
           <CauseEffectCard
             items={[
-              "More tilt = more extreme seasons",
-              "Hotter summers can melt more ice; colder winters dump more snow",
-              "At maximum tilt, northern summers get enough extra heat to melt ice sheets",
+              "More tilt creates bigger summer and winter contrasts",
+              "Stronger northern summers can melt leftover winter snow and ice",
+              "That summer melt matters most for whether ice sheets grow or retreat",
             ]}
           />
         </div>

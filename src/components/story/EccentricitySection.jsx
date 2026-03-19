@@ -34,6 +34,9 @@ export function EccentricitySection({ eccentricity, onEccentricityChange, temper
             max={0.058}
             step={0.001}
             hint="Watch the orbit shape change above"
+            minLabel="Rounder orbit"
+            maxLabel="More oval orbit"
+            formatValue={(nextValue) => nextValue.toFixed(3)}
           />
 
           <TemperatureIndicator temperature={temperature} />

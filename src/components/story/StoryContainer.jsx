@@ -226,11 +226,10 @@ export function StoryContainer() {
               eccentricity={eccentricity}
               axialTilt={axialTilt}
               precession={precession}
-              temperature={temperature}
               iceFactor={iceFactor}
-              normTemp={displayedTemp}
               groupRefFromParent={earthGroupRef}
               showAxis={sceneConfig.showAxis}
+              currentSection={currentSection}
             />
             {/* OrbitControls only in playground */}
             {isPlayground && (

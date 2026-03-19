@@ -6,9 +6,10 @@ import { earthVertexShader, earthFragmentShader } from "./shaders";
 import { AxisIndicators } from "./AxisIndicators";
 
 export const Earth = React.forwardRef(
-  ({ axialTilt, precession, temperature, iceFactor, onReady, showAxis = true }, ref) => {
+  ({ axialTilt, precession, iceFactor, onReady, showAxis = true }, ref) => {
     const [texturesLoaded, setTexturesLoaded] = useState(false);
     const [textures, setTextures] = useState(null);
+    const worldPosition = useMemo(() => new THREE.Vector3(), []);
 
     useEffect(() => {
       const loadTextures = async () => {
@@ -62,16 +63,19 @@ export const Earth = React.forwardRef(
         directionalLightDirection: {
           value: new THREE.Vector3(10, 20, 10).normalize(),
         },
-        temperature: { value: temperature },
-        precession: { value: precession },
         displacementScale: { value: 0.01 },
         iceFactor: { value: iceFactor },
       };
-    }, [texturesLoaded, textures, temperature, precession, iceFactor]);
+    }, [texturesLoaded, textures]);
+
+    useEffect(() => {
+      if (uniforms) {
+        uniforms.iceFactor.value = iceFactor;
+      }
+    }, [iceFactor, uniforms]);
 
     useFrame(() => {
       if (uniforms?.sunDirection?.value && ref?.current?.parent) {
-        const worldPosition = new THREE.Vector3();
         ref.current.parent.getWorldPosition(worldPosition);
         uniforms.sunDirection.value
           .copy(worldPosition)
@@ -91,15 +95,17 @@ export const Earth = React.forwardRef(
       return null;
     }
 
-    const tiltQuaternion = new THREE.Quaternion().setFromAxisAngle(
-      new THREE.Vector3(0, 0, 1),
-      THREE.MathUtils.degToRad(axialTilt)
-    );
-    const precessionQuaternion = new THREE.Quaternion().setFromAxisAngle(
-      new THREE.Vector3(0, 1, 0),
-      THREE.MathUtils.degToRad(precession)
-    );
-    const combinedQuaternion = tiltQuaternion.multiply(precessionQuaternion);
+    const combinedQuaternion = useMemo(() => {
+      const tiltQuaternion = new THREE.Quaternion().setFromAxisAngle(
+        new THREE.Vector3(0, 0, 1),
+        THREE.MathUtils.degToRad(axialTilt)
+      );
+      const precessionQuaternion = new THREE.Quaternion().setFromAxisAngle(
+        new THREE.Vector3(0, 1, 0),
+        THREE.MathUtils.degToRad(precession)
+      );
+      return tiltQuaternion.multiply(precessionQuaternion);
+    }, [axialTilt, precession]);
 
     return (
       <group quaternion={combinedQuaternion}>
@@ -134,7 +140,7 @@ export const Earth = React.forwardRef(
           />
         </mesh>
 
-        {showAxis && <AxisIndicators axialTilt={axialTilt} precession={precession} />}
+        {showAxis ? <AxisIndicators /> : null}
       </group>
     );
   }

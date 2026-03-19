@@ -8,18 +8,17 @@ export function OrbitingEarth({
   eccentricity,
   axialTilt,
   precession,
-  temperature,
   iceFactor,
-  normTemp,
   groupRefFromParent,
   showAxis = true,
+  currentSection = 0,
 }) {
   const a = 20;
   const b = a * (1 - 2 * eccentricity);
   const groupRef = useRef();
   const earthRef = useRef();
-  const markerRef = useRef();
   const [isReady, setIsReady] = useState(false);
+  const orbitThetaRef = useRef(0);
 
   useEffect(() => {
     if (groupRefFromParent && groupRef.current) {
@@ -27,21 +26,32 @@ export function OrbitingEarth({
     }
   }, [groupRefFromParent, isReady]);
 
-  useFrame(({ clock }) => {
+  useFrame((_, delta) => {
     if (!groupRef.current || !isReady) return;
-    const theta = clock.getElapsedTime() * 0.1;
-    const x = a * Math.cos(theta);
-    const z = b * Math.sin(theta);
-    groupRef.current.position.set(x, 0, z);
+
+    const isTiltFocusSection = currentSection === 3;
+    if (!isTiltFocusSection) {
+      orbitThetaRef.current += delta * 0.1;
+    }
+
+    const targetTheta = isTiltFocusSection ? 0 : orbitThetaRef.current;
+    const targetX = a * Math.cos(targetTheta);
+    const targetZ = b * Math.sin(targetTheta);
+    const easing = isTiltFocusSection ? 0.16 : 0.08;
+
+    groupRef.current.position.x = THREE.MathUtils.lerp(
+      groupRef.current.position.x,
+      targetX,
+      easing
+    );
+    groupRef.current.position.z = THREE.MathUtils.lerp(
+      groupRef.current.position.z,
+      targetZ,
+      easing
+    );
+
     if (earthRef.current) {
       earthRef.current.rotation.y += 0.01;
-    }
-    if (markerRef.current) {
-      markerRef.current.position.set(x, 0, z);
-      const distance = Math.sqrt(x * x + z * z);
-      const markerColor =
-        distance < a ? new THREE.Color(1, 0, 0) : new THREE.Color(0, 0, 1);
-      markerRef.current.material.color = markerColor;
     }
   });
 
@@ -53,15 +63,10 @@ export function OrbitingEarth({
         ref={earthRef}
         axialTilt={axialTilt}
         precession={precession}
-        temperature={temperature}
         iceFactor={iceFactor}
         onReady={onEarthReady}
         showAxis={showAxis}
       />
-      <mesh ref={markerRef}>
-        <sphereGeometry args={[0.3, 16, 16]} />
-        <meshBasicMaterial color="white" />
-      </mesh>
     </group>
   );
 }

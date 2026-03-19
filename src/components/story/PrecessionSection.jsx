@@ -34,6 +34,10 @@ export function PrecessionSection({ precession, onPrecessionChange, temperature,
             min={0}
             max={360}
             step={1}
+            hint="Notice which hemisphere points sunward at closest approach"
+            minLabel="Current orientation"
+            maxLabel="Full wobble"
+            formatValue={(nextValue) => `${nextValue.toFixed(0)}°`}
           />
 
           <TemperatureIndicator temperature={temperature} />

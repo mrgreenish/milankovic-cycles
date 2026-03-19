@@ -1,9 +1,29 @@
 "use client";
 import React, { useRef, useCallback } from "react";
 
-export function StorySlider({ label, scienceName, value, onChange, min, max, step, hint }) {
+export function StorySlider({
+  label,
+  scienceName,
+  value,
+  onChange,
+  min,
+  max,
+  step,
+  hint,
+  minLabel,
+  maxLabel,
+  formatValue,
+}) {
   const percentage = ((value - min) / (max - min)) * 100;
   const lastUpdate = useRef(0);
+  const formattedValue =
+    typeof value === "number"
+      ? formatValue
+        ? formatValue(value)
+        : step < 1
+          ? value.toFixed(3)
+          : value.toFixed(1)
+      : value;
 
   // Single throttled handler for both onInput and onChange.
   // In React, range input onChange maps to the native 'input' event and fires
@@ -34,12 +54,7 @@ export function StorySlider({ label, scienceName, value, onChange, min, max, ste
         <span className="text-lg text-stardust-white font-medium">{label}</span>
         {scienceName && (
           <span className="text-xs font-mono text-pale-gold opacity-60">
-            {scienceName}:{" "}
-            {typeof value === "number"
-              ? step < 1
-                ? value.toFixed(3)
-                : value.toFixed(1)
-              : value}
+            {scienceName}: {formattedValue}
           </span>
         )}
       </div>
@@ -70,9 +85,9 @@ export function StorySlider({ label, scienceName, value, onChange, min, max, ste
           aria-valuenow={value}
         />
       </div>
-      <div className="flex justify-between text-xs text-stardust-white opacity-40 mt-1">
-        <span>{min}</span>
-        <span>{max}</span>
+      <div className="flex justify-between gap-4 text-xs text-stardust-white opacity-50 mt-1">
+        <span>{minLabel || min}</span>
+        <span className="text-right">{maxLabel || max}</span>
       </div>
     </div>
   );
