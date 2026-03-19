@@ -41,9 +41,9 @@ const PRESETS = {
 
 // Fun challenges to make exploration purposeful
 const CHALLENGES = [
-  { text: "Can you create an ice age?", target: "below 5°C", check: (t) => t < 5 },
-  { text: "Can you make Earth as warm as possible?", target: "above 15°C", check: (t) => t > 15 },
-  { text: "Can you match today's temperature?", target: "~14°C", check: (t) => Math.abs(t - 14) < 1 },
+  { text: "Create an ice age", target: "below 5°C", check: (t) => t < 5 },
+  { text: "Make Earth as warm as possible", target: "above 15°C", check: (t) => t > 15 },
+  { text: "Match today's temperature", target: "~14°C", check: (t) => Math.abs(t - 14) < 1 },
 ];
 
 export function PlaygroundSection({
@@ -165,17 +165,12 @@ export function PlaygroundSection({
             </button>
           </div>
 
-          {/* Mobile 3D hint */}
-          {isMobile && (
-            <p className="text-xs text-pale-gold opacity-60 text-center">
-              👆 Drag the 3D view above to rotate it
-            </p>
-          )}
-          {!isMobile && (
-            <p className="text-xs text-stardust-white opacity-40">
-              🖱️ Drag the 3D view to rotate, scroll to zoom
-            </p>
-          )}
+          {/* 3D hint */}
+          <p className="text-xs text-stardust-white opacity-40">
+            {isMobile
+              ? "Drag the 3D view above to rotate it"
+              : "Drag the 3D view to rotate, scroll to zoom"}
+          </p>
 
           <StorySlider
             label="The Stretch"
@@ -239,8 +234,14 @@ export function PlaygroundSection({
                 }`}
               >
                 <span className="flex items-center justify-between">
-                  <span>
-                    {activeChallenge === index && challengeComplete ? "✅ " : "🎯 "}
+                  <span className="flex items-center gap-2">
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="shrink-0">
+                      {activeChallenge === index && challengeComplete ? (
+                        <path d="M2 7l3.5 3.5L12 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-green-400" />
+                      ) : (
+                        <circle cx="7" cy="7" r="5.5" stroke="currentColor" strokeWidth="1" className="text-pale-gold opacity-60" />
+                      )}
+                    </svg>
                     {challenge.text}
                   </span>
                   {activeChallenge === index && !challengeComplete && (
