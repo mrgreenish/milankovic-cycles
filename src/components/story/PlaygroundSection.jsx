@@ -234,8 +234,14 @@ export function PlaygroundSection({
                 }`}
               >
                 <span className="flex items-center justify-between">
-                  <span>
-                    {activeChallenge === index && challengeComplete ? "— " : "— "}
+                  <span className="flex items-center gap-2">
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="shrink-0">
+                      {activeChallenge === index && challengeComplete ? (
+                        <path d="M2 7l3.5 3.5L12 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-green-400" />
+                      ) : (
+                        <circle cx="7" cy="7" r="5.5" stroke="currentColor" strokeWidth="1" className="text-pale-gold opacity-60" />
+                      )}
+                    </svg>
                     {challenge.text}
                   </span>
                   {activeChallenge === index && !challengeComplete && (
