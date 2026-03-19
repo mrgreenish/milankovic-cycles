@@ -1,9 +1,11 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { StorySection } from "./StorySection";
 
 export function ClosingSection({ onInView }) {
+  const [copied, setCopied] = useState(false);
+
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -26,7 +28,8 @@ export function ClosingSection({ onInView }) {
       // Fallback: copy to clipboard
       try {
         await navigator.clipboard.writeText(`${shareText} ${shareUrl}`);
-        alert("Link copied to clipboard!");
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
       } catch {
         // Silently fail
       }
@@ -69,7 +72,7 @@ export function ClosingSection({ onInView }) {
             href="/about"
             className="celestial-button text-center px-6 py-3"
           >
-            About Milankovic
+            About Milanković
           </Link>
           <Link
             href="/faq"
@@ -79,16 +82,16 @@ export function ClosingSection({ onInView }) {
           </Link>
           <button
             onClick={handleShare}
-            className="px-6 py-3 rounded-md text-center font-medium transition-all duration-300 bg-antique-brass text-deep-space hover:brightness-110 hover:-translate-y-0.5"
+            className="celestial-button text-center px-6 py-3"
           >
-            Share This
+            {copied ? "Copied!" : "Share This"}
           </button>
         </div>
 
         {/* Start over */}
         <button
           onClick={scrollToTop}
-          className="text-sm text-stardust-white opacity-40 hover:opacity-80 transition-opacity flex items-center gap-2 mx-auto"
+          className="text-sm text-stardust-white opacity-50 hover:opacity-90 transition-opacity flex items-center gap-2 mx-auto"
         >
           <svg
             className="w-4 h-4"
