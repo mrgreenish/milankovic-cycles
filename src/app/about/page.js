@@ -69,7 +69,7 @@ export default function AboutPage() {
 
           {/* Text column */}
           <div className="order-1 md:order-2">
-            <h1 className="text-5xl md:text-6xl font-playfair text-stardust-white mb-8 leading-tight">
+            <h1 className="text-5xl md:text-6xl text-stardust-white mb-8 leading-tight">
               <span className="text-antique-brass">Inspired</span> by Milutin Milanković
             </h1>
             
@@ -88,7 +88,7 @@ export default function AboutPage() {
                     F
                   </div>
                   <div>
-                    <h3 className="text-xl font-playfair text-stardust-white">Filip van Harreveld</h3>
+                    <h3 className="text-xl text-stardust-white">Filip van Harreveld</h3>
                     <p className="text-sm text-stardust-white/70 mt-1">Creative developer</p>
                     <a 
                       href="https://filipvanharreveld.com" 
@@ -107,13 +107,13 @@ export default function AboutPage() {
 
         {/* Additional content */}
         <div className="mt-24 max-w-3xl mx-auto text-center">
-          <h2 className="text-3xl md:text-4xl font-playfair text-antique-brass mb-8">About This Project</h2>
+          <h2 className="text-3xl md:text-4xl text-antique-brass mb-8">About This Project</h2>
           <p className="text-lg text-stardust-white/80 leading-relaxed mb-8">
             This interactive visualization explores the Milanković cycles — the collective effects of changes in the Earth's movements on its climate over thousands of years. The visualization aims to make these complex astronomical concepts more accessible through digital design and interactive elements.
           </p>
           
           <div className="mt-8 mb-12 p-6 bg-slate-blue/20 rounded-lg border border-slate-blue/30">
-            <h3 className="text-xl font-playfair text-antique-brass mb-4">Contact</h3>
+            <h3 className="text-xl text-antique-brass mb-4">Contact</h3>
             <p className="text-stardust-white/80 mb-4">
               If you notice any inaccuracies or have suggestions for improvement, please feel free to reach out.
             </p>

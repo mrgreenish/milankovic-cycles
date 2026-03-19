@@ -252,16 +252,16 @@ export function StoryContainer() {
       </div>
 
       {/* Navigation */}
-      <nav className="fixed top-4 left-4 z-50 flex gap-3">
+      <nav className="fixed top-4 left-4 z-50 flex gap-3 bg-deep-space/40 backdrop-blur-sm rounded-md px-3 py-1.5">
         <Link
           href="/about"
-          className="text-sm text-stardust-white opacity-50 hover:opacity-100 transition-opacity"
+          className="text-sm text-stardust-white opacity-60 hover:opacity-100 transition-opacity"
         >
           About
         </Link>
         <Link
           href="/faq"
-          className="text-sm text-stardust-white opacity-50 hover:opacity-100 transition-opacity"
+          className="text-sm text-stardust-white opacity-60 hover:opacity-100 transition-opacity"
         >
           FAQ
         </Link>
