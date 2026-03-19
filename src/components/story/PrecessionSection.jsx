@@ -8,7 +8,7 @@ import { TemperatureIndicator } from "./TemperatureIndicator";
 export function PrecessionSection({ precession, onPrecessionChange, temperature, onInView }) {
   return (
     <StorySection id={4} onInView={onInView}>
-      <div className="w-full max-w-lg px-6 md:px-12 py-8">
+      <div className="w-full max-w-lg px-6 md:px-12 py-8 md:ml-auto">
         <div className="observatory-panel p-6 md:p-8 space-y-6">
           <div>
             <h2 className="text-3xl md:text-4xl mb-1">The Wobble</h2>
@@ -16,14 +16,16 @@ export function PrecessionSection({ precession, onPrecessionChange, temperature,
           </div>
 
           <p className="text-base text-stardust-white opacity-80 leading-relaxed">
-            Earth's axis slowly wobbles in a circle, like a spinning top that's winding
-            down. One full wobble takes about <strong className="text-pale-gold">26,000 years</strong>.
+            Earth's tilt doesn't just lean — the <em>direction</em> of that lean slowly
+            traces a circle, like a spinning top winding down. One full cycle takes
+            about <strong className="text-pale-gold">26,000 years</strong>.
           </p>
 
           <p className="text-sm text-stardust-white opacity-60 leading-relaxed italic">
+            Watch the dashed circle in the 3D view — that's the path the axis traces.
             This wobble changes which season happens when Earth is closest to the Sun.
-            Right now, Northern Hemisphere winter happens near the closest point.
-            In 13,000 years, it'll be summer instead.
+            Right now, northern winters happen near the closest point.
+            In 13,000 years, northern summers will instead.
           </p>
 
           <StorySlider
@@ -34,9 +36,9 @@ export function PrecessionSection({ precession, onPrecessionChange, temperature,
             min={0}
             max={360}
             step={1}
-            hint="Notice which hemisphere points sunward at closest approach"
-            minLabel="Current orientation"
-            maxLabel="Full wobble"
+            hint="Watch the axis tip move along the dashed circle above"
+            minLabel="Today's orientation"
+            maxLabel="Full cycle (back to start)"
             formatValue={(nextValue) => `${nextValue.toFixed(0)}°`}
           />
 

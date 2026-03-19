@@ -3,6 +3,7 @@ import React, { useRef, useState, useEffect, useCallback } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { Earth } from "./Earth";
+import { PrecessionCone } from "./AxisIndicators";
 
 export function OrbitingEarth({
   eccentricity,
@@ -29,15 +30,15 @@ export function OrbitingEarth({
   useFrame((_, delta) => {
     if (!groupRef.current || !isReady) return;
 
-    const isTiltFocusSection = currentSection === 3;
-    if (!isTiltFocusSection) {
+    const isPinnedSection = currentSection === 3 || currentSection === 4;
+    if (!isPinnedSection) {
       orbitThetaRef.current += delta * 0.1;
     }
 
-    const targetTheta = isTiltFocusSection ? 0 : orbitThetaRef.current;
+    const targetTheta = isPinnedSection ? 0 : orbitThetaRef.current;
     const targetX = a * Math.cos(targetTheta);
     const targetZ = b * Math.sin(targetTheta);
-    const easing = isTiltFocusSection ? 0.16 : 0.08;
+    const easing = isPinnedSection ? 0.16 : 0.08;
 
     groupRef.current.position.x = THREE.MathUtils.lerp(
       groupRef.current.position.x,
@@ -51,11 +52,16 @@ export function OrbitingEarth({
     );
 
     if (earthRef.current) {
-      earthRef.current.rotation.y += 0.01;
+      // Slow rotation during precession section so wobble is the main visible motion
+      const rotSpeed = currentSection === 4 ? 0.002 : 0.01;
+      earthRef.current.rotation.y += rotSpeed;
     }
   });
 
   const onEarthReady = useCallback(() => setIsReady(true), []);
+
+  // Show the precession cone in sections where precession is relevant
+  const showPrecessionCone = showAxis && (currentSection === 4 || currentSection === 5 || currentSection === 6);
 
   return (
     <group ref={groupRef}>
@@ -66,6 +72,12 @@ export function OrbitingEarth({
         iceFactor={iceFactor}
         onReady={onEarthReady}
         showAxis={showAxis}
+      />
+      {/* Precession cone is outside Earth's quaternion group so it stays fixed */}
+      <PrecessionCone
+        axialTilt={axialTilt}
+        precession={precession}
+        visible={showPrecessionCone}
       />
     </group>
   );

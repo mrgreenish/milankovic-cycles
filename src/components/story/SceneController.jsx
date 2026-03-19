@@ -33,9 +33,9 @@ const SCENE_CONFIGS = {
     showOrbit: false,
     showAxis: true,
   },
-  4: { // Precession - angled view
-    camera: [15, 25, 35],
-    lookAt: [0, 0, 0],
+  4: { // Precession - same view as tilt section, with orbit for seasonal context
+    camera: [18, 5, 15],
+    lookAt: [20, 0, 0],
     showSun: true,
     showOrbit: true,
     showAxis: true,

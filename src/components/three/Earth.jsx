@@ -91,10 +91,6 @@ export const Earth = React.forwardRef(
       }
     });
 
-    if (!texturesLoaded || !uniforms || !textures) {
-      return null;
-    }
-
     const combinedQuaternion = useMemo(() => {
       const tiltQuaternion = new THREE.Quaternion().setFromAxisAngle(
         new THREE.Vector3(0, 0, 1),
@@ -106,6 +102,10 @@ export const Earth = React.forwardRef(
       );
       return tiltQuaternion.multiply(precessionQuaternion);
     }, [axialTilt, precession]);
+
+    if (!texturesLoaded || !uniforms || !textures) {
+      return null;
+    }
 
     return (
       <group quaternion={combinedQuaternion}>
