@@ -853,14 +853,16 @@
   }
 }
 
-/* Mobile: push slider sections to bottom so 3D canvas is visible above */
+/* Mobile: push slider sections to bottom so 3D canvas is visible above.
+   Excludes #section-6 (PlaygroundSection) whose tall multi-panel content
+   must stay top-aligned via its own items-start className. */
 @media (max-width: 767px) {
-  .story-section:has(.celestial-slider) {
+  .story-section:has(.celestial-slider):not(#section-6) {
     align-items: flex-end;
     padding-bottom: 1.5rem;
   }
 
-  .story-section:has(.celestial-slider) .observatory-panel {
+  .story-section:has(.celestial-slider):not(#section-6) .observatory-panel {
     background-color: hsla(var(--deep-space), 0.78);
   }
 }

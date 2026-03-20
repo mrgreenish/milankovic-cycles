@@ -145,7 +145,7 @@ export function PlaygroundSection({
   };
 
   return (
-    <StorySection id={6} onInView={handleInView} className="items-start pt-20">
+    <StorySection id={6} onInView={handleInView} className="!items-start pt-20">
       <div className="w-full max-w-lg px-4 md:px-12 py-4 md:py-8 space-y-3 md:space-y-4">
         <div className="observatory-panel p-4 md:p-8 space-y-4 md:space-y-6">
           <div className="flex items-start justify-between">
