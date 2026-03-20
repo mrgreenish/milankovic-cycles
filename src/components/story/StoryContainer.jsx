@@ -68,48 +68,30 @@ export function StoryContainer() {
   // Derive season from current state
   const isPlaygroundSection = currentSection === 6;
 
-  // Calculate temperature whenever params change
-  // For story sections: use annual mean at 65°N (the Milankovitch-critical latitude)
-  // This correctly shows cold temps for ice-age params and warm for today's,
-  // because the orbital signal is strongest at high northern latitudes across the full year.
-  // For playground: use dynamic season at 65°N for real-time seasonal variation.
+  // Calculate temperature whenever params change.
+  // Always use annual mean at 65°N (the Milankovitch-critical latitude) —
+  // averaging across 4 seasons captures the full orbital forcing signal and
+  // gives a stable reading that only changes when the user moves a slider.
   useEffect(() => {
-    if (isPlaygroundSection) {
-      const season = ((simulatedYear % 1) + 1) % 1;
-      const tempData = calculateGlobalTemperature({
+    const seasons = [0, 0.25, 0.5, 0.75];
+    let totalTemp = 0;
+    let totalIce = 0;
+    for (const s of seasons) {
+      const data = calculateGlobalTemperature({
         latitude: 65,
-        season,
+        season: s,
         eccentricity,
         axialTilt,
         precession,
         co2Level,
         tempOffset: 0,
       });
-      setTemperature(tempData.temperature);
-      setIceFactor(tempData.iceFactor);
-    } else {
-      // Annual mean at 65°N: average across 4 seasons
-      // This captures the full orbital forcing signal that drives ice ages
-      const seasons = [0, 0.25, 0.5, 0.75];
-      let totalTemp = 0;
-      let totalIce = 0;
-      for (const s of seasons) {
-        const data = calculateGlobalTemperature({
-          latitude: 65,
-          season: s,
-          eccentricity,
-          axialTilt,
-          precession,
-          co2Level,
-          tempOffset: 0,
-        });
-        totalTemp += data.temperature;
-        totalIce += data.iceFactor;
-      }
-      setTemperature(totalTemp / seasons.length);
-      setIceFactor(totalIce / seasons.length);
+      totalTemp += data.temperature;
+      totalIce += data.iceFactor;
     }
-  }, [eccentricity, axialTilt, precession, co2Level, isPlaygroundSection, simulatedYear]);
+    setTemperature(totalTemp / seasons.length);
+    setIceFactor(totalIce / seasons.length);
+  }, [eccentricity, axialTilt, precession, co2Level]);
 
   // Smooth temperature display using rAF
   const displayedTempRef = useRef(10);
