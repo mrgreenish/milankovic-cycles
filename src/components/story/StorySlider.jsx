@@ -1,5 +1,5 @@
 "use client";
-import React, { useRef, useCallback } from "react";
+import React, { useRef, useCallback, useEffect } from "react";
 
 export function StorySlider({
   label,
@@ -16,6 +16,33 @@ export function StorySlider({
 }) {
   const percentage = ((value - min) / (max - min)) * 100;
   const lastUpdate = useRef(0);
+  const inputRef = useRef(null);
+  const touchStart = useRef(null);
+
+  // Non-passive touchmove listener: prevents page scroll only when dragging
+  // horizontally (dx > dy). This fixes value-jumping without blocking upward
+  // scroll gestures that start on the slider track.
+  useEffect(() => {
+    const el = inputRef.current;
+    if (!el) return;
+    const onTouchStart = (e) => {
+      const t = e.touches[0];
+      touchStart.current = { x: t.clientX, y: t.clientY };
+    };
+    const onTouchMove = (e) => {
+      if (!touchStart.current) return;
+      const t = e.touches[0];
+      const dx = Math.abs(t.clientX - touchStart.current.x);
+      const dy = Math.abs(t.clientY - touchStart.current.y);
+      if (dx > dy) e.preventDefault();
+    };
+    el.addEventListener("touchstart", onTouchStart, { passive: true });
+    el.addEventListener("touchmove", onTouchMove, { passive: false });
+    return () => {
+      el.removeEventListener("touchstart", onTouchStart);
+      el.removeEventListener("touchmove", onTouchMove);
+    };
+  }, []);
   const formattedValue =
     typeof value === "number"
       ? formatValue
@@ -72,10 +99,10 @@ export function StorySlider({
         <input
           type="range"
           value={value}
+          ref={inputRef}
           onChange={handleInput}
           onPointerUp={handleCommit}
           onKeyUp={handleCommit}
-          onTouchStart={(e) => e.stopPropagation()}
           min={min}
           max={max}
           step={step}

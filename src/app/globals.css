@@ -227,7 +227,7 @@
   -webkit-appearance: none;
   appearance: none;
   background: transparent;
-  touch-action: none;
+  touch-action: pan-y;
   -webkit-user-select: none;
   user-select: none;
   cursor: pointer;
