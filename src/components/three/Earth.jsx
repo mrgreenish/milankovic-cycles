@@ -2,7 +2,12 @@
 import React, { useRef, useState, useEffect, useMemo } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
-import { earthVertexShader, earthFragmentShader } from "./shaders";
+import {
+  earthVertexShader,
+  earthFragmentShader,
+  atmosphereVertexShader,
+  atmosphereFragmentShader,
+} from "./shaders";
 import { AxisIndicators } from "./AxisIndicators";
 
 export const Earth = React.forwardRef(
@@ -68,6 +73,13 @@ export const Earth = React.forwardRef(
       };
     }, [texturesLoaded, textures]);
 
+    const atmosphereUniforms = useMemo(() => {
+      if (!uniforms) return null;
+      return {
+        sunDirection: uniforms.sunDirection,
+      };
+    }, [uniforms]);
+
     useEffect(() => {
       if (uniforms) {
         uniforms.iceFactor.value = iceFactor;
@@ -110,7 +122,7 @@ export const Earth = React.forwardRef(
     return (
       <group quaternion={combinedQuaternion}>
         <mesh ref={ref} castShadow receiveShadow>
-          <sphereGeometry args={[1, 48, 48]} />
+          <sphereGeometry args={[1, 64, 64]} />
           <shaderMaterial
             fragmentShader={earthFragmentShader}
             vertexShader={earthVertexShader}
@@ -130,13 +142,27 @@ export const Earth = React.forwardRef(
           />
         </mesh>
 
-        <mesh scale={1.03}>
+        <mesh scale={1.015}>
           <sphereGeometry args={[1, 32, 32]} />
           <meshBasicMaterial
             color="#a8d0e6"
             transparent={true}
             opacity={iceFactor * 0.5}
             depthWrite={false}
+          />
+        </mesh>
+
+        {/* Atmosphere glow shell */}
+        <mesh scale={1.06}>
+          <sphereGeometry args={[1, 48, 48]} />
+          <shaderMaterial
+            transparent={true}
+            depthWrite={false}
+            side={THREE.BackSide}
+            blending={THREE.AdditiveBlending}
+            vertexShader={atmosphereVertexShader}
+            fragmentShader={atmosphereFragmentShader}
+            uniforms={atmosphereUniforms}
           />
         </mesh>
 

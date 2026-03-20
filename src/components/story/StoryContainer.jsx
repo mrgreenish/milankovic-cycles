@@ -2,6 +2,7 @@
 import React, { useState, useCallback, useEffect, Suspense, useRef } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, PerspectiveCamera } from "@react-three/drei";
+import * as THREE from "three";
 
 import { Sun } from "@/components/three/Sun";
 import { OrbitPath } from "@/components/three/OrbitPath";
@@ -170,9 +171,10 @@ export function StoryContainer() {
             gl={{
               antialias: true,
               powerPreference: "high-performance",
-              precision: "mediump",
+              precision: "highp",
+              toneMapping: THREE.NoToneMapping,
             }}
-            dpr={[1, 1]}
+            dpr={[1, 2]}
             performance={{ min: 0.5 }}
           >
             <PerspectiveCamera
@@ -227,8 +229,8 @@ export function StoryContainer() {
               />
             )}
 
-            {/* Post-processing effects - disabled on mobile */}
-            {!isMobile && <SceneEffects />}
+            {/* Post-processing effects */}
+            <SceneEffects isMobile={isMobile} />
           </Canvas>
         </Suspense>
       </div>
