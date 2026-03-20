@@ -227,7 +227,7 @@
   -webkit-appearance: none;
   appearance: none;
   background: transparent;
-  touch-action: pan-y;
+  touch-action: none;
   -webkit-user-select: none;
   user-select: none;
   cursor: pointer;
@@ -850,6 +850,18 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+/* Mobile: push slider sections to bottom so 3D canvas is visible above */
+@media (max-width: 767px) {
+  .story-section:has(.celestial-slider) {
+    align-items: flex-end;
+    padding-bottom: 1.5rem;
+  }
+
+  .story-section:has(.celestial-slider) .observatory-panel {
+    background-color: hsla(var(--deep-space), 0.78);
   }
 }
 

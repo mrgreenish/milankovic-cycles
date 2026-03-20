@@ -75,6 +75,7 @@ export function StorySlider({
           onChange={handleInput}
           onPointerUp={handleCommit}
           onKeyUp={handleCommit}
+          onTouchStart={(e) => e.stopPropagation()}
           min={min}
           max={max}
           step={step}
