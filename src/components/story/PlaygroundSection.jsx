@@ -145,12 +145,12 @@ export function PlaygroundSection({
   };
 
   return (
-    <StorySection id={6} onInView={handleInView} className="items-start pt-20">
-      <div className="w-full max-w-lg px-6 md:px-12 py-8 space-y-4">
-        <div className="observatory-panel p-6 md:p-8 space-y-6">
+    <StorySection id={6} onInView={handleInView} className="!items-start pt-20">
+      <div className="w-full max-w-lg px-4 md:px-12 py-4 md:py-8 space-y-3 md:space-y-4">
+        <div className="observatory-panel p-4 md:p-8 space-y-4 md:space-y-6">
           <div className="flex items-start justify-between">
             <div>
-              <h2 className="text-3xl md:text-4xl mb-2">Your Turn to Explore</h2>
+              <h2 className="text-2xl md:text-4xl mb-2">Your Turn to Explore</h2>
               <p className="text-sm text-stardust-white opacity-60">
                 Now you understand the three cycles. Combine them freely and see
                 what happens.
