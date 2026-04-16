@@ -853,17 +853,64 @@
   }
 }
 
-/* Mobile: push slider sections to bottom so 3D canvas is visible above.
-   Excludes #section-6 (PlaygroundSection) whose tall multi-panel content
-   must stay top-aligned via its own items-start className. */
+/* Mobile: push slider sections to bottom so 3D canvas is visible above. */
 @media (max-width: 767px) {
-  .story-section:has(.celestial-slider):not(#section-6) {
+  .story-section:has(.celestial-slider) {
     align-items: flex-end;
     padding-bottom: 1.5rem;
   }
 
-  .story-section:has(.celestial-slider):not(#section-6) .observatory-panel {
+  .story-section:has(.celestial-slider) .observatory-panel {
     background-color: hsla(var(--deep-space), 0.78);
+  }
+}
+
+/* Spotlight — highlights the focused ParameterCard with a soft brass glow.
+   The non-focused dim is applied via inline opacity inside ParameterCard, so
+   this file only holds the focus treatment and its reduced-motion variant. */
+.spotlight-focus {
+  box-shadow:
+    0 0 0 1px hsla(var(--antique-brass), 0.5),
+    0 0 24px hsla(var(--antique-brass), 0.25);
+  animation: spotlight-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes spotlight-pulse {
+  0%, 100% {
+    box-shadow:
+      0 0 0 1px hsla(var(--antique-brass), 0.5),
+      0 0 20px hsla(var(--antique-brass), 0.22);
+  }
+  50% {
+    box-shadow:
+      0 0 0 1px hsla(var(--antique-brass), 0.7),
+      0 0 32px hsla(var(--antique-brass), 0.4);
+  }
+}
+
+/* Respect users who prefer reduced motion — hold a static glow instead of
+   pulsing, keep preset-like transitions instantaneous. Information parity
+   preserved: the focus indication is still present, just not animated. */
+@media (prefers-reduced-motion: reduce) {
+  .spotlight-focus {
+    animation: none;
+  }
+
+  .story-section .observatory-panel {
+    animation: none;
+  }
+
+  .animate-glow,
+  .animate-orbit,
+  .animate-spin-slow,
+  .animate-slideUp,
+  .animate-fadeIn,
+  .animate-scaleUp {
+    animation: none !important;
+  }
+
+  * {
+    scroll-behavior: auto !important;
   }
 }
 

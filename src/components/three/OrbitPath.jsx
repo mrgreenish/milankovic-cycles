@@ -3,7 +3,12 @@ import React from "react";
 import * as THREE from "three";
 import { Line, Html } from "@react-three/drei";
 
-export function OrbitPath({ eccentricity, showLabels = true, currentSection = 0 }) {
+export function OrbitPath({
+  eccentricity,
+  showLabels = true,
+  currentSection = 0,
+  spotlight = null,
+}) {
   const a = 20;
   const b = a * (1 - 2 * eccentricity);
   const baselineB = a * (1 - 2 * 0.0167);
@@ -32,8 +37,20 @@ export function OrbitPath({ eccentricity, showLabels = true, currentSection = 0 
     "Fall (N. Hemisphere)",
   ];
 
-  // Show "closer" / "farther" labels during eccentricity section (section 2)
   const showDistanceLabels = currentSection === 2;
+
+  const orbitFade =
+    !spotlight
+      ? 1
+      : spotlight === "eccentricity"
+      ? 1
+      : spotlight === "axialTilt"
+      ? 0.3
+      : spotlight === "precession"
+      ? 0.45
+      : 1;
+  const boost = spotlight === "eccentricity" ? 1.15 : 1;
+  const markerFade = orbitFade;
 
   return (
     <group>
@@ -41,8 +58,8 @@ export function OrbitPath({ eccentricity, showLabels = true, currentSection = 0 
         points={baselinePoints}
         color="#2d4661"
         lineWidth={0.6}
-        transparent={false}
-        opacity={1}
+        transparent
+        opacity={1 * orbitFade}
         dashed
         dashSize={0.15}
         gapSize={0.15}
@@ -52,7 +69,7 @@ export function OrbitPath({ eccentricity, showLabels = true, currentSection = 0 
         color="white"
         lineWidth={1.2}
         transparent
-        opacity={0.5}
+        opacity={0.5 * orbitFade}
         dashed
         dashSize={0.2}
         gapSize={0.2}
@@ -62,17 +79,34 @@ export function OrbitPath({ eccentricity, showLabels = true, currentSection = 0 
         color="#375a82"
         lineWidth={1.8}
         transparent
-        opacity={0.2}
+        opacity={0.2 * orbitFade}
         dashed
         dashSize={0.25}
         gapSize={0.25}
       />
 
-      <Line points={points} color="#cdaf7d" lineWidth={2} transparent={false} opacity={1} />
-      <Line points={points} color="#e8d0a9" lineWidth={4} transparent opacity={0.7} />
-      <Line points={points} color="#e8d0a9" lineWidth={6} transparent opacity={0.4} />
+      <Line
+        points={points}
+        color="#cdaf7d"
+        lineWidth={2 * boost}
+        transparent
+        opacity={1 * orbitFade}
+      />
+      <Line
+        points={points}
+        color="#e8d0a9"
+        lineWidth={4 * boost}
+        transparent
+        opacity={Math.min(1, 0.7 * boost) * orbitFade}
+      />
+      <Line
+        points={points}
+        color="#e8d0a9"
+        lineWidth={6 * boost}
+        transparent
+        opacity={Math.min(1, 0.4 * boost) * orbitFade}
+      />
 
-      {/* Distance labels for eccentricity section */}
       {showDistanceLabels && (
         <>
           <Html position={[-a + 2, 2, 0]} center>
@@ -110,7 +144,6 @@ export function OrbitPath({ eccentricity, showLabels = true, currentSection = 0 
         </>
       )}
 
-      {/* Sun label */}
       <Html position={[0, 3, 0]} center>
         <div
           style={{
@@ -118,7 +151,7 @@ export function OrbitPath({ eccentricity, showLabels = true, currentSection = 0 
             fontSize: "11px",
             fontWeight: "500",
             whiteSpace: "nowrap",
-            opacity: 0.7,
+            opacity: 0.7 * orbitFade,
             textShadow: "0 0 8px rgba(251, 191, 36, 0.5)",
           }}
         >
@@ -132,8 +165,8 @@ export function OrbitPath({ eccentricity, showLabels = true, currentSection = 0 
             <sphereGeometry args={[0.3, 16, 16]} />
             <meshBasicMaterial
               color={index % 2 === 0 ? "#cdaf7d" : "#e36962"}
-              transparent={false}
-              opacity={1}
+              transparent
+              opacity={1 * markerFade}
             />
           </mesh>
           <mesh scale={1.2}>
@@ -141,7 +174,7 @@ export function OrbitPath({ eccentricity, showLabels = true, currentSection = 0 
             <meshBasicMaterial
               color={index % 2 === 0 ? "#cdaf7d" : "#e36962"}
               transparent
-              opacity={0.6}
+              opacity={0.6 * markerFade}
             />
           </mesh>
           <mesh scale={1.4}>
@@ -149,7 +182,7 @@ export function OrbitPath({ eccentricity, showLabels = true, currentSection = 0 
             <meshBasicMaterial
               color={index % 2 === 0 ? "#cdaf7d" : "#e36962"}
               transparent
-              opacity={0.3}
+              opacity={0.3 * markerFade}
             />
           </mesh>
           {showLabels && (
@@ -166,6 +199,7 @@ export function OrbitPath({ eccentricity, showLabels = true, currentSection = 0 
                   border: "1px solid rgba(232, 208, 169, 0.8)",
                   textShadow: "0 0 10px rgba(232, 208, 169, 1)",
                   boxShadow: "0 0 20px rgba(205, 175, 125, 0.5)",
+                  opacity: markerFade,
                 }}
               >
                 {seasonLabels[index]}

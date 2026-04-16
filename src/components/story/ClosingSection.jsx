@@ -2,9 +2,29 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { StorySection } from "./StorySection";
+import { ERAS } from "@/lib/eraLookup";
 
-export function ClosingSection({ onInView }) {
+function buildSnapshotLine(snapshot) {
+  if (!snapshot) return null;
+  const { temperature, eraKey } = snapshot;
+  // Comparison is against today's 65°N annual mean (~-8°C in the playground
+  // calibration), the same scale as the TemperaturePod reading.
+  const todayTemp = -8;
+  const delta = temperature - todayTemp;
+  const absDelta = Math.abs(delta);
+  const direction = delta > 0 ? "warmer" : "colder";
+  const magnitude =
+    absDelta < 0.5
+      ? "nearly identical to"
+      : `${absDelta.toFixed(1)}°C ${direction} than`;
+  const eraRef =
+    eraKey && ERAS[eraKey] ? ` — like ${ERAS[eraKey].shortLabel}` : "";
+  return `You tuned a climate ${magnitude} today${eraRef}.`;
+}
+
+export function ClosingSection({ onInView, snapshot }) {
   const [copied, setCopied] = useState(false);
+  const snapshotLine = buildSnapshotLine(snapshot);
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -41,6 +61,11 @@ export function ClosingSection({ onInView }) {
       <div className="w-full max-w-2xl mx-auto px-6 text-center space-y-8">
         {/* Summary of what they learned */}
         <div className="observatory-panel p-6 space-y-3">
+          {snapshotLine && (
+            <p className="text-sm text-antique-brass font-mono uppercase tracking-wider opacity-80">
+              {snapshotLine}
+            </p>
+          )}
           <p className="text-lg text-pale-gold font-medium">
             You now understand the 3 orbital cycles that drive ice ages
           </p>

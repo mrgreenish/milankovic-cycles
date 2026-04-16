@@ -47,6 +47,10 @@ export function StoryContainer() {
   // Section tracking
   const [currentSection, setCurrentSection] = useState(0);
 
+  // Playground UI state
+  const [focusedParam, setFocusedParam] = useState(null);
+  const [snapshot, setSnapshot] = useState(null);
+
   // Scene visibility
   const [sceneConfig, setSceneConfig] = useState({
     showSun: false,
@@ -160,6 +164,7 @@ export function StoryContainer() {
   };
 
   const isPlayground = currentSection === 6;
+  const effectiveFocus = isPlayground ? focusedParam : null;
 
   return (
     <div className="relative">
@@ -204,6 +209,7 @@ export function StoryContainer() {
                 eccentricity={eccentricity}
                 showLabels={currentSection >= 4}
                 currentSection={currentSection}
+                spotlight={effectiveFocus}
               />
             )}
             <OrbitingEarth
@@ -214,6 +220,7 @@ export function StoryContainer() {
               groupRefFromParent={earthGroupRef}
               showAxis={sceneConfig.showAxis}
               currentSection={currentSection}
+              spotlight={effectiveFocus}
             />
             {/* OrbitControls only in playground */}
             {isPlayground && (
@@ -298,9 +305,11 @@ export function StoryContainer() {
           displayedTemp={displayedTemp}
           formatNumber={formatNumber}
           onInView={handleSectionInView}
-          isMobile={isMobile}
+          focusedParam={focusedParam}
+          onFocusParamChange={setFocusedParam}
+          onSnapshot={setSnapshot}
         />
-        <ClosingSection onInView={handleSectionInView} />
+        <ClosingSection onInView={handleSectionInView} snapshot={snapshot} />
       </div>
     </div>
   );

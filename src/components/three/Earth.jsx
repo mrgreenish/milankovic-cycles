@@ -11,7 +11,10 @@ import {
 import { AxisIndicators } from "./AxisIndicators";
 
 export const Earth = React.forwardRef(
-  ({ axialTilt, precession, iceFactor, onReady, showAxis = true }, ref) => {
+  (
+    { axialTilt, precession, iceFactor, onReady, showAxis = true, spotlight = null },
+    ref
+  ) => {
     const [texturesLoaded, setTexturesLoaded] = useState(false);
     const [textures, setTextures] = useState(null);
     const worldPosition = useMemo(() => new THREE.Vector3(), []);
@@ -166,7 +169,7 @@ export const Earth = React.forwardRef(
           />
         </mesh>
 
-        {showAxis ? <AxisIndicators /> : null}
+        {showAxis ? <AxisIndicators spotlight={spotlight} /> : null}
       </group>
     );
   }

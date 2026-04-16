@@ -13,6 +13,7 @@ export function OrbitingEarth({
   groupRefFromParent,
   showAxis = true,
   currentSection = 0,
+  spotlight = null,
 }) {
   const a = 20;
   const b = a * (1 - 2 * eccentricity);
@@ -72,12 +73,14 @@ export function OrbitingEarth({
         iceFactor={iceFactor}
         onReady={onEarthReady}
         showAxis={showAxis}
+        spotlight={spotlight}
       />
       {/* Precession cone is outside Earth's quaternion group so it stays fixed */}
       <PrecessionCone
         axialTilt={axialTilt}
         precession={precession}
         visible={showPrecessionCone}
+        spotlight={spotlight}
       />
     </group>
   );

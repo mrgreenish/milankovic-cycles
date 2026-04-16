@@ -3,7 +3,7 @@ import React, { useEffect, useMemo } from "react";
 import * as THREE from "three";
 import { Html, Line } from "@react-three/drei";
 
-export const AxisIndicators = React.memo(function AxisIndicators() {
+export const AxisIndicators = React.memo(function AxisIndicators({ spotlight = null }) {
   const arrow = useMemo(
     () =>
       new THREE.ArrowHelper(
@@ -17,6 +17,31 @@ export const AxisIndicators = React.memo(function AxisIndicators() {
     []
   );
 
+  const arrowOpacity =
+    !spotlight
+      ? 1
+      : spotlight === "axialTilt"
+      ? 1
+      : spotlight === "precession"
+      ? 0.85
+      : spotlight === "eccentricity"
+      ? 0.2
+      : 1;
+
+  const arrowColor =
+    spotlight === "axialTilt" ? 0xfbbf24 : 0xffffff;
+
+  useEffect(() => {
+    arrow.line.material.transparent = true;
+    arrow.cone.material.transparent = true;
+    arrow.line.material.opacity = arrowOpacity;
+    arrow.cone.material.opacity = arrowOpacity;
+    arrow.line.material.color.setHex(arrowColor);
+    arrow.cone.material.color.setHex(arrowColor);
+    arrow.line.material.needsUpdate = true;
+    arrow.cone.material.needsUpdate = true;
+  }, [arrow, arrowOpacity, arrowColor]);
+
   useEffect(() => {
     return () => {
       arrow.line.geometry.dispose();
@@ -25,6 +50,8 @@ export const AxisIndicators = React.memo(function AxisIndicators() {
       arrow.cone.material.dispose();
     };
   }, [arrow]);
+
+  const labelOpacity = arrowOpacity;
 
   return (
     <group>
@@ -40,6 +67,8 @@ export const AxisIndicators = React.memo(function AxisIndicators() {
             fontFamily: "'Courier New', Courier, monospace",
             backdropFilter: "blur(4px)",
             border: "1px solid rgba(255, 255, 255, 0.1)",
+            opacity: labelOpacity,
+            transition: "opacity 300ms ease",
           }}
         >
           Rotation Axis
@@ -54,7 +83,7 @@ export const AxisIndicators = React.memo(function AxisIndicators() {
  * as precession changes. Rendered OUTSIDE the Earth's quaternion group
  * so it stays fixed while the axis moves through it.
  */
-export function PrecessionCone({ axialTilt, precession, visible }) {
+export function PrecessionCone({ axialTilt, precession, visible, spotlight = null }) {
   const { conePoints, spokeLines, markerPos } = useMemo(() => {
     const tiltRad = THREE.MathUtils.degToRad(axialTilt);
     const axisLength = 5;
@@ -62,7 +91,6 @@ export function PrecessionCone({ axialTilt, precession, visible }) {
     const height = axisLength * Math.cos(tiltRad);
     const origin = new THREE.Vector3(0, 0, 0);
 
-    // Dashed circle at the rim of the cone (wobble path)
     const pts = [];
     const segments = 64;
     for (let i = 0; i <= segments; i++) {
@@ -70,7 +98,6 @@ export function PrecessionCone({ axialTilt, precession, visible }) {
       pts.push(new THREE.Vector3(radius * Math.cos(angle), height, radius * Math.sin(angle)));
     }
 
-    // 8 evenly-spaced spokes from origin up to the rim — makes the cone 3D shape obvious
     const spokes = [];
     for (let i = 0; i < 8; i++) {
       const angle = (i / 8) * Math.PI * 2;
@@ -80,7 +107,6 @@ export function PrecessionCone({ axialTilt, precession, visible }) {
       ]);
     }
 
-    // Current axis-tip position on the cone rim
     const precRad = THREE.MathUtils.degToRad(precession);
     const mx = radius * Math.cos(precRad);
     const mz = radius * Math.sin(precRad);
@@ -88,54 +114,64 @@ export function PrecessionCone({ axialTilt, precession, visible }) {
     return { conePoints: pts, spokeLines: spokes, markerPos: [mx, height, mz] };
   }, [axialTilt, precession]);
 
-  if (!visible) return null;
+  // Hide outright when a non-precession parameter has focus — we want the user
+  // to see only the parameter they're manipulating.
+  const hiddenBySpotlight =
+    spotlight === "eccentricity" || spotlight === "axialTilt";
+
+  if (!visible || hiddenBySpotlight) return null;
+
+  const boost = spotlight === "precession" ? 1.4 : 1;
+  const baseSpokeOp = 0.18;
+  const baseRimOp = 0.55;
+  const baseNorthOp = 0.3;
 
   return (
     <group>
-      {/* Cone spokes from Earth centre to rim — shows the 3D cone shape */}
       {spokeLines.map((pts, i) => (
         <Line
           key={i}
           points={pts}
           color="#cdaf7d"
-          lineWidth={1}
+          lineWidth={1 * boost}
           transparent
-          opacity={0.18}
+          opacity={Math.min(1, baseSpokeOp * boost)}
         />
       ))}
 
-      {/* Dashed circle at rim — the wobble path */}
       <Line
         points={conePoints}
         color="#e8d0a9"
-        lineWidth={2}
+        lineWidth={2 * boost}
         transparent
-        opacity={0.55}
+        opacity={Math.min(1, baseRimOp * boost)}
         dashed
         dashSize={0.3}
         gapSize={0.2}
       />
 
-      {/* Vertical "true north" reference — so you can see the axis leaning away */}
       <Line
         points={[new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 5.2, 0)]}
         color="#4a9eff"
         lineWidth={1}
         transparent
-        opacity={0.3}
+        opacity={baseNorthOp}
         dashed
         dashSize={0.25}
         gapSize={0.25}
       />
 
-      {/* Bright marker dot at current axis-tip position */}
       <mesh position={markerPos}>
         <sphereGeometry args={[0.2, 12, 12]} />
         <meshBasicMaterial color="#fbbf24" />
       </mesh>
-      <mesh position={markerPos} scale={2.2}>
+      <mesh position={markerPos} scale={spotlight === "precession" ? 2.8 : 2.2}>
         <sphereGeometry args={[0.2, 12, 12]} />
-        <meshBasicMaterial color="#fbbf24" transparent opacity={0.25} />
+        <meshBasicMaterial
+          color="#fbbf24"
+          transparent
+          opacity={spotlight === "precession" ? 0.45 : 0.25}
+        />
       </mesh>
     </group>
   );

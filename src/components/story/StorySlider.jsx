@@ -13,15 +13,25 @@ export function StorySlider({
   minLabel,
   maxLabel,
   formatValue,
+  todayMark,
+  todayLabel = "today",
+  snapToToday = false,
+  ariaValueText,
+  onFocus,
+  onBlur,
+  onPointerDown,
+  onPointerUp,
+  renderValue,
 }) {
   const percentage = ((value - min) / (max - min)) * 100;
+  const todayPct =
+    typeof todayMark === "number"
+      ? ((todayMark - min) / (max - min)) * 100
+      : null;
   const lastUpdate = useRef(0);
   const inputRef = useRef(null);
   const touchStart = useRef(null);
 
-  // Non-passive touchmove listener: prevents page scroll only when dragging
-  // horizontally (dx > dy). This fixes value-jumping without blocking upward
-  // scroll gestures that start on the slider track.
   useEffect(() => {
     const el = inputRef.current;
     if (!el) return;
@@ -43,6 +53,7 @@ export function StorySlider({
       el.removeEventListener("touchmove", onTouchMove);
     };
   }, []);
+
   const formattedValue =
     typeof value === "number"
       ? formatValue
@@ -52,38 +63,51 @@ export function StorySlider({
           : value.toFixed(1)
       : value;
 
-  // Single throttled handler for both onInput and onChange.
-  // In React, range input onChange maps to the native 'input' event and fires
-  // continuously during drag — so we throttle to ~60fps on the only handler.
+  const maybeSnap = useCallback(
+    (raw) => {
+      if (!snapToToday || typeof todayMark !== "number") return raw;
+      const range = max - min;
+      if (Math.abs(raw - todayMark) / range < 0.01) return todayMark;
+      return raw;
+    },
+    [snapToToday, todayMark, max, min]
+  );
+
   const handleInput = useCallback(
     (e) => {
       const now = performance.now();
       if (now - lastUpdate.current > 16) {
         lastUpdate.current = now;
-        onChange(parseFloat(e.target.value));
+        onChange(maybeSnap(parseFloat(e.target.value)));
       }
     },
-    [onChange]
+    [onChange, maybeSnap]
   );
 
-  // Commit final value on pointerUp/mouseUp to ensure we never miss the
-  // last position (the throttle may have skipped it).
   const handleCommit = useCallback(
     (e) => {
-      onChange(parseFloat(e.target.value));
+      onChange(maybeSnap(parseFloat(e.target.value)));
     },
-    [onChange]
+    [onChange, maybeSnap]
   );
 
+  const computedAriaValueText =
+    ariaValueText ||
+    (scienceName ? `${scienceName} ${formattedValue}` : formattedValue);
+
   return (
-    <div className="w-full space-y-3">
-      <div className="flex items-baseline justify-between">
-        <span className="text-lg text-stardust-white font-medium">{label}</span>
-        {scienceName && (
+    <div className="w-full space-y-2">
+      <div className="flex items-baseline justify-between gap-2">
+        <span className="text-base text-stardust-white font-medium">
+          {label}
+        </span>
+        {renderValue ? (
+          renderValue(value)
+        ) : scienceName ? (
           <span className="text-xs font-mono text-pale-gold opacity-60">
             {scienceName}: {formattedValue}
           </span>
-        )}
+        ) : null}
       </div>
 
       {hint && (
@@ -93,29 +117,64 @@ export function StorySlider({
       )}
 
       <div
-        className="celestial-slider-track"
+        className="celestial-slider-track relative"
         style={{ "--slider-pct": `${percentage}%` }}
       >
+        {todayPct !== null && (
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute top-1/2 -translate-y-1/2 w-[2px] h-[14px] bg-pale-gold/70 rounded-sm"
+            style={{
+              left: `calc(${todayPct}% - 1px)`,
+              boxShadow: "0 0 6px hsla(35, 60%, 76%, 0.6)",
+            }}
+            title={`${todayLabel} ${
+              formatValue ? formatValue(todayMark) : todayMark
+            }`}
+          />
+        )}
         <input
           type="range"
           value={value}
           ref={inputRef}
           onChange={handleInput}
-          onPointerUp={handleCommit}
+          onPointerUp={(e) => {
+            handleCommit(e);
+            onPointerUp?.(e);
+          }}
+          onPointerDown={onPointerDown}
+          onFocus={onFocus}
+          onBlur={onBlur}
           onKeyUp={handleCommit}
           min={min}
           max={max}
           step={step}
           className="celestial-slider"
-          aria-label={`${label} - ${scienceName || ""}`}
+          aria-label={`${label}${scienceName ? ` — ${scienceName}` : ""}`}
           aria-valuemin={min}
           aria-valuemax={max}
           aria-valuenow={value}
+          aria-valuetext={computedAriaValueText}
         />
       </div>
-      <div className="flex justify-between gap-4 text-xs text-stardust-white opacity-50 mt-1">
-        <span>{minLabel || min}</span>
-        <span className="text-right">{maxLabel || max}</span>
+
+      <div className="relative">
+        <div className="flex justify-between gap-4 text-xs text-stardust-white opacity-40">
+          <span>{minLabel || min}</span>
+          <span className="text-right">{maxLabel || max}</span>
+        </div>
+        {todayPct !== null && (
+          <span
+            aria-hidden="true"
+            className="absolute top-0 text-[10px] font-mono text-pale-gold opacity-70 whitespace-nowrap"
+            style={{
+              left: `${todayPct}%`,
+              transform: "translateX(-50%)",
+            }}
+          >
+            {todayLabel}
+          </span>
+        )}
       </div>
     </div>
   );
