@@ -28,9 +28,10 @@ export function StorySlider({
     typeof todayMark === "number"
       ? ((todayMark - min) / (max - min)) * 100
       : null;
-  const lastUpdate = useRef(0);
   const inputRef = useRef(null);
   const touchStart = useRef(null);
+  const pendingValue = useRef(null);
+  const rafId = useRef(null);
 
   useEffect(() => {
     const el = inputRef.current;
@@ -54,6 +55,13 @@ export function StorySlider({
     };
   }, []);
 
+  useEffect(
+    () => () => {
+      if (rafId.current !== null) cancelAnimationFrame(rafId.current);
+    },
+    []
+  );
+
   const formattedValue =
     typeof value === "number"
       ? formatValue
@@ -64,7 +72,8 @@ export function StorySlider({
       : value;
 
   const maybeSnap = useCallback(
-    (raw) => {
+    (raw, { committing } = { committing: false }) => {
+      if (!committing) return raw;
       if (!snapToToday || typeof todayMark !== "number") return raw;
       const range = max - min;
       if (Math.abs(raw - todayMark) / range < 0.01) return todayMark;
@@ -73,20 +82,32 @@ export function StorySlider({
     [snapToToday, todayMark, max, min]
   );
 
+  const flush = useCallback(() => {
+    rafId.current = null;
+    if (pendingValue.current !== null) {
+      onChange(maybeSnap(pendingValue.current, { committing: false }));
+      pendingValue.current = null;
+    }
+  }, [onChange, maybeSnap]);
+
   const handleInput = useCallback(
     (e) => {
-      const now = performance.now();
-      if (now - lastUpdate.current > 16) {
-        lastUpdate.current = now;
-        onChange(maybeSnap(parseFloat(e.target.value)));
+      pendingValue.current = parseFloat(e.target.value);
+      if (rafId.current === null) {
+        rafId.current = requestAnimationFrame(flush);
       }
     },
-    [onChange, maybeSnap]
+    [flush]
   );
 
   const handleCommit = useCallback(
     (e) => {
-      onChange(maybeSnap(parseFloat(e.target.value)));
+      if (rafId.current !== null) {
+        cancelAnimationFrame(rafId.current);
+        rafId.current = null;
+      }
+      pendingValue.current = null;
+      onChange(maybeSnap(parseFloat(e.target.value), { committing: true }));
     },
     [onChange, maybeSnap]
   );

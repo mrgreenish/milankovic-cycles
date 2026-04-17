@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useRef, lazy, Suspense } from "react";
+import React, { useState, useEffect, useRef, useCallback, lazy, Suspense } from "react";
 import { StorySection } from "./StorySection";
 import { ParameterCard } from "./playground/ParameterCard";
 import { TemperaturePod } from "./playground/TemperaturePod";
@@ -113,11 +113,30 @@ export function PlaygroundSection({
     };
   }, []);
 
-  const handleParamChange = (setter) => (v) => {
-    cancelAnim();
-    setter(v);
-    setActiveEraKey(null);
-  };
+  const handleEccentricityInput = useCallback(
+    (v) => {
+      cancelAnim();
+      onEccentricityChange(v);
+      setActiveEraKey(null);
+    },
+    [onEccentricityChange]
+  );
+  const handleAxialTiltInput = useCallback(
+    (v) => {
+      cancelAnim();
+      onAxialTiltChange(v);
+      setActiveEraKey(null);
+    },
+    [onAxialTiltChange]
+  );
+  const handlePrecessionInput = useCallback(
+    (v) => {
+      cancelAnim();
+      onPrecessionChange(v);
+      setActiveEraKey(null);
+    },
+    [onPrecessionChange]
+  );
 
   const focusParam = (key) => {
     clearTimeout(stickyTimer.current);
@@ -191,7 +210,7 @@ export function PlaygroundSection({
               label="Stretch"
               scienceName="Eccentricity"
               value={eccentricity}
-              onChange={handleParamChange(onEccentricityChange)}
+              onChange={handleEccentricityInput}
               min={0.005}
               max={0.058}
               step={0.001}
@@ -208,7 +227,7 @@ export function PlaygroundSection({
               label="Lean"
               scienceName="Obliquity"
               value={axialTilt}
-              onChange={handleParamChange(onAxialTiltChange)}
+              onChange={handleAxialTiltInput}
               min={22.1}
               max={24.5}
               step={0.1}
@@ -225,7 +244,7 @@ export function PlaygroundSection({
               label="Wobble"
               scienceName="Precession"
               value={precession}
-              onChange={handleParamChange(onPrecessionChange)}
+              onChange={handlePrecessionInput}
               min={0}
               max={360}
               step={1}
