@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useCallback, useEffect, Suspense, useRef } from "react";
+import { useIsMobile } from "@/lib/useIsMobile";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, PerspectiveCamera } from "@react-three/drei";
 import * as THREE from "three";
@@ -58,14 +59,7 @@ export function StoryContainer() {
     showAxis: false,
   });
 
-  // Mobile detection
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 768);
-    check();
-    window.addEventListener("resize", check);
-    return () => window.removeEventListener("resize", check);
-  }, []);
+  const isMobile = useIsMobile();
 
   // Earth group ref for positioning
   const earthGroupRef = useRef();
@@ -179,7 +173,7 @@ export function StoryContainer() {
               precision: "highp",
               toneMapping: THREE.NoToneMapping,
             }}
-            dpr={[1, 2]}
+            dpr={isMobile ? [1, 1.5] : [1, 2]}
             performance={{ min: 0.5 }}
           >
             <PerspectiveCamera
@@ -242,8 +236,8 @@ export function StoryContainer() {
         </Suspense>
       </div>
 
-      {/* Navigation */}
-      <nav className="fixed top-4 left-4 z-50 flex gap-3 bg-deep-space/40 backdrop-blur-sm rounded-md px-3 py-1.5">
+      {/* Navigation — desktop pinned top-left, mobile pinned bottom-right (out of section headers) */}
+      <nav className="hidden md:flex fixed top-4 left-4 z-50 gap-3 bg-deep-space/40 backdrop-blur-sm rounded-md px-3 py-1.5">
         <Link
           href="/about"
           className="text-sm text-stardust-white opacity-60 hover:opacity-100 transition-opacity"
@@ -253,6 +247,25 @@ export function StoryContainer() {
         <Link
           href="/faq"
           className="text-sm text-stardust-white opacity-60 hover:opacity-100 transition-opacity"
+        >
+          FAQ
+        </Link>
+      </nav>
+      <nav
+        className="md:hidden fixed right-3 z-50 flex gap-1 bg-deep-space/60 backdrop-blur-md rounded-full px-1 py-1 border border-antique-brass/20"
+        style={{
+          bottom: "calc(env(safe-area-inset-bottom, 0px) + 0.75rem)",
+        }}
+      >
+        <Link
+          href="/about"
+          className="text-xs text-stardust-white/80 hover:text-pale-gold transition-colors rounded-full px-3 min-h-[44px] inline-flex items-center"
+        >
+          About
+        </Link>
+        <Link
+          href="/faq"
+          className="text-xs text-stardust-white/80 hover:text-pale-gold transition-colors rounded-full px-3 min-h-[44px] inline-flex items-center"
         >
           FAQ
         </Link>

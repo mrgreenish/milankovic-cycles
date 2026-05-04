@@ -22,7 +22,6 @@ export function ParameterCard({
 }) {
   const { headline, intuition, effect } = describe(value);
   const raw = formatValue(value);
-  const todayStr = formatValue(todayValue);
   const isDimmed = anyFocused && !focused;
 
   return (
@@ -59,7 +58,7 @@ export function ParameterCard({
             {headline}
           </div>
           <div className="text-[11px] font-mono text-stardust-white/50 mt-0.5">
-            {raw} · today {todayStr}
+            {raw}
           </div>
           <p className="text-xs text-stardust-white/50 mt-1 leading-snug">
             {intuition}
