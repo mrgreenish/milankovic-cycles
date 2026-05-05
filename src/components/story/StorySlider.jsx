@@ -179,23 +179,22 @@ export function StorySlider({
         />
       </div>
 
-      <div className="relative">
-        <div className="flex justify-between gap-4 text-xs text-stardust-white opacity-40">
-          <span>{minLabel || min}</span>
-          <span className="text-right">{maxLabel || max}</span>
-        </div>
-        {todayPct !== null && (
-          <span
-            aria-hidden="true"
-            className="absolute top-0 text-[10px] font-mono text-pale-gold opacity-70 whitespace-nowrap"
-            style={{
-              left: `${todayPct}%`,
-              transform: "translateX(-50%)",
-            }}
-          >
-            {todayLabel}
-          </span>
-        )}
+      <div className="flex justify-between gap-4 text-xs text-stardust-white opacity-40">
+        <span
+          className={
+            todayPct !== null && todayPct < 12 ? "invisible" : undefined
+          }
+        >
+          {minLabel || min}
+        </span>
+        <span
+          className={[
+            "text-right",
+            todayPct !== null && todayPct > 88 ? "invisible" : "",
+          ].join(" ")}
+        >
+          {maxLabel || max}
+        </span>
       </div>
     </div>
   );

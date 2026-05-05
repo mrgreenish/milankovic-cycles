@@ -736,15 +736,15 @@
   }
   
   .celestial-slider::-webkit-slider-thumb {
-    width: 28px !important;
-    height: 28px !important;
-    transform: scale(1.2);
+    width: 22px !important;
+    height: 22px !important;
+    transform: none;
   }
-  
+
   .celestial-slider::-moz-range-thumb {
-    width: 28px !important;
-    height: 28px !important;
-    transform: scale(1.2);
+    width: 22px !important;
+    height: 22px !important;
+    transform: none;
   }
 }
 
@@ -853,15 +853,21 @@
   }
 }
 
-/* Mobile: push slider sections to bottom so 3D canvas is visible above. */
+/* Mobile: bottom-anchor sections that have a panel and cap the panel height so
+   the 3D canvas above is visible. ~45vh of canvas remains uncovered. Hero/
+   centered sections are left untouched. */
 @media (max-width: 767px) {
-  .story-section:has(.celestial-slider) {
+  .story-section:has(.observatory-panel) {
     align-items: flex-end;
-    padding-bottom: 1.5rem;
+    padding-bottom: 1rem;
   }
 
-  .story-section:has(.celestial-slider) .observatory-panel {
+  .story-section .observatory-panel {
+    max-height: 55vh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
     background-color: hsla(var(--deep-space), 0.78);
+    -webkit-overflow-scrolling: touch;
   }
 }
 

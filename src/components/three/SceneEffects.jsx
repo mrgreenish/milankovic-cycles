@@ -10,10 +10,25 @@ import {
 import { BlendFunction, ToneMappingMode } from "postprocessing";
 
 export function SceneEffects({ isMobile = false }) {
+  if (isMobile) {
+    return (
+      <EffectComposer multisampling={0}>
+        <Bloom
+          intensity={0.4}
+          luminanceThreshold={0.6}
+          luminanceSmoothing={0.9}
+          mipmapBlur
+          radius={0.4}
+        />
+        <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
+      </EffectComposer>
+    );
+  }
+
   return (
     <EffectComposer multisampling={0}>
       <Bloom
-        intensity={isMobile ? 0.4 : 0.8}
+        intensity={0.8}
         luminanceThreshold={0.6}
         luminanceSmoothing={0.9}
         mipmapBlur
