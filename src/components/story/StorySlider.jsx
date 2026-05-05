@@ -28,32 +28,8 @@ export function StorySlider({
     typeof todayMark === "number"
       ? ((todayMark - min) / (max - min)) * 100
       : null;
-  const inputRef = useRef(null);
-  const touchStart = useRef(null);
   const pendingValue = useRef(null);
   const rafId = useRef(null);
-
-  useEffect(() => {
-    const el = inputRef.current;
-    if (!el) return;
-    const onTouchStart = (e) => {
-      const t = e.touches[0];
-      touchStart.current = { x: t.clientX, y: t.clientY };
-    };
-    const onTouchMove = (e) => {
-      if (!touchStart.current) return;
-      const t = e.touches[0];
-      const dx = Math.abs(t.clientX - touchStart.current.x);
-      const dy = Math.abs(t.clientY - touchStart.current.y);
-      if (dx > dy) e.preventDefault();
-    };
-    el.addEventListener("touchstart", onTouchStart, { passive: true });
-    el.addEventListener("touchmove", onTouchMove, { passive: false });
-    return () => {
-      el.removeEventListener("touchstart", onTouchStart);
-      el.removeEventListener("touchmove", onTouchMove);
-    };
-  }, []);
 
   useEffect(
     () => () => {
@@ -157,7 +133,6 @@ export function StorySlider({
         <input
           type="range"
           value={value}
-          ref={inputRef}
           onChange={handleInput}
           onPointerUp={(e) => {
             handleCommit(e);
