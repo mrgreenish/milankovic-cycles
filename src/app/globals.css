@@ -807,11 +807,14 @@
   100% { box-shadow: 0 0 0 4px rgba(205, 175, 125, 0.8), 0 0 20px rgba(205, 175, 125, 0.5); }
 }
 
-/* Story section styles */
+/* Story section styles.
+   Use svh, NOT dvh: dvh re-evaluates every time the mobile URL bar
+   collapses/expands, which resizes all eight sections mid-scroll and makes
+   the page jump under the user's finger. svh is fixed for the page's life. */
 .story-section {
   scroll-snap-align: start;
   min-height: 100vh;
-  min-height: 100dvh;
+  min-height: 100svh;
 }
 
 .story-section .observatory-panel {
@@ -882,10 +885,12 @@
     padding-bottom: 1rem;
   }
 
+  /* No overscroll-behavior: contain here — a touch drag starting on a panel
+     that's at its scroll boundary (or doesn't overflow at all) must chain to
+     the page, otherwise scrolling feels stuck and then lurches. */
   :is(#section-1, #section-2, #section-3, #section-4) .observatory-panel {
-    max-height: 55vh;
+    max-height: 55svh;
     overflow-y: auto;
-    overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
   }
 

@@ -152,12 +152,33 @@ export function PlaygroundSection({
 
   // While the sheet is expanded the page must not scroll underneath it —
   // otherwise the section flips mid-interaction and the sheet disappears.
+  // overflow:hidden alone is ignored by iOS Safari, so pin the body with
+  // position:fixed and restore the exact scroll offset on unlock.
   useEffect(() => {
     if (!isMobile || !isActive || !sheetExpanded) return;
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    const scrollY = window.scrollY;
+    const { style } = document.body;
+    const prev = {
+      position: style.position,
+      top: style.top,
+      left: style.left,
+      right: style.right,
+      overflow: style.overflow,
+    };
+    style.position = "fixed";
+    style.top = `-${scrollY}px`;
+    style.left = "0";
+    style.right = "0";
+    style.overflow = "hidden";
     return () => {
-      document.body.style.overflow = prevOverflow;
+      style.position = prev.position;
+      style.top = prev.top;
+      style.left = prev.left;
+      style.right = prev.right;
+      style.overflow = prev.overflow;
+      // html has scroll-behavior:smooth — the restore must be instant or
+      // the page visibly animates back to where the user already was.
+      window.scrollTo({ top: scrollY, behavior: "instant" });
     };
   }, [isMobile, isActive, sheetExpanded]);
 
