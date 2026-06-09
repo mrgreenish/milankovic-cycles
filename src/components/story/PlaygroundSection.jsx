@@ -67,7 +67,10 @@ export function PlaygroundSection({
   const [activeEraKey, setActiveEraKey] = useState("today");
   const [showGraph, setShowGraph] = useState(false);
   const [graphOpen, setGraphOpen] = useState(false);
-  const [sheetExpanded, setSheetExpanded] = useState(true);
+  // Peek by default so arriving at the playground never hijacks the scroll;
+  // the nudge animation invites the tap that expands it.
+  const [sheetExpanded, setSheetExpanded] = useState(false);
+  const [everActive, setEverActive] = useState(false);
   const hasInitialized = useRef(false);
   const animRef = useRef(null);
   const stickyTimer = useRef(null);
@@ -137,6 +140,27 @@ export function PlaygroundSection({
     };
   }, []);
 
+  // Keep the sheet mounted after first activation so it slides away instead
+  // of popping out of existence; collapse it whenever the section is left.
+  useEffect(() => {
+    if (isActive) {
+      setEverActive(true);
+    } else {
+      setSheetExpanded(false);
+    }
+  }, [isActive]);
+
+  // While the sheet is expanded the page must not scroll underneath it —
+  // otherwise the section flips mid-interaction and the sheet disappears.
+  useEffect(() => {
+    if (!isMobile || !isActive || !sheetExpanded) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [isMobile, isActive, sheetExpanded]);
+
   const handleEccentricityInput = useCallback(
     (v) => {
       cancelAnim();
@@ -182,6 +206,16 @@ export function PlaygroundSection({
       precession,
       eraKey: activeEraKey,
     });
+    // On mobile the snapshot's payoff lives in the closing section — take
+    // the user there, after the collapse has released the body scroll lock.
+    if (isMobile) {
+      setSheetExpanded(false);
+      setTimeout(() => {
+        document
+          .getElementById("section-7")
+          ?.scrollIntoView({ behavior: "smooth" });
+      }, 80);
+    }
   };
 
   const params = { eccentricity, axialTilt, precession };
@@ -363,13 +397,19 @@ export function PlaygroundSection({
       </div>
 
       {/* Mobile: bottom sheet over the 3D scene. Peek shows the temperature
-          readout; expand to reveal the dials. */}
-      {isMobile && isActive && (
+          readout; expand to reveal the dials. Stays mounted after first
+          activation so it slides in/out instead of popping. */}
+      {isMobile && everActive && (
         <div
           className={[
             "md:hidden playground-sheet fixed inset-x-0 bottom-0 z-40",
-            sheetExpanded ? "" : "playground-sheet--peek",
+            !isActive
+              ? "playground-sheet--hidden"
+              : sheetExpanded
+              ? ""
+              : "playground-sheet--peek",
           ].join(" ")}
+          aria-hidden={!isActive}
         >
           <button
             type="button"
@@ -383,7 +423,12 @@ export function PlaygroundSection({
               sheetExpanded ? "Collapse climate controls" : "Expand climate controls"
             }
           >
-            <span className="absolute top-1.5 left-1/2 -translate-x-1/2 w-9 h-1 rounded-full bg-stardust-white/30" />
+            <span
+              className={[
+                "absolute top-1.5 left-1/2 -translate-x-1/2 w-9 h-1 rounded-full bg-stardust-white/30",
+                isActive && !sheetExpanded ? "peek-nudge" : "",
+              ].join(" ")}
+            />
             <span className="text-sm font-medium text-stardust-white truncate">
               Conduct the Climate
             </span>
@@ -434,6 +479,20 @@ export function PlaygroundSection({
               </button>
             </div>
             {controls}
+            <button
+              type="button"
+              onClick={() => {
+                setSheetExpanded(false);
+                setTimeout(() => {
+                  document
+                    .getElementById("section-7")
+                    ?.scrollIntoView({ behavior: "smooth" });
+                }, 80);
+              }}
+              className="w-full text-center text-xs text-stardust-white/60 hover:text-pale-gold transition-colors py-3"
+            >
+              Continue the story ↓
+            </button>
           </div>
         </div>
       )}

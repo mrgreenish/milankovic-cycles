@@ -871,21 +871,26 @@
   }
 }
 
-/* Mobile: bottom-anchor sections that have a panel and cap the panel height so
-   the 3D canvas above is visible. ~45vh of canvas remains uncovered. Hero/
-   centered sections are left untouched. */
+/* Mobile: bottom-anchor ONLY the parameter story sections (Earth & Sun,
+   Stretch, Lean, Wobble) and cap their panel height so the 3D canvas above
+   stays visible. The Combined and Closing sections must NOT get this —
+   capping their taller content created nested inner scrollbars and
+   bottom-anchored overlaps. They flow and scroll with the page instead. */
 @media (max-width: 767px) {
-  .story-section:has(.observatory-panel) {
+  :is(#section-1, #section-2, #section-3, #section-4).story-section {
     align-items: flex-end;
     padding-bottom: 1rem;
   }
 
-  .story-section .observatory-panel {
+  :is(#section-1, #section-2, #section-3, #section-4) .observatory-panel {
     max-height: 55vh;
     overflow-y: auto;
     overscroll-behavior: contain;
-    background-color: hsla(var(--deep-space), 0.78);
     -webkit-overflow-scrolling: touch;
+  }
+
+  .story-section .observatory-panel {
+    background-color: hsla(var(--deep-space), 0.78);
   }
 }
 
@@ -958,8 +963,35 @@
   transform: translateY(calc(100% - 3.5rem - env(safe-area-inset-bottom, 0px)));
 }
 
+/* Fully off-screen when the playground section isn't active — the sheet
+   stays mounted and slides away instead of popping out of existence. */
+.playground-sheet--hidden {
+  transform: translateY(110%);
+  pointer-events: none;
+}
+
 .playground-sheet-body {
   max-height: min(58dvh, 32rem);
+}
+
+/* One-time nudge on the peek handle when the sheet first arrives */
+@keyframes peek-nudge {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  30% {
+    transform: translateY(-6px);
+  }
+  55% {
+    transform: translateY(0);
+  }
+  75% {
+    transform: translateY(-3px);
+  }
+}
+
+.peek-nudge {
+  animation: peek-nudge 1.2s ease-in-out 0.6s 2;
 }
 
 @keyframes sheet-up {
@@ -1035,7 +1067,8 @@
 
   .snap-pulse,
   .mission-pop,
-  .chip-in {
+  .chip-in,
+  .peek-nudge {
     animation: none;
   }
 
@@ -1045,8 +1078,9 @@
   }
 }
 
-/* Smooth scroll snap for story */
-@media (min-height: 600px) {
+/* Smooth scroll snap for story — desktop only. On touch screens proximity
+   snapping fights natural momentum scrolling and the taller final sections. */
+@media (min-width: 768px) and (min-height: 600px) {
   html {
     scroll-snap-type: y proximity;
   }

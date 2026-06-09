@@ -109,11 +109,11 @@ export function CombinedSection({ onParamsChange, onInView, temperature }) {
 
   return (
     <StorySection id={5} onInView={handleInView}>
-      <div className="w-full max-w-2xl mx-auto px-6 text-center py-8">
-        <div className="observatory-panel p-6 md:p-8 space-y-6">
-          <h2 className="text-3xl md:text-4xl">When All Three Align</h2>
+      <div className="w-full max-w-2xl mx-auto px-4 md:px-6 text-center py-8">
+        <div className="observatory-panel p-4 md:p-8 space-y-4 md:space-y-6">
+          <h2 className="text-2xl md:text-4xl">When All Three Align</h2>
 
-          <p className="text-base text-stardust-white opacity-80 leading-relaxed">
+          <p className="text-sm md:text-base text-stardust-white opacity-80 leading-relaxed">
             Each of these changes is small on its own. But when they line up in
             just the right way, they can push Earth into an ice age — or pull it
             back out.
@@ -169,8 +169,8 @@ export function CombinedSection({ onParamsChange, onInView, temperature }) {
             </div>
           </div>
 
-          <div className="observatory-panel p-4 bg-deep-space bg-opacity-50">
-            <p className="text-sm text-pale-gold leading-relaxed">
+          <div className="observatory-panel p-3 md:p-4 bg-deep-space bg-opacity-50">
+            <p className="text-xs md:text-sm text-pale-gold leading-relaxed">
               The key is summer sunlight at 65° north. When summers there are
               cool enough that winter snow doesn't fully melt, ice builds up year
               after year. Eventually, massive ice sheets cover much of North
