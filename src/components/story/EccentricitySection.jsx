@@ -4,6 +4,7 @@ import { StorySection } from "./StorySection";
 import { StorySlider } from "./StorySlider";
 import { CauseEffectCard } from "./CauseEffectCard";
 import { TemperatureIndicator } from "./TemperatureIndicator";
+import { TODAY_ECC } from "@/lib/parameterCopy";
 
 export function EccentricitySection({ eccentricity, onEccentricityChange, temperature, onInView }) {
   return (
@@ -36,6 +37,8 @@ export function EccentricitySection({ eccentricity, onEccentricityChange, temper
             hint="Watch the orbit shape change above"
             minLabel="Rounder orbit"
             maxLabel="More oval orbit"
+            todayMark={TODAY_ECC}
+            snapToToday
             formatValue={(nextValue) => nextValue.toFixed(3)}
           />
 

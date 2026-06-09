@@ -4,6 +4,7 @@ import { StorySection } from "./StorySection";
 import { StorySlider } from "./StorySlider";
 import { CauseEffectCard } from "./CauseEffectCard";
 import { TemperatureIndicator } from "./TemperatureIndicator";
+import { TODAY_TILT } from "@/lib/parameterCopy";
 
 export function AxialTiltSection({ axialTilt, onAxialTiltChange, temperature, onInView }) {
   return (
@@ -36,6 +37,8 @@ export function AxialTiltSection({ axialTilt, onAxialTiltChange, temperature, on
             hint="Watch the white axis line lean farther from vertical"
             minLabel="Less tilt, milder seasons"
             maxLabel="More tilt, stronger seasons"
+            todayMark={TODAY_TILT}
+            snapToToday
             formatValue={(nextValue) => `${nextValue.toFixed(1)}°`}
           />
 

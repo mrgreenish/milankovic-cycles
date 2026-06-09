@@ -252,7 +252,11 @@ export function StoryContainer() {
         </Link>
       </nav>
       <nav
-        className="md:hidden fixed right-3 z-50 flex gap-1 bg-deep-space/60 backdrop-blur-md rounded-full px-1 py-1 border border-antique-brass/20"
+        className={[
+          "md:hidden fixed right-3 z-50 gap-1 bg-deep-space/60 backdrop-blur-md rounded-full px-1 py-1 border border-antique-brass/20",
+          // The playground bottom sheet owns this corner of the screen
+          isPlayground ? "hidden" : "flex",
+        ].join(" ")}
         style={{
           bottom: "calc(env(safe-area-inset-bottom, 0px) + 0.75rem)",
         }}
@@ -318,6 +322,7 @@ export function StoryContainer() {
           displayedTemp={displayedTemp}
           formatNumber={formatNumber}
           onInView={handleSectionInView}
+          isActive={isPlayground}
           focusedParam={focusedParam}
           onFocusParamChange={setFocusedParam}
           onSnapshot={setSnapshot}

@@ -15,6 +15,7 @@ export function ParameterCard({
   todayValue,
   formatValue,
   describe,
+  describeDelta,
   focused,
   anyFocused,
   onFocus,
@@ -23,6 +24,7 @@ export function ParameterCard({
   const { headline, intuition, effect } = describe(value);
   const raw = formatValue(value);
   const isDimmed = anyFocused && !focused;
+  const deltaInfo = describeDelta ? describeDelta(value, todayValue) : null;
 
   return (
     <div
@@ -31,7 +33,7 @@ export function ParameterCard({
         focused
           ? "spotlight-focus bg-deep-space/80 border-antique-brass/50"
           : "bg-deep-space/50 border-slate-blue/20",
-        isDimmed ? "opacity-40" : "opacity-100",
+        isDimmed ? "opacity-40 delay-100" : "opacity-100 delay-0",
       ].join(" ")}
       data-param={kind}
       data-focused={focused ? "true" : "false"}
@@ -57,8 +59,18 @@ export function ParameterCard({
           <div className="text-pale-gold text-base md:text-lg font-medium leading-tight mt-0.5">
             {headline}
           </div>
-          <div className="text-[11px] font-mono text-stardust-white/50 mt-0.5">
-            {raw}
+          <div className="flex items-center gap-2 text-[11px] font-mono mt-0.5">
+            <span className="text-stardust-white/50">{raw}</span>
+            {deltaInfo &&
+              (deltaInfo.atToday ? (
+                <span className="text-pale-gold/80 chip-in">
+                  ● today&apos;s value
+                </span>
+              ) : (
+                <span className="text-stardust-white/40">
+                  {deltaInfo.text} vs today
+                </span>
+              ))}
           </div>
           <p className="text-xs text-stardust-white/50 mt-1 leading-snug">
             {intuition}
