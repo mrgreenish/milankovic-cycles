@@ -5,7 +5,7 @@ import * as THREE from "three";
 import { Earth } from "./Earth";
 import { PrecessionCone } from "./AxisIndicators";
 
-export function OrbitingEarth({
+export const OrbitingEarth = React.memo(function OrbitingEarth({
   eccentricity,
   axialTilt,
   precession,
@@ -84,4 +84,4 @@ export function OrbitingEarth({
       />
     </group>
   );
-}
+});

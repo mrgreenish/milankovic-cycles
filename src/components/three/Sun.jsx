@@ -3,17 +3,64 @@ import React, { useRef, useMemo } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 
-export function Sun() {
-  const sunRef = useRef();
-  const lensFlareRef = useRef();
+// Module scope: defining this inside Sun gave it a new component identity on
+// every render, remounting the sprites and re-uploading the flare texture.
+function LensFlareSystem() {
+  const flareTexture = useMemo(() => {
+    const canvas = document.createElement("canvas");
+    canvas.width = 256;
+    canvas.height = 256;
+    const ctx = canvas.getContext("2d");
+    const gradient = ctx.createRadialGradient(128, 128, 0, 128, 128, 128);
+    gradient.addColorStop(0, "rgba(255, 255, 255, 1.0)");
+    gradient.addColorStop(0.1, "rgba(255, 230, 190, 0.8)");
+    gradient.addColorStop(0.5, "rgba(255, 150, 50, 0.3)");
+    gradient.addColorStop(1, "rgba(255, 100, 50, 0.0)");
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, 256, 256);
 
-  useFrame(({ clock }) => {
-    if (sunRef.current) {
-      sunRef.current.material.uniforms.time.value = clock.getElapsedTime() * 0.2;
-    }
-  });
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.needsUpdate = true;
+    return texture;
+  }, []);
 
-  const sunShader = {
+  return (
+    <group position={[0, 0, 0]}>
+      <sprite position={[0, 0, 0]} scale={[3, 3, 3]}>
+        <spriteMaterial
+          attach="material"
+          map={flareTexture}
+          transparent
+          opacity={0.6}
+          color={0xffbb77}
+          blending={THREE.AdditiveBlending}
+        />
+      </sprite>
+      <sprite position={[0, 0, -0.2]} scale={[7, 7, 7]}>
+        <spriteMaterial
+          attach="material"
+          map={flareTexture}
+          transparent
+          opacity={0.4}
+          color={0xff6622}
+          blending={THREE.AdditiveBlending}
+        />
+      </sprite>
+      <sprite position={[0, 0, -0.4]} scale={[12, 12, 12]}>
+        <spriteMaterial
+          attach="material"
+          map={flareTexture}
+          transparent
+          opacity={0.15}
+          color={0xff4400}
+          blending={THREE.AdditiveBlending}
+        />
+      </sprite>
+    </group>
+  );
+}
+
+const SUN_SHADER = {
     uniforms: {
       time: { value: 0 },
     },
@@ -87,62 +134,23 @@ export function Sun() {
         gl_FragColor = vec4(color, 1.0);
       }
     `,
-  };
+};
 
-  const LensFlareSystem = () => {
-    const flareTexture = useMemo(() => {
-      const canvas = document.createElement("canvas");
-      canvas.width = 256;
-      canvas.height = 256;
-      const ctx = canvas.getContext("2d");
-      const gradient = ctx.createRadialGradient(128, 128, 0, 128, 128, 128);
-      gradient.addColorStop(0, "rgba(255, 255, 255, 1.0)");
-      gradient.addColorStop(0.1, "rgba(255, 230, 190, 0.8)");
-      gradient.addColorStop(0.5, "rgba(255, 150, 50, 0.3)");
-      gradient.addColorStop(1, "rgba(255, 100, 50, 0.0)");
-      ctx.fillStyle = gradient;
-      ctx.fillRect(0, 0, 256, 256);
+export const Sun = React.memo(function Sun() {
+  const sunRef = useRef();
 
-      const texture = new THREE.CanvasTexture(canvas);
-      texture.needsUpdate = true;
-      return texture;
-    }, []);
+  useFrame(({ clock }) => {
+    if (sunRef.current) {
+      sunRef.current.material.uniforms.time.value = clock.getElapsedTime() * 0.2;
+    }
+  });
 
-    return (
-      <group ref={lensFlareRef} position={[0, 0, 0]}>
-        <sprite position={[0, 0, 0]} scale={[3, 3, 3]}>
-          <spriteMaterial
-            attach="material"
-            map={flareTexture}
-            transparent
-            opacity={0.6}
-            color={0xffbb77}
-            blending={THREE.AdditiveBlending}
-          />
-        </sprite>
-        <sprite position={[0, 0, -0.2]} scale={[7, 7, 7]}>
-          <spriteMaterial
-            attach="material"
-            map={flareTexture}
-            transparent
-            opacity={0.4}
-            color={0xff6622}
-            blending={THREE.AdditiveBlending}
-          />
-        </sprite>
-        <sprite position={[0, 0, -0.4]} scale={[12, 12, 12]}>
-          <spriteMaterial
-            attach="material"
-            map={flareTexture}
-            transparent
-            opacity={0.15}
-            color={0xff4400}
-            blending={THREE.AdditiveBlending}
-          />
-        </sprite>
-      </group>
-    );
-  };
+  // Per-mount copy so a remount never shares uniform objects with a
+  // disposed material.
+  const sunShader = useMemo(
+    () => ({ ...SUN_SHADER, uniforms: { time: { value: 0 } } }),
+    []
+  );
 
   return (
     <group>
@@ -164,4 +172,4 @@ export function Sun() {
       <LensFlareSystem />
     </group>
   );
-}
+});

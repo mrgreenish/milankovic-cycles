@@ -55,7 +55,6 @@ export function PlaygroundSection({
   onEccentricityChange,
   onAxialTiltChange,
   onPrecessionChange,
-  simulatedYear,
   co2Level,
   displayedTemp,
   formatNumber,
@@ -327,7 +326,6 @@ export function PlaygroundSection({
               temperature={displayedTemp}
               iceFactor={iceFactor}
               co2Level={co2Level}
-              simulatedYear={simulatedYear}
               formatNumber={formatNumber}
               style={{ width: "100%", height: "180px" }}
             />

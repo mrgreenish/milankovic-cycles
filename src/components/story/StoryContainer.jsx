@@ -42,9 +42,6 @@ export function StoryContainer() {
   const [iceFactor, setIceFactor] = useState(0);
   const [co2Level] = useState(280);
 
-  // Simulation state
-  const [simulatedYear, setSimulatedYear] = useState(0);
-
   // Section tracking
   const [currentSection, setCurrentSection] = useState(0);
 
@@ -92,19 +89,19 @@ export function StoryContainer() {
     setIceFactor(totalIce / seasons.length);
   }, [eccentricity, axialTilt, precession, co2Level]);
 
-  // Smooth temperature display using rAF
+  // Smooth temperature display using rAF. The loop stops once converged —
+  // the effect re-arms it whenever the target temperature changes.
   const displayedTempRef = useRef(10);
   useEffect(() => {
     let frame;
     const tick = () => {
       const gap = Math.abs(temperature - displayedTempRef.current);
-      // Snap to target when close enough to avoid permanent lag
+      // Snap to target when close enough, then stop scheduling frames
       if (gap < 0.05) {
         if (displayedTempRef.current !== temperature) {
           displayedTempRef.current = temperature;
           setDisplayedTemp(temperature);
         }
-        frame = requestAnimationFrame(tick);
         return;
       }
       const next = smoothTemperature(displayedTempRef.current, temperature, 0.5);
@@ -115,21 +112,6 @@ export function StoryContainer() {
     frame = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frame);
   }, [temperature]);
-
-  // Simple year counter for playground
-  useEffect(() => {
-    if (currentSection !== 6) return;
-    let frame;
-    let last = performance.now();
-    const tick = (now) => {
-      const delta = now - last;
-      last = now;
-      setSimulatedYear((prev) => prev + delta * 0.1);
-      frame = requestAnimationFrame(tick);
-    };
-    frame = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(frame);
-  }, [currentSection]);
 
   const handleSectionInView = useCallback((id) => {
     setCurrentSection(id);
@@ -168,7 +150,9 @@ export function StoryContainer() {
           <Canvas
             shadows={false}
             gl={{
-              antialias: true,
+              // The scene renders through EffectComposer's offscreen buffers,
+              // so default-framebuffer MSAA never applies — skip its cost.
+              antialias: false,
               powerPreference: "high-performance",
               precision: "highp",
               toneMapping: THREE.NoToneMapping,
@@ -317,7 +301,6 @@ export function StoryContainer() {
           onEccentricityChange={setEccentricity}
           onAxialTiltChange={setAxialTilt}
           onPrecessionChange={setPrecession}
-          simulatedYear={simulatedYear}
           co2Level={co2Level}
           displayedTemp={displayedTemp}
           formatNumber={formatNumber}

@@ -9,7 +9,6 @@ export function GlobalTemperatureGraph({
   temperature,
   iceFactor,
   co2Level,
-  simulatedYear,
   formatNumber,
   style,
 }) {
@@ -17,27 +16,39 @@ export function GlobalTemperatureGraph({
   const [temperatureHistory, setTemperatureHistory] = useState([]);
   const [isHovered, setIsHovered] = useState(false);
   const maxHistoryLength = 200;
-  const lastUpdateRef = useRef(0);
-  const updateInterval = 100; // Update every 100ms
+  const updateInterval = 100; // Sample every 100ms
 
-  // Append new temperature data with rate limiting.
+  // Latest props, readable from the sampling interval without re-arming it.
+  const sampleRef = useRef(null);
+  sampleRef.current = {
+    temperature,
+    axialTilt,
+    eccentricity,
+    precession,
+    co2Level,
+    iceFactor,
+  };
+
+  // Sample on a fixed clock. The graph keeps its own simulated-year counter
+  // so the rest of the app doesn't need to re-render to drive the timeline.
+  const yearRef = useRef(0);
   useEffect(() => {
-    const currentTime = Date.now();
-    if (currentTime - lastUpdateRef.current >= updateInterval) {
-      // Skip adding the data point if temperature is not a valid number
-      if (!isFinite(temperature)) return;
-      
+    const id = setInterval(() => {
+      const p = sampleRef.current;
+      if (!p || !isFinite(p.temperature)) return;
+      yearRef.current += updateInterval * 0.1;
+
       setTemperatureHistory((prev) => {
         const newHistory = [
           ...prev,
           {
-            temp: isFinite(temperature) ? temperature : prev.length > 0 ? prev[prev.length - 1].temp : 10,
-            axialTilt: isFinite(axialTilt) ? axialTilt : 23.44,
-            eccentricity: isFinite(eccentricity) ? eccentricity : 0.0167,
-            precession: isFinite(precession) ? precession % 360 : 0,
-            co2: isFinite(co2Level) ? co2Level : 280,
-            ice: isFinite(iceFactor) ? iceFactor : 0,
-            year: isFinite(simulatedYear) ? simulatedYear : 0,
+            temp: p.temperature,
+            axialTilt: isFinite(p.axialTilt) ? p.axialTilt : 23.44,
+            eccentricity: isFinite(p.eccentricity) ? p.eccentricity : 0.0167,
+            precession: isFinite(p.precession) ? p.precession % 360 : 0,
+            co2: isFinite(p.co2Level) ? p.co2Level : 280,
+            ice: isFinite(p.iceFactor) ? p.iceFactor : 0,
+            year: yearRef.current,
           },
         ];
         if (newHistory.length > maxHistoryLength) {
@@ -45,21 +56,12 @@ export function GlobalTemperatureGraph({
         }
         return newHistory;
       });
-      lastUpdateRef.current = currentTime;
-    }
-  }, [
-    temperature,
-    axialTilt,
-    eccentricity,
-    precession,
-    co2Level,
-    iceFactor,
-    simulatedYear,
-  ]);
+    }, updateInterval);
+    return () => clearInterval(id);
+  }, []);
 
+  // Draw whenever the data changes (≤10 Hz) instead of every animation frame.
   useEffect(() => {
-    let animationFrameId;
-
     const render = () => {
       const canvas = canvasRef.current;
       if (!canvas || temperatureHistory.length < 2) return;
@@ -346,13 +348,9 @@ export function GlobalTemperatureGraph({
         }
       });
 
-      animationFrameId = requestAnimationFrame(render);
     };
 
     render();
-    return () => {
-      cancelAnimationFrame(animationFrameId);
-    };
   }, [
     temperatureHistory,
     axialTilt,

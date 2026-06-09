@@ -1,41 +1,56 @@
 "use client";
-import React from "react";
+import React, { useMemo } from "react";
 import * as THREE from "three";
 import { Line, Html } from "@react-three/drei";
 
-export function OrbitPath({
+const A = 20;
+const BASELINE_B = A * (1 - 2 * 0.0167);
+
+// The baseline (today) ellipse never changes — build it once.
+const BASELINE_POINTS = (() => {
+  const pts = [];
+  for (let theta = 0; theta <= Math.PI * 2; theta += 0.02) {
+    pts.push(new THREE.Vector3(A * Math.cos(theta), 0, BASELINE_B * Math.sin(theta)));
+  }
+  return pts;
+})();
+
+const SEASON_LABELS = [
+  "Winter (N. Hemisphere)",
+  "Spring (N. Hemisphere)",
+  "Summer (N. Hemisphere)",
+  "Fall (N. Hemisphere)",
+];
+
+export const OrbitPath = React.memo(function OrbitPath({
   eccentricity,
   showLabels = true,
   currentSection = 0,
   spotlight = null,
 }) {
-  const a = 20;
+  const a = A;
   const b = a * (1 - 2 * eccentricity);
-  const baselineB = a * (1 - 2 * 0.0167);
 
-  const points = [];
-  const baselinePoints = [];
-  const seasonalMarkers = [];
+  // Rebuilding these allocates ~300 vectors and forces drei's Line to
+  // recompute its geometry, so only do it when the shape actually changes.
+  const { points, seasonalMarkers } = useMemo(() => {
+    const pts = [];
+    for (let theta = 0; theta <= Math.PI * 2; theta += 0.02) {
+      pts.push(new THREE.Vector3(a * Math.cos(theta), 0, b * Math.sin(theta)));
+    }
+    return {
+      points: pts,
+      seasonalMarkers: [
+        new THREE.Vector3(a, 0, 0),
+        new THREE.Vector3(0, 0, b),
+        new THREE.Vector3(-a, 0, 0),
+        new THREE.Vector3(0, 0, -b),
+      ],
+    };
+  }, [a, b]);
 
-  for (let theta = 0; theta <= Math.PI * 2; theta += 0.02) {
-    const x = a * Math.cos(theta);
-    const currentZ = b * Math.sin(theta);
-    const baselineZ = baselineB * Math.sin(theta);
-    points.push(new THREE.Vector3(x, 0, currentZ));
-    baselinePoints.push(new THREE.Vector3(x, 0, baselineZ));
-  }
-
-  seasonalMarkers.push(new THREE.Vector3(a, 0, 0));
-  seasonalMarkers.push(new THREE.Vector3(0, 0, b));
-  seasonalMarkers.push(new THREE.Vector3(-a, 0, 0));
-  seasonalMarkers.push(new THREE.Vector3(0, 0, -b));
-
-  const seasonLabels = [
-    "Winter (N. Hemisphere)",
-    "Spring (N. Hemisphere)",
-    "Summer (N. Hemisphere)",
-    "Fall (N. Hemisphere)",
-  ];
+  const baselinePoints = BASELINE_POINTS;
+  const seasonLabels = SEASON_LABELS;
 
   const showDistanceLabels = currentSection === 2;
 
@@ -210,4 +225,4 @@ export function OrbitPath({
       ))}
     </group>
   );
-}
+});
