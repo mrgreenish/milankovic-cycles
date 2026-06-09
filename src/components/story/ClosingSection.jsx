@@ -3,13 +3,14 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { StorySection } from "./StorySection";
 import { ERAS } from "@/lib/eraLookup";
+import { getTodayTemperature } from "@/lib/todayClimate";
 
 function buildSnapshotLine(snapshot) {
   if (!snapshot) return null;
   const { temperature, eraKey } = snapshot;
-  // Comparison is against today's 65°N annual mean (~-8°C in the playground
-  // calibration), the same scale as the TemperaturePod reading.
-  const todayTemp = -8;
+  // Comparison is against today's 65°N annual mean, the same scale and model
+  // as the TemperaturePod reading.
+  const todayTemp = getTodayTemperature();
   const delta = temperature - todayTemp;
   const absDelta = Math.abs(delta);
   const direction = delta > 0 ? "warmer" : "colder";
@@ -58,18 +59,23 @@ export function ClosingSection({ onInView, snapshot }) {
 
   return (
     <StorySection id={7} onInView={onInView} className="justify-center">
-      <div className="w-full max-w-2xl mx-auto px-6 text-center space-y-8">
+      <div
+        className="w-full max-w-2xl mx-auto px-4 md:px-6 text-center space-y-5 md:space-y-8 py-10 md:py-12"
+        style={{
+          paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 3rem)",
+        }}
+      >
         {/* Summary of what they learned */}
-        <div className="observatory-panel p-6 space-y-3">
+        <div className="observatory-panel p-4 md:p-6 space-y-3">
           {snapshotLine && (
             <p className="text-sm text-antique-brass font-mono uppercase tracking-wider opacity-80">
               {snapshotLine}
             </p>
           )}
-          <p className="text-lg text-pale-gold font-medium">
+          <p className="text-base md:text-lg text-pale-gold font-medium">
             You now understand the 3 orbital cycles that drive ice ages
           </p>
-          <div className="flex flex-wrap justify-center gap-6 text-sm text-stardust-white opacity-60 font-mono">
+          <div className="flex flex-wrap justify-center gap-3 md:gap-6 text-sm text-stardust-white opacity-60 font-mono">
             <span>The Stretch</span>
             <span className="opacity-30">/</span>
             <span>The Lean</span>
@@ -79,8 +85,8 @@ export function ClosingSection({ onInView, snapshot }) {
         </div>
 
         {/* Quote */}
-        <div className="observatory-panel p-8 md:p-12 space-y-6">
-          <blockquote className="text-2xl md:text-3xl text-pale-gold leading-relaxed italic">
+        <div className="observatory-panel p-5 md:p-12 space-y-4 md:space-y-6">
+          <blockquote className="text-lg md:text-3xl text-pale-gold leading-relaxed italic">
             "The purpose of the theory is to explain the alternation of ice ages
             and warm periods — not by invoking catastrophes, but through the
             slow, relentless changes in Earth's orbit."
@@ -92,7 +98,7 @@ export function ClosingSection({ onInView, snapshot }) {
         </div>
 
         {/* Action buttons */}
-        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+        <div className="flex flex-col sm:flex-row gap-2.5 md:gap-3 justify-center">
           <Link
             href="/about"
             className="celestial-button text-center px-6 py-3"

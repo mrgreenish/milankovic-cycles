@@ -1,5 +1,5 @@
 "use client";
-import React, { useRef, useCallback, useEffect } from "react";
+import React, { useRef, useCallback, useEffect, useState } from "react";
 
 export function StorySlider({
   label,
@@ -30,10 +30,13 @@ export function StorySlider({
       : null;
   const pendingValue = useRef(null);
   const rafId = useRef(null);
+  const [justSnapped, setJustSnapped] = useState(false);
+  const snapTimer = useRef(null);
 
   useEffect(
     () => () => {
       if (rafId.current !== null) cancelAnimationFrame(rafId.current);
+      clearTimeout(snapTimer.current);
     },
     []
   );
@@ -83,9 +86,17 @@ export function StorySlider({
         rafId.current = null;
       }
       pendingValue.current = null;
-      onChange(maybeSnap(parseFloat(e.target.value), { committing: true }));
+      const raw = parseFloat(e.target.value);
+      const snapped = maybeSnap(raw, { committing: true });
+      if (snapped !== raw && snapped === todayMark) {
+        if (typeof navigator !== "undefined") navigator.vibrate?.(10);
+        setJustSnapped(true);
+        clearTimeout(snapTimer.current);
+        snapTimer.current = setTimeout(() => setJustSnapped(false), 600);
+      }
+      onChange(snapped);
     },
-    [onChange, maybeSnap]
+    [onChange, maybeSnap, todayMark]
   );
 
   const computedAriaValueText =
@@ -120,7 +131,10 @@ export function StorySlider({
         {todayPct !== null && (
           <span
             aria-hidden="true"
-            className="pointer-events-none absolute top-1/2 -translate-y-1/2 w-[2px] h-[14px] bg-pale-gold/70 rounded-sm"
+            className={[
+              "pointer-events-none absolute top-1/2 -translate-y-1/2 w-[2px] h-[14px] bg-pale-gold/70 rounded-sm",
+              justSnapped ? "snap-pulse" : "",
+            ].join(" ")}
             style={{
               left: `calc(${todayPct}% - 1px)`,
               boxShadow: "0 0 6px hsla(35, 60%, 76%, 0.6)",
@@ -154,22 +168,26 @@ export function StorySlider({
         />
       </div>
 
-      <div className="flex justify-between gap-4 text-xs text-stardust-white opacity-40">
-        <span
-          className={
-            todayPct !== null && todayPct < 12 ? "invisible" : undefined
-          }
-        >
-          {minLabel || min}
-        </span>
-        <span
-          className={[
-            "text-right",
-            todayPct !== null && todayPct > 88 ? "invisible" : "",
-          ].join(" ")}
-        >
-          {maxLabel || max}
-        </span>
+      <div
+        className={[
+          "relative flex justify-between gap-4 text-xs text-stardust-white",
+          todayPct !== null ? "pb-4" : "",
+        ].join(" ")}
+      >
+        <span className="opacity-40">{minLabel || min}</span>
+        {todayPct !== null && (
+          <span
+            aria-hidden="true"
+            className="absolute -translate-x-1/2 text-[10px] font-mono text-pale-gold/60 whitespace-nowrap"
+            style={{
+              left: `clamp(16px, ${todayPct}%, calc(100% - 16px))`,
+              top: "1.1rem",
+            }}
+          >
+            ↑ {todayLabel}
+          </span>
+        )}
+        <span className="text-right opacity-40">{maxLabel || max}</span>
       </div>
     </div>
   );

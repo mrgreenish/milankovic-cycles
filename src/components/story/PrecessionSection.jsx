@@ -4,6 +4,7 @@ import { StorySection } from "./StorySection";
 import { StorySlider } from "./StorySlider";
 import { CauseEffectCard } from "./CauseEffectCard";
 import { TemperatureIndicator } from "./TemperatureIndicator";
+import { TODAY_PREC } from "@/lib/parameterCopy";
 
 export function PrecessionSection({ precession, onPrecessionChange, temperature, onInView }) {
   return (
@@ -39,6 +40,8 @@ export function PrecessionSection({ precession, onPrecessionChange, temperature,
             hint="Watch the axis tip move along the dashed circle above"
             minLabel="Today's orientation"
             maxLabel="Full cycle (back to start)"
+            todayMark={TODAY_PREC}
+            snapToToday
             formatValue={(nextValue) => `${nextValue.toFixed(0)}°`}
           />
 

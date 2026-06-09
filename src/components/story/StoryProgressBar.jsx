@@ -13,15 +13,47 @@ const SECTION_LABELS = [
 ];
 
 export function StoryProgressBar({ currentSection, totalSections }) {
+  const jumpTo = (i) => {
+    const el = document.getElementById(`section-${i}`);
+    if (el) el.scrollIntoView({ behavior: "smooth" });
+  };
+
   return (
-    <div className="fixed right-4 top-1/2 -translate-y-1/2 z-40 hidden md:flex flex-col items-end gap-1">
+    <>
+      {/* Mobile: minimal dots for orientation + jumping. Hidden in the
+          playground where the bottom sheet owns navigation. */}
+      <div
+        className={[
+          "md:hidden fixed right-0.5 top-1/2 -translate-y-1/2 z-30 flex flex-col items-center transition-opacity duration-300",
+          currentSection === 6 ? "opacity-0 pointer-events-none" : "opacity-100",
+        ].join(" ")}
+      >
+        {Array.from({ length: totalSections }, (_, i) => (
+          <button
+            key={i}
+            onClick={() => jumpTo(i)}
+            className="p-1.5 flex items-center justify-center"
+            aria-label={`Go to ${SECTION_LABELS[i]}`}
+          >
+            <span
+              className={`rounded-full transition-all duration-300 ${
+                currentSection === i
+                  ? "w-2 h-2 bg-antique-brass shadow-[0_0_6px_hsla(36,60%,58%,0.6)]"
+                  : i < currentSection
+                    ? "w-1.5 h-1.5 bg-antique-brass/50"
+                    : "w-1.5 h-1.5 bg-stardust-white/25"
+              }`}
+            />
+          </button>
+        ))}
+      </div>
+
+      {/* Desktop: dots with hover labels */}
+      <div className="fixed right-4 top-1/2 -translate-y-1/2 z-40 hidden md:flex flex-col items-end gap-1">
       {Array.from({ length: totalSections }, (_, i) => (
         <button
           key={i}
-          onClick={() => {
-            const el = document.getElementById(`section-${i}`);
-            if (el) el.scrollIntoView({ behavior: "smooth" });
-          }}
+          onClick={() => jumpTo(i)}
           className="group flex items-center gap-2 py-1"
           aria-label={`Go to ${SECTION_LABELS[i]}`}
         >
@@ -58,6 +90,7 @@ export function StoryProgressBar({ currentSection, totalSections }) {
           </div>
         </button>
       ))}
-    </div>
+      </div>
+    </>
   );
 }

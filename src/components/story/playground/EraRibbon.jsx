@@ -51,7 +51,7 @@ export function EraRibbon({ params, activeKey, onSelect }) {
                 aria-label={`Jump to ${era.name}`}
                 aria-pressed={isActive}
                 className={[
-                  "relative z-10 flex flex-col items-center gap-1 px-2 py-1 rounded transition-all",
+                  "relative z-10 flex flex-col items-center gap-1 px-2 py-1.5 min-h-[40px] rounded transition-all",
                   "focus:outline-none focus-visible:ring-1 focus-visible:ring-antique-brass",
                 ].join(" ")}
               >

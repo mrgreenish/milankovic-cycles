@@ -1,10 +1,13 @@
 "use client";
-import React, { useRef, useEffect, useState } from "react";
+import React from "react";
 import { normalizeTemperature } from "@/lib/temperatureUtils";
+import { getTodayTemperature } from "@/lib/todayClimate";
 
 function TemperatureIcon({ temperature }) {
-  // Abstract SVG icons that match the observatory aesthetic
-  if (temperature < 0) {
+  // Abstract SVG icons that match the observatory aesthetic.
+  // Thresholds match the playground TemperaturePod (65°N annual mean,
+  // today ≈ -8°C, achievable range roughly -15..+10°C).
+  if (temperature < -10) {
     // Glacial — crystalline star
     return (
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-temp-cold">
@@ -13,7 +16,7 @@ function TemperatureIcon({ temperature }) {
       </svg>
     );
   }
-  if (temperature < 5) {
+  if (temperature < -5) {
     // Cold — simple snowflake
     return (
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-temp-cold">
@@ -21,7 +24,7 @@ function TemperatureIcon({ temperature }) {
       </svg>
     );
   }
-  if (temperature < 10) {
+  if (temperature < 0) {
     // Cool — half circle
     return (
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-pale-gold opacity-60">
@@ -30,7 +33,7 @@ function TemperatureIcon({ temperature }) {
       </svg>
     );
   }
-  if (temperature < 15) {
+  if (temperature < 5) {
     // Moderate — circle with rays
     return (
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-pale-gold">
@@ -49,32 +52,23 @@ function TemperatureIcon({ temperature }) {
 }
 
 export function TemperatureIndicator({ temperature }) {
-  // Normalize between roughly -5C and 20C range
-  const norm = normalizeTemperature(temperature, -5, 20);
-  const clampedNorm = Math.max(0, Math.min(1, norm));
-  const percentage = clampedNorm * 100;
+  // Same normalization and labels as the playground TemperaturePod so the
+  // reading means the same thing throughout the story.
+  const norm = normalizeTemperature(temperature, -15, 10);
+  const percentage = Math.max(0, Math.min(1, norm)) * 100;
 
-  // Track delta changes
-  const prevTemp = useRef(temperature);
-  const [delta, setDelta] = useState(null);
-  const deltaTimeout = useRef(null);
+  const todayTemp = getTodayTemperature();
+  const todayPct =
+    Math.max(0, Math.min(1, normalizeTemperature(todayTemp, -15, 10))) * 100;
 
-  useEffect(() => {
-    const diff = temperature - prevTemp.current;
-    if (Math.abs(diff) > 0.05) {
-      setDelta(diff);
-      clearTimeout(deltaTimeout.current);
-      deltaTimeout.current = setTimeout(() => setDelta(null), 1500);
-    }
-    prevTemp.current = temperature;
-    return () => clearTimeout(deltaTimeout.current);
-  }, [temperature]);
+  const delta = temperature - todayTemp;
+  const showDelta = Math.abs(delta) > 0.15;
 
   const getLabel = () => {
-    if (temperature < 0) return "Glacial";
-    if (temperature < 5) return "Cold";
-    if (temperature < 10) return "Cool";
-    if (temperature < 15) return "Moderate";
+    if (temperature < -10) return "Glacial";
+    if (temperature < -5) return "Cold";
+    if (temperature < 0) return "Cool";
+    if (temperature < 5) return "Moderate";
     return "Warm";
   };
 
@@ -87,14 +81,14 @@ export function TemperatureIndicator({ temperature }) {
           <span className="text-2xl font-mono font-bold text-pale-gold">
             {temperature.toFixed(1)}°C
           </span>
-          {delta !== null && (
+          {showDelta && (
             <span
-              className={`text-sm font-mono font-medium transition-opacity duration-300 ${
+              className={`text-sm font-mono font-medium chip-in ${
                 delta > 0 ? "text-temp-warm" : "text-temp-cold"
               }`}
             >
-              {delta > 0 ? "+" : ""}
-              {delta.toFixed(1)}°C
+              {delta > 0 ? "+" : "−"}
+              {Math.abs(delta).toFixed(1)}° vs today
             </span>
           )}
         </div>
@@ -110,6 +104,16 @@ export function TemperatureIndicator({ temperature }) {
         }}
       >
         <div
+          className="absolute top-0 h-full w-[2px] bg-pale-gold/70"
+          style={{
+            left: `${todayPct}%`,
+            transform: "translateX(-50%)",
+            boxShadow: "0 0 4px hsla(35, 60%, 76%, 0.6)",
+          }}
+          title={`Today: ${todayTemp.toFixed(1)}°C`}
+          aria-hidden
+        />
+        <div
           className="absolute top-0 h-full w-1.5 bg-stardust-white rounded-full transition-all duration-300"
           style={{
             left: `${percentage}%`,
@@ -118,9 +122,16 @@ export function TemperatureIndicator({ temperature }) {
           }}
         />
       </div>
-      <div className="flex justify-between text-xs text-stardust-white opacity-30">
-        <span>Cold</span>
-        <span>Warm</span>
+      <div className="relative flex justify-between text-xs text-stardust-white">
+        <span className="opacity-30">Cold</span>
+        <span
+          aria-hidden="true"
+          className="absolute top-0 -translate-x-1/2 text-[10px] font-mono text-pale-gold/60"
+          style={{ left: `${todayPct}%` }}
+        >
+          today
+        </span>
+        <span className="opacity-30">Warm</span>
       </div>
     </div>
   );

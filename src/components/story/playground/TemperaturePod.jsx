@@ -1,7 +1,8 @@
 "use client";
-import React, { useEffect, useRef, useState } from "react";
+import React from "react";
 import { normalizeTemperature } from "@/lib/temperatureUtils";
 import { ERAS, findNearestEra } from "@/lib/eraLookup";
+import { getTodayTemperature } from "@/lib/todayClimate";
 
 function TempIcon({ temperature }) {
   if (temperature < -10) {
@@ -55,40 +56,31 @@ function label(t) {
 
 export function TemperaturePod({
   temperature,
+  displayedTemp,
   iceFactor,
   eccentricity,
   axialTilt,
   precession,
-  focusedParam,
 }) {
-  const norm = normalizeTemperature(temperature, -15, 10);
+  const shownTemp = typeof displayedTemp === "number" ? displayedTemp : temperature;
+  const norm = normalizeTemperature(shownTemp, -15, 10);
   const pct = Math.max(0, Math.min(1, norm)) * 100;
 
-  const [ghostTemp, setGhostTemp] = useState(null);
-  const focusStartRef = useRef(null);
+  const todayTemp = getTodayTemperature();
+  const todayPct =
+    Math.max(0, Math.min(1, normalizeTemperature(todayTemp, -15, 10))) * 100;
 
-  useEffect(() => {
-    if (focusedParam) {
-      if (focusStartRef.current === null) {
-        focusStartRef.current = temperature;
-        setGhostTemp(temperature);
-      }
-    } else {
-      focusStartRef.current = null;
-      const t = setTimeout(() => setGhostTemp(null), 1200);
-      return () => clearTimeout(t);
-    }
-  }, [focusedParam]);
+  const delta = temperature - todayTemp;
+  const showDelta = Math.abs(delta) > 0.15;
 
-  const ghostPct =
-    ghostTemp !== null
-      ? Math.max(0, Math.min(1, normalizeTemperature(ghostTemp, -15, 10))) * 100
-      : null;
-
-  const delta =
-    ghostTemp !== null && focusedParam
-      ? temperature - ghostTemp
-      : null;
+  // Tint the big number toward warm/cold once we drift away from today, so
+  // the direction of change reads at a glance.
+  const numberColor =
+    delta > 1
+      ? "hsl(15 75% 70%)"
+      : delta < -1
+      ? "hsl(215 70% 72%)"
+      : "hsl(var(--pale-gold))";
 
   const nearestKey = findNearestEra(
     { eccentricity, axialTilt, precession },
@@ -112,18 +104,21 @@ export function TemperaturePod({
 
       <div className="flex items-center gap-2">
         <TempIcon temperature={temperature} />
-        <span className="text-2xl font-mono font-bold text-pale-gold leading-none">
-          {temperature.toFixed(1)}°C
+        <span
+          className="text-2xl font-mono font-bold leading-none transition-colors duration-500"
+          style={{ color: numberColor }}
+        >
+          {shownTemp.toFixed(1)}°C
         </span>
-        {delta !== null && Math.abs(delta) > 0.1 && (
+        {showDelta && (
           <span
             className={[
-              "text-xs font-mono font-medium ml-auto",
+              "text-xs font-mono font-medium ml-auto chip-in",
               delta > 0 ? "text-temp-warm" : "text-temp-cold",
             ].join(" ")}
           >
-            {delta > 0 ? "+" : ""}
-            {delta.toFixed(1)}
+            {delta > 0 ? "+" : "−"}
+            {Math.abs(delta).toFixed(1)}° vs today
           </span>
         )}
       </div>
@@ -135,13 +130,16 @@ export function TemperaturePod({
             "linear-gradient(to right, hsl(222 50% 36%), hsl(215 32% 45%), hsl(30 58% 47%), hsl(20 60% 44%), hsl(10 65% 41%))",
         }}
       >
-        {ghostPct !== null && (
-          <div
-            className="absolute top-0 h-full w-[2px] bg-pale-gold/50"
-            style={{ left: `${ghostPct}%`, transform: "translateX(-50%)" }}
-            aria-hidden
-          />
-        )}
+        <div
+          className="absolute top-0 h-full w-[2px] bg-pale-gold/70"
+          style={{
+            left: `${todayPct}%`,
+            transform: "translateX(-50%)",
+            boxShadow: "0 0 4px hsla(35, 60%, 76%, 0.6)",
+          }}
+          title={`Today: ${todayTemp.toFixed(1)}°C`}
+          aria-hidden
+        />
         <div
           className="absolute top-0 h-full w-1.5 bg-stardust-white rounded-full transition-all duration-300"
           style={{
@@ -155,6 +153,9 @@ export function TemperaturePod({
       <div className="flex items-center justify-between text-[11px]">
         <span className="text-stardust-white/50">
           Ice <span className="font-mono text-pale-gold/70">{icePct}%</span>
+        </span>
+        <span className="text-[10px] font-mono text-pale-gold/50">
+          today {todayTemp.toFixed(1)}°C
         </span>
         <span className="text-pale-gold/70 font-mono">
           {nearestEra ? `like ${nearestEra.shortLabel}` : ""}

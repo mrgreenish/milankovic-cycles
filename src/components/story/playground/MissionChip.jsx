@@ -1,18 +1,13 @@
 "use client";
 import React, { useEffect, useRef, useState } from "react";
+import { getTodayTemperature } from "@/lib/todayClimate";
 
 // Targets are 65°N annual-mean temperatures — the latitude that drives
-// glacial cycles. Today's value sits near -8°C for current orbital config;
-// the achievable range across the playground sliders is roughly -15 to +10°C.
-const TODAY_TEMP = -8;
+// glacial cycles. The achievable range across the playground sliders is
+// roughly -10.3 to +10.9°C, so missions progress easy → hard within it.
+const TODAY_TEMP = getTodayTemperature();
 
 const MISSIONS = [
-  {
-    id: "iceAge",
-    label: "Build an ice age",
-    target: "≤ -12°C",
-    check: (t) => t <= -12,
-  },
   {
     id: "warm",
     label: "Warm Earth up",
@@ -20,9 +15,15 @@ const MISSIONS = [
     check: (t) => t >= 5,
   },
   {
+    id: "iceAge",
+    label: "Build an ice age",
+    target: "≤ -9°C",
+    check: (t) => t <= -9,
+  },
+  {
     id: "today",
     label: "Match today",
-    target: `~${TODAY_TEMP}°C`,
+    target: `~${TODAY_TEMP.toFixed(0)}°C`,
     check: (t) => Math.abs(t - TODAY_TEMP) < 1.2,
   },
 ];
@@ -32,7 +33,10 @@ export function MissionChip({ temperature, className = "" }) {
   const [justCompleted, setJustCompleted] = useState(false);
   const celebrateTimer = useRef(null);
   const rotateTimer = useRef(null);
-  const armedRef = useRef(true);
+  // Start unarmed: leftover params from the Combined-section animation can
+  // briefly satisfy a mission on mount, before the playground resets to
+  // today. Arm only once we've seen a non-completed state.
+  const armedRef = useRef(false);
 
   const current = MISSIONS[index];
   const done = current.check(temperature);
@@ -41,6 +45,7 @@ export function MissionChip({ temperature, className = "" }) {
     if (done && armedRef.current && !justCompleted) {
       armedRef.current = false;
       setJustCompleted(true);
+      if (typeof navigator !== "undefined") navigator.vibrate?.([12, 60, 12]);
       celebrateTimer.current = setTimeout(() => {
         rotateTimer.current = setTimeout(() => {
           setIndex((i) => (i + 1) % MISSIONS.length);
@@ -71,7 +76,7 @@ export function MissionChip({ temperature, className = "" }) {
       className={[
         "inline-flex items-center gap-2 py-1.5 px-3 rounded-full border text-xs transition-all duration-300",
         justCompleted
-          ? "bg-emerald-500/15 border-emerald-400/60 text-emerald-200"
+          ? "bg-emerald-500/15 border-emerald-400/60 text-emerald-200 mission-pop"
           : "bg-deep-space/70 border-antique-brass/40 text-pale-gold",
         className,
       ].join(" ")}
@@ -110,7 +115,7 @@ export function MissionChip({ temperature, className = "" }) {
         type="button"
         onClick={advance}
         aria-label="Next mission"
-        className="opacity-60 hover:opacity-100 transition-opacity p-0.5"
+        className="opacity-70 hover:opacity-100 transition-opacity p-1.5 -m-1"
       >
         <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
           <path
