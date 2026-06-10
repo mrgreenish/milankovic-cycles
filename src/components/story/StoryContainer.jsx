@@ -2,7 +2,7 @@
 import React, { useState, useCallback, useEffect, Suspense, useRef } from "react";
 import { useIsMobile } from "@/lib/useIsMobile";
 import { Canvas } from "@react-three/fiber";
-import { OrbitControls, PerspectiveCamera } from "@react-three/drei";
+import { OrbitControls, PerspectiveCamera, Stars } from "@react-three/drei";
 import * as THREE from "three";
 
 import { Sun } from "@/components/three/Sun";
@@ -11,6 +11,7 @@ import { OrbitingEarth } from "@/components/three/OrbitingEarth";
 import { SceneEffects } from "@/components/three/SceneEffects";
 import { SceneController } from "./SceneController";
 import { StoryProgressBar } from "./StoryProgressBar";
+import { ClimateHUD } from "./ClimateHUD";
 
 import { HeroSection } from "./HeroSection";
 import { EarthSunSection } from "./EarthSunSection";
@@ -117,6 +118,38 @@ export function StoryContainer() {
     setCurrentSection(id);
   }, []);
 
+  // Authoritative section tracking: whichever section sits under the viewport
+  // center wins. The per-section IntersectionObservers still drive section
+  // side effects, but they can miss transitions during fast or smooth
+  // scrolling and leave the scene config stale — this never does.
+  useEffect(() => {
+    let frame = null;
+    const update = () => {
+      frame = null;
+      const center = window.innerHeight / 2;
+      for (let i = 0; i < TOTAL_SECTIONS; i++) {
+        const el = document.getElementById(`section-${i}`);
+        if (!el) continue;
+        const rect = el.getBoundingClientRect();
+        if (rect.top <= center && rect.bottom > center) {
+          setCurrentSection(i);
+          break;
+        }
+      }
+    };
+    const onScroll = () => {
+      if (frame === null) frame = requestAnimationFrame(update);
+    };
+    update();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+      if (frame !== null) cancelAnimationFrame(frame);
+    };
+  }, []);
+
   const handleSceneConfig = useCallback((config) => {
     setSceneConfig(config);
   }, []);
@@ -178,6 +211,18 @@ export function StoryContainer() {
             <SceneController
               currentSection={currentSection}
               onSceneConfig={handleSceneConfig}
+              isMobile={isMobile}
+            />
+
+            {/* Subtle starfield gives the observatory a sky */}
+            <Stars
+              radius={250}
+              depth={60}
+              count={isMobile ? 1200 : 2200}
+              factor={3}
+              saturation={0}
+              fade
+              speed={0.4}
             />
 
             {/* 3D Elements - visibility controlled by scene config */}
@@ -188,6 +233,7 @@ export function StoryContainer() {
                 showLabels={currentSection >= 4}
                 currentSection={currentSection}
                 spotlight={effectiveFocus}
+                isMobile={isMobile}
               />
             )}
             <OrbitingEarth
@@ -266,6 +312,13 @@ export function StoryContainer() {
         totalSections={TOTAL_SECTIONS}
       />
 
+      {/* The one climate instrument of the story — persistent across the
+          three cycle sections and the combined view */}
+      <ClimateHUD
+        temperature={displayedTemp}
+        visible={currentSection >= 2 && currentSection <= 5}
+      />
+
       {/* Scrollable content sections */}
       <div className="relative z-10">
         <HeroSection onInView={handleSectionInView} />
@@ -273,25 +326,21 @@ export function StoryContainer() {
         <EccentricitySection
           eccentricity={eccentricity}
           onEccentricityChange={setEccentricity}
-          temperature={temperature}
           onInView={handleSectionInView}
         />
         <AxialTiltSection
           axialTilt={axialTilt}
           onAxialTiltChange={setAxialTilt}
-          temperature={temperature}
           onInView={handleSectionInView}
         />
         <PrecessionSection
           precession={precession}
           onPrecessionChange={setPrecession}
-          temperature={temperature}
           onInView={handleSectionInView}
         />
         <CombinedSection
           onParamsChange={handleCombinedParamsChange}
           onInView={handleSectionInView}
-          temperature={temperature}
         />
         <PlaygroundSection
           eccentricity={eccentricity}

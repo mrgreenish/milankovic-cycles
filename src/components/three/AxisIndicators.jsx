@@ -3,7 +3,10 @@ import React, { useEffect, useMemo } from "react";
 import * as THREE from "three";
 import { Html, Line } from "@react-three/drei";
 
-export const AxisIndicators = React.memo(function AxisIndicators({ spotlight = null }) {
+export const AxisIndicators = React.memo(function AxisIndicators({
+  spotlight = null,
+  labelVisible = true,
+}) {
   const arrow = useMemo(
     () =>
       new THREE.ArrowHelper(
@@ -56,24 +59,27 @@ export const AxisIndicators = React.memo(function AxisIndicators({ spotlight = n
   return (
     <group>
       <primitive object={arrow} />
-      <Html position={[0, 5.2, 0]} center>
-        <div
-          style={{
-            color: "white",
-            background: "rgba(0, 0, 0, 0.7)",
-            padding: "4px 8px",
-            borderRadius: "4px",
-            fontSize: "12px",
-            fontFamily: "'Courier New', Courier, monospace",
-            backdropFilter: "blur(4px)",
-            border: "1px solid rgba(255, 255, 255, 0.1)",
-            opacity: labelOpacity,
-            transition: "opacity 300ms ease",
-          }}
-        >
-          Rotation Axis
-        </div>
-      </Html>
+      {labelVisible && (
+        <Html position={[0, 5.6, 0]} center>
+          <div
+            style={{
+              color: "hsl(35, 60%, 76%)",
+              backgroundColor: "hsla(230, 33%, 5%, 0.8)",
+              padding: "3px 9px",
+              borderRadius: "9999px",
+              fontSize: "11px",
+              fontFamily: "'Space Mono', 'Courier New', monospace",
+              whiteSpace: "nowrap",
+              border: "1px solid hsla(36, 60%, 58%, 0.35)",
+              letterSpacing: "0.02em",
+              opacity: labelOpacity,
+              transition: "opacity 300ms ease",
+            }}
+          >
+            Rotation Axis
+          </div>
+        </Html>
+      )}
     </group>
   );
 });

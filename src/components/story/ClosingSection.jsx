@@ -75,7 +75,7 @@ export function ClosingSection({ onInView, snapshot }) {
           <p className="text-base md:text-lg text-pale-gold font-medium">
             You now understand the 3 orbital cycles that drive ice ages
           </p>
-          <div className="flex flex-wrap justify-center gap-3 md:gap-6 text-sm text-stardust-white opacity-60 font-mono">
+          <div className="flex flex-wrap justify-center gap-3 md:gap-6 text-sm text-stardust-white opacity-75 font-mono">
             <span>The Stretch</span>
             <span className="opacity-30">/</span>
             <span>The Lean</span>
@@ -91,7 +91,7 @@ export function ClosingSection({ onInView, snapshot }) {
             and warm periods — not by invoking catastrophes, but through the
             slow, relentless changes in Earth's orbit."
           </blockquote>
-          <p className="text-sm text-stardust-white opacity-50">
+          <p className="text-sm text-stardust-white opacity-70">
             — Milutin Milankovic, who figured this out in the 1920s with just a
             pencil, paper, and years of calculations.
           </p>
@@ -142,7 +142,7 @@ export function ClosingSection({ onInView, snapshot }) {
 
         {/* Personal connection */}
         <div className="pt-4 border-t border-stardust-white/10">
-          <p className="text-sm text-stardust-white opacity-50">
+          <p className="text-sm text-stardust-white opacity-70">
             Built by Filip van Harreveld — great-grandson of Milutin Milankovic
           </p>
         </div>

@@ -1,7 +1,13 @@
 "use client";
 import React, { useRef, useEffect } from "react";
 
-export function StorySection({ id, children, className = "", onInView }) {
+export function StorySection({
+  id,
+  children,
+  className = "",
+  onInView,
+  pinned = false,
+}) {
   const ref = useRef(null);
 
   useEffect(() => {
@@ -29,9 +35,19 @@ export function StorySection({ id, children, className = "", onInView }) {
     <section
       ref={ref}
       id={`section-${id}`}
-      className={`story-section relative min-h-screen flex items-center ${className}`}
+      className={`story-section relative ${
+        pinned ? "story-section--pinned" : ""
+      }`}
     >
-      {children}
+      {/* Pinned sections are taller than the viewport; this inner wrapper
+          sticks while the scroll drives the 3D scene behind it. */}
+      <div
+        className={`story-sticky ${
+          pinned ? "sticky top-0" : ""
+        } flex items-center ${className}`}
+      >
+        {children}
+      </div>
     </section>
   );
 }

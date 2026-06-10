@@ -57,12 +57,13 @@ export function StoryProgressBar({ currentSection, totalSections }) {
           className="group flex items-center gap-2 py-1"
           aria-label={`Go to ${SECTION_LABELS[i]}`}
         >
-          {/* Label - visible on hover or when active */}
+          {/* Label - visible on hover or when active. Rendered as a pill so
+              it stays legible even when it overlaps panel content. */}
           <span
-            className={`text-xs font-mono whitespace-nowrap transition-all duration-300 ${
+            className={`text-xs font-mono whitespace-nowrap rounded-full px-2.5 py-1 bg-deep-space/85 backdrop-blur-sm border border-antique-brass/25 transition-all duration-300 ${
               currentSection === i
-                ? "opacity-80 text-pale-gold translate-x-0"
-                : "opacity-0 group-hover:opacity-60 text-stardust-white translate-x-2 group-hover:translate-x-0"
+                ? "opacity-100 text-pale-gold translate-x-0"
+                : "opacity-0 group-hover:opacity-90 text-stardust-white translate-x-2 group-hover:translate-x-0"
             }`}
           >
             {SECTION_LABELS[i]}

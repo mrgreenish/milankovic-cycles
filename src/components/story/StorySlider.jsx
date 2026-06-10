@@ -112,16 +112,14 @@ export function StorySlider({
         {renderValue ? (
           renderValue(value)
         ) : scienceName ? (
-          <span className="text-xs font-mono text-pale-gold opacity-60">
+          <span className="text-xs font-mono text-pale-gold opacity-80">
             {scienceName}: {formattedValue}
           </span>
         ) : null}
       </div>
 
       {hint && (
-        <p className="text-sm text-pale-gold opacity-70 flex items-center gap-1">
-          <span className="inline-block animate-bounce text-xs">↑</span> {hint}
-        </p>
+        <p className="text-sm text-pale-gold opacity-90">{hint}</p>
       )}
 
       <div
@@ -174,11 +172,11 @@ export function StorySlider({
           todayPct !== null ? "pb-4" : "",
         ].join(" ")}
       >
-        <span className="opacity-40">{minLabel || min}</span>
+        <span className="opacity-70">{minLabel || min}</span>
         {todayPct !== null && (
           <span
             aria-hidden="true"
-            className="absolute -translate-x-1/2 text-[10px] font-mono text-pale-gold/60 whitespace-nowrap"
+            className="absolute -translate-x-1/2 text-[11px] font-mono text-pale-gold/80 whitespace-nowrap"
             style={{
               left: `clamp(16px, ${todayPct}%, calc(100% - 16px))`,
               top: "1.1rem",
@@ -187,7 +185,7 @@ export function StorySlider({
             ↑ {todayLabel}
           </span>
         )}
-        <span className="text-right opacity-40">{maxLabel || max}</span>
+        <span className="text-right opacity-70">{maxLabel || max}</span>
       </div>
     </div>
   );

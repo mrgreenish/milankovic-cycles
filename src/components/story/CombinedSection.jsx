@@ -1,9 +1,21 @@
 "use client";
 import React, { useEffect, useRef, useState } from "react";
 import { StorySection } from "./StorySection";
+import { StorySlider } from "./StorySlider";
+import { ERAS } from "@/lib/eraLookup";
 
-const ICE_AGE = { eccentricity: 0.019, axialTilt: 22.99, precession: 114 };
-const TODAY = { eccentricity: 0.0167, axialTilt: 23.44, precession: 0 };
+// Use the canonical era presets so the live 65°N reading on the climate HUD
+// actually goes cold here — ad-hoc params previously read *warmer* than today.
+const ICE_AGE = {
+  eccentricity: ERAS.iceAge.eccentricity,
+  axialTilt: ERAS.iceAge.axialTilt,
+  precession: ERAS.iceAge.precession,
+};
+const TODAY = {
+  eccentricity: ERAS.today.eccentricity,
+  axialTilt: ERAS.today.axialTilt,
+  precession: ERAS.today.precession,
+};
 const DURATION = 6000;
 const PAUSE = 2000;
 
@@ -19,15 +31,16 @@ function lerpParams(from, to, t) {
   };
 }
 
-export function CombinedSection({ onParamsChange, onInView, temperature }) {
+export function CombinedSection({ onParamsChange, onInView }) {
   const [isAnimating, setIsAnimating] = useState(false);
+  const [userOwned, setUserOwned] = useState(false);
   const [progress, setProgress] = useState(0);
   const [currentParams, setCurrentParams] = useState(ICE_AGE);
   const animationRef = useRef(null);
   const timeoutRef = useRef(null);
 
   useEffect(() => {
-    if (!isAnimating) return;
+    if (!isAnimating || userOwned) return;
 
     let cancelled = false;
 
@@ -78,7 +91,7 @@ export function CombinedSection({ onParamsChange, onInView, temperature }) {
       if (animationRef.current) cancelAnimationFrame(animationRef.current);
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
     };
-  }, [isAnimating, onParamsChange]);
+  }, [isAnimating, userOwned, onParamsChange]);
 
   const handleInView = (id) => {
     setIsAnimating(true);
@@ -91,6 +104,7 @@ export function CombinedSection({ onParamsChange, onInView, temperature }) {
       ([entry]) => {
         if (!entry.isIntersecting) {
           setIsAnimating(false);
+          setUserOwned(false);
           onParamsChange(TODAY);
         }
       },
@@ -102,67 +116,69 @@ export function CombinedSection({ onParamsChange, onInView, temperature }) {
     return () => observer.disconnect();
   }, [onParamsChange]);
 
-  // Interpolated temperature for display
-  const iceTemp = -5;
-  const todayTemp = 14;
-  const displayTemp = iceTemp + (todayTemp - iceTemp) * progress;
+  // User grabs the timeline: stop the replay and let them scrub history
+  const handleTimelineChange = (p) => {
+    setProgress(p);
+    const params = lerpParams(ICE_AGE, TODAY, p);
+    onParamsChange(params);
+    setCurrentParams(params);
+  };
+
+  const yearsAgo = Math.round((1 - progress) * 21000);
+  const timelineReadout =
+    yearsAgo < 250 ? "Today" : `${yearsAgo.toLocaleString()} years ago`;
 
   return (
     <StorySection id={5} onInView={handleInView}>
-      <div className="w-full max-w-2xl mx-auto px-4 md:px-6 text-center py-8">
-        <div className="observatory-panel p-4 md:p-8 space-y-4 md:space-y-6">
+      <div className="w-full max-w-lg px-4 md:px-12 py-8">
+        <div className="observatory-panel p-4 md:p-8 space-y-4 md:space-y-5">
           <h2 className="text-2xl md:text-4xl">When All Three Align</h2>
 
-          <p className="text-sm md:text-base text-stardust-white opacity-80 leading-relaxed">
+          <p className="text-sm md:text-base text-stardust-white opacity-90 leading-relaxed">
             Each of these changes is small on its own. But when they line up in
             just the right way, they can push Earth into an ice age — or pull it
             back out.
           </p>
 
-          {/* Timeline bar */}
-          <div className="space-y-2">
-            <div className="flex justify-between text-xs text-stardust-white opacity-50">
-              <span>21,000 years ago</span>
-              <span>Today</span>
-            </div>
-            <div className="h-2 rounded-full overflow-hidden bg-slate-blue/40">
-              <div
-                className="h-full rounded-full transition-all duration-100"
-                style={{
-                  width: `${progress * 100}%`,
-                  background: `linear-gradient(to right, #2563eb, #06b6d4, #84cc16, #eab308)`,
-                }}
-              />
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm font-mono text-blue-400">
-                ❄️ {iceTemp}°C
+          {/* Draggable history timeline — replays on its own until grabbed */}
+          <StorySlider
+            label="Travel through time"
+            value={progress}
+            onChange={handleTimelineChange}
+            min={0}
+            max={1}
+            step={0.001}
+            hint={
+              userOwned
+                ? "Drag between the last ice age and today"
+                : "Watch history replay — or grab the dial yourself"
+            }
+            minLabel="Last Ice Age"
+            maxLabel="Today"
+            onPointerDown={() => setUserOwned(true)}
+            renderValue={() => (
+              <span className="text-xs font-mono text-pale-gold opacity-90">
+                {timelineReadout}
               </span>
-              <span className="text-lg font-mono font-bold text-pale-gold">
-                {displayTemp.toFixed(1)}°C
-              </span>
-              <span className="text-sm font-mono text-yellow-400">
-                ☀️ {todayTemp}°C
-              </span>
-            </div>
-          </div>
+            )}
+          />
 
           {/* Live parameter values */}
           <div className="grid grid-cols-3 gap-2 text-xs font-mono">
             <div className="observatory-panel p-2 text-center">
-              <div className="text-stardust-white opacity-50">Stretch</div>
+              <div className="text-stardust-white opacity-70">Stretch</div>
               <div className="text-pale-gold">
                 {currentParams.eccentricity.toFixed(4)}
               </div>
             </div>
             <div className="observatory-panel p-2 text-center">
-              <div className="text-stardust-white opacity-50">Lean</div>
+              <div className="text-stardust-white opacity-70">Lean</div>
               <div className="text-pale-gold">
                 {currentParams.axialTilt.toFixed(2)}°
               </div>
             </div>
             <div className="observatory-panel p-2 text-center">
-              <div className="text-stardust-white opacity-50">Wobble</div>
+              <div className="text-stardust-white opacity-70">Wobble</div>
               <div className="text-pale-gold">
                 {currentParams.precession.toFixed(0)}°
               </div>
@@ -171,10 +187,10 @@ export function CombinedSection({ onParamsChange, onInView, temperature }) {
 
           <div className="observatory-panel p-3 md:p-4 bg-deep-space bg-opacity-50">
             <p className="text-xs md:text-sm text-pale-gold leading-relaxed">
-              The key is summer sunlight at 65° north. When summers there are
-              cool enough that winter snow doesn't fully melt, ice builds up year
-              after year. Eventually, massive ice sheets cover much of North
-              America and Europe.
+              The key is summer sunlight at 65° north — the reading on the
+              climate dial. When summers there are cool enough that winter snow
+              doesn't fully melt, ice builds up year after year. Eventually,
+              massive ice sheets cover much of North America and Europe.
             </p>
           </div>
         </div>

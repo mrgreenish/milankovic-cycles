@@ -22,11 +22,26 @@ const SEASON_LABELS = [
   "Fall (N. Hemisphere)",
 ];
 
+// Shared chip styling for every in-scene annotation — observatory style,
+// deliberately glow-free so labels never wash out the UI panels above them.
+const labelChipStyle = {
+  color: "hsl(35, 60%, 76%)",
+  backgroundColor: "hsla(230, 33%, 5%, 0.8)",
+  padding: "3px 9px",
+  borderRadius: "9999px",
+  fontSize: "11px",
+  fontFamily: "'Space Mono', 'Courier New', monospace",
+  whiteSpace: "nowrap",
+  border: "1px solid hsla(36, 60%, 58%, 0.35)",
+  letterSpacing: "0.02em",
+};
+
 export const OrbitPath = React.memo(function OrbitPath({
   eccentricity,
   showLabels = true,
   currentSection = 0,
   spotlight = null,
+  isMobile = false,
 }) {
   const a = A;
   const b = a * (1 - 2 * eccentricity);
@@ -122,35 +137,27 @@ export const OrbitPath = React.memo(function OrbitPath({
         opacity={Math.min(1, 0.4 * boost) * orbitFade}
       />
 
+      {/* Pulled in from the orbit's extremes so they never clip the viewport
+          edge or collide with the progress rail / narrative column. */}
       {showDistanceLabels && (
         <>
-          <Html position={[-a + 2, 2, 0]} center>
+          <Html position={[-a * (isMobile ? 0.32 : 0.55), 2, 0]} center>
             <div
               style={{
-                color: "#ef4444",
-                backgroundColor: "rgba(239, 68, 68, 0.15)",
-                padding: "3px 10px",
-                borderRadius: "12px",
-                fontSize: "13px",
-                fontWeight: "600",
-                whiteSpace: "nowrap",
-                border: "1px solid rgba(239, 68, 68, 0.4)",
+                ...labelChipStyle,
+                color: "#f3978f",
+                border: "1px solid rgba(227, 105, 98, 0.45)",
               }}
             >
               ← Farther from Sun
             </div>
           </Html>
-          <Html position={[a - 2, 2, 0]} center>
+          <Html position={[a * (isMobile ? 0.32 : 0.55), 2, 0]} center>
             <div
               style={{
+                ...labelChipStyle,
                 color: "#fbbf24",
-                backgroundColor: "rgba(251, 191, 36, 0.15)",
-                padding: "3px 10px",
-                borderRadius: "12px",
-                fontSize: "13px",
-                fontWeight: "600",
-                whiteSpace: "nowrap",
-                border: "1px solid rgba(251, 191, 36, 0.4)",
+                border: "1px solid rgba(251, 191, 36, 0.45)",
               }}
             >
               Closer to Sun →
@@ -164,65 +171,59 @@ export const OrbitPath = React.memo(function OrbitPath({
           style={{
             color: "#fbbf24",
             fontSize: "11px",
-            fontWeight: "500",
+            fontFamily: "'Space Mono', 'Courier New', monospace",
             whiteSpace: "nowrap",
-            opacity: 0.7 * orbitFade,
-            textShadow: "0 0 8px rgba(251, 191, 36, 0.5)",
+            opacity: 0.8 * orbitFade,
           }}
         >
-          Sun ☀️
+          Sun
         </div>
       </Html>
 
-      {seasonalMarkers.map((position, index) => (
-        <group key={index} position={position}>
-          <mesh>
-            <sphereGeometry args={[0.3, 16, 16]} />
-            <meshBasicMaterial
-              color={index % 2 === 0 ? "#cdaf7d" : "#e36962"}
-              transparent
-              opacity={1 * markerFade}
-            />
-          </mesh>
-          <mesh scale={1.2}>
-            <sphereGeometry args={[0.3, 16, 16]} />
-            <meshBasicMaterial
-              color={index % 2 === 0 ? "#cdaf7d" : "#e36962"}
-              transparent
-              opacity={0.6 * markerFade}
-            />
-          </mesh>
-          <mesh scale={1.4}>
-            <sphereGeometry args={[0.3, 16, 16]} />
-            <meshBasicMaterial
-              color={index % 2 === 0 ? "#cdaf7d" : "#e36962"}
-              transparent
-              opacity={0.3 * markerFade}
-            />
-          </mesh>
-          {showLabels && (
-            <Html position={[0, 1, 0]} center>
-              <div
-                style={{
-                  color: "white",
-                  backgroundColor: "rgba(205, 175, 125, 0.6)",
-                  padding: "4px 8px",
-                  borderRadius: "4px",
-                  fontSize: "12px",
-                  whiteSpace: "nowrap",
-                  backdropFilter: "blur(4px)",
-                  border: "1px solid rgba(232, 208, 169, 0.8)",
-                  textShadow: "0 0 10px rgba(232, 208, 169, 1)",
-                  boxShadow: "0 0 20px rgba(205, 175, 125, 0.5)",
-                  opacity: markerFade,
-                }}
-              >
-                {seasonLabels[index]}
-              </div>
-            </Html>
-          )}
-        </group>
-      ))}
+      {seasonalMarkers.map((position, index) => {
+        // Label budget: only Winter and Summer (the pair precession actually
+        // swaps) carry labels in the story; Spring/Fall labels appear only on
+        // the desktop playground where there's room to read all four.
+        const isKeySeason = index === 0 || index === 2;
+        const showThisLabel =
+          showLabels &&
+          (isKeySeason || (currentSection === 6 && !isMobile));
+        return (
+          <group key={index} position={position}>
+            <mesh>
+              <sphereGeometry args={[0.3, 16, 16]} />
+              <meshBasicMaterial
+                color={index % 2 === 0 ? "#cdaf7d" : "#e36962"}
+                transparent
+                opacity={1 * markerFade}
+              />
+            </mesh>
+            <mesh scale={1.2}>
+              <sphereGeometry args={[0.3, 16, 16]} />
+              <meshBasicMaterial
+                color={index % 2 === 0 ? "#cdaf7d" : "#e36962"}
+                transparent
+                opacity={0.6 * markerFade}
+              />
+            </mesh>
+            <mesh scale={1.4}>
+              <sphereGeometry args={[0.3, 16, 16]} />
+              <meshBasicMaterial
+                color={index % 2 === 0 ? "#cdaf7d" : "#e36962"}
+                transparent
+                opacity={0.3 * markerFade}
+              />
+            </mesh>
+            {showThisLabel && (
+              <Html position={[0, 1, 0]} center>
+                <div style={{ ...labelChipStyle, opacity: markerFade }}>
+                  {seasonLabels[index]}
+                </div>
+              </Html>
+            )}
+          </group>
+        );
+      })}
     </group>
   );
 });

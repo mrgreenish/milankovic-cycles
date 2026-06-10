@@ -12,7 +12,15 @@ import { AxisIndicators } from "./AxisIndicators";
 
 export const Earth = React.forwardRef(
   (
-    { axialTilt, precession, iceFactor, onReady, showAxis = true, spotlight = null },
+    {
+      axialTilt,
+      precession,
+      iceFactor,
+      onReady,
+      showAxis = true,
+      axisLabelVisible = true,
+      spotlight = null,
+    },
     ref
   ) => {
     const [texturesLoaded, setTexturesLoaded] = useState(false);
@@ -169,7 +177,9 @@ export const Earth = React.forwardRef(
           />
         </mesh>
 
-        {showAxis ? <AxisIndicators spotlight={spotlight} /> : null}
+        {showAxis ? (
+          <AxisIndicators spotlight={spotlight} labelVisible={axisLabelVisible} />
+        ) : null}
       </group>
     );
   }

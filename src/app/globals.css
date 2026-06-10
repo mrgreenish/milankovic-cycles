@@ -91,7 +91,9 @@
     letter-spacing: -0.015em;
     margin: 0;
     padding: 0;
-    width: 100vw;
+    /* 100% not 100vw — 100vw includes the scrollbar, which pushed
+       right-anchored UI (nav pill, progress rail) off the visible edge */
+    width: 100%;
     min-height: 100vh;
     overflow-x: hidden;
     overflow-y: auto;
@@ -157,7 +159,7 @@
   background: radial-gradient(
     circle at center, 
     transparent 0%, 
-    hsla(var(--deep-space), 0.4) 100%
+    hsl(var(--deep-space) / 0.4) 100%
   );
   pointer-events: none;
 }
@@ -165,11 +167,11 @@
 /* Custom UI Components */
 .observatory-panel {
   @apply bg-opacity-70 backdrop-blur-md border border-opacity-30 rounded-lg;
-  background-color: hsla(var(--deep-space), 0.7);
-  border-color: hsla(var(--slate-blue), 0.3);
+  background-color: hsl(var(--deep-space) / 0.7);
+  border-color: hsl(var(--slate-blue) / 0.3);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2), 
-              0 0 0 1px hsla(var(--antique-brass), 0.1),
-              inset 0 0 0 1px hsla(var(--stardust-white), 0.05);
+              0 0 0 1px hsl(var(--antique-brass) / 0.1),
+              inset 0 0 0 1px hsl(var(--stardust-white) / 0.05);
 }
 
 .control-panel {
@@ -179,20 +181,20 @@
 /* Custom interactive elements */
 .celestial-button {
   @apply px-4 py-2 rounded-md transition-all duration-300 focus:outline-none;
-  background-color: hsla(var(--deep-space), 0.8);
+  background-color: hsl(var(--deep-space) / 0.8);
   border: 1px solid hsl(var(--stardust-white));
   color: hsl(var(--stardust-white));
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2), 
-              inset 0 0 0 1px hsla(var(--stardust-white), 0.05);
+              inset 0 0 0 1px hsl(var(--stardust-white) / 0.05);
 }
 
 .celestial-button:hover {
-  background-color: hsla(var(--midnight-blue), 0.8);
+  background-color: hsl(var(--midnight-blue) / 0.8);
   border-color: hsl(var(--stardust-white));
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3), 
-              0 0 0 1px hsla(var(--antique-brass), 0.2),
-              inset 0 0 0 1px hsla(var(--stardust-white), 0.1);
+              0 0 0 1px hsl(var(--antique-brass) / 0.2),
+              inset 0 0 0 1px hsl(var(--stardust-white) / 0.1);
 }
 
 .celestial-button:active {
@@ -203,8 +205,8 @@
 /* Data display elements */
 .data-display {
   @apply bg-opacity-60 backdrop-blur-sm p-2 rounded border border-opacity-20 text-sm;
-  background-color: hsla(var(--deep-space), 0.6);
-  border-color: hsla(var(--antique-brass), 0.2);
+  background-color: hsl(var(--deep-space) / 0.6);
+  border-color: hsl(var(--antique-brass) / 0.2);
   color: hsl(var(--pale-gold));
 }
 
@@ -289,8 +291,8 @@
 /* Tooltip styling */
 .celestial-tooltip {
   @apply absolute z-50 px-3 py-2 text-sm rounded-md shadow-lg;
-  background-color: hsla(var(--deep-space), 0.9);
-  border: 1px solid hsla(var(--antique-brass), 0.3);
+  background-color: hsl(var(--deep-space) / 0.9);
+  border: 1px solid hsl(var(--antique-brass) / 0.3);
   backdrop-filter: blur(8px);
   color: hsl(var(--stardust-white));
   max-width: 300px;
@@ -307,9 +309,9 @@
 }
 
 @keyframes pulse-glow {
-  0% { box-shadow: 0 0 5px hsla(var(--antique-brass), 0.3); }
-  50% { box-shadow: 0 0 15px hsla(var(--antique-brass), 0.6); }
-  100% { box-shadow: 0 0 5px hsla(var(--antique-brass), 0.3); }
+  0% { box-shadow: 0 0 5px hsl(var(--antique-brass) / 0.3); }
+  50% { box-shadow: 0 0 15px hsl(var(--antique-brass) / 0.6); }
+  100% { box-shadow: 0 0 5px hsl(var(--antique-brass) / 0.3); }
 }
 
 .animate-glow {
@@ -720,16 +722,16 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: hsla(var(--deep-space), 0.6);
+  background: hsl(var(--deep-space) / 0.6);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: hsla(var(--antique-brass), 0.4);
+  background: hsl(var(--antique-brass) / 0.4);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: hsla(var(--antique-brass), 0.7);
+  background: hsl(var(--antique-brass) / 0.7);
 }
 
 /* Loading state animations */
@@ -817,13 +819,33 @@
   min-height: 100svh;
 }
 
+/* Inner wrapper holds the flex layout; for pinned sections it sticks while
+   the extra scroll length drives the 3D scene (scroll-scrubbed parameters). */
+.story-sticky {
+  min-height: 100vh;
+  min-height: 100svh;
+}
+
+.story-section--pinned {
+  min-height: 220vh;
+  min-height: 220svh;
+}
+
+@media (max-width: 767px) {
+  .story-section--pinned {
+    min-height: 190vh;
+    min-height: 190svh;
+  }
+}
+
 .story-section .observatory-panel {
-  background-color: hsla(var(--deep-space), 0.85);
+  /* High enough that scene glow (sun, atmosphere) can't wash out the text */
+  background-color: hsl(var(--deep-space) / 0.92);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2),
-              0 0 0 1px hsla(var(--antique-brass), 0.1),
-              inset 0 1px 0 0 hsla(var(--pale-gold), 0.1);
+              0 0 0 1px hsl(var(--antique-brass) / 0.1),
+              inset 0 1px 0 0 hsl(var(--pale-gold) / 0.1);
   position: relative;
 }
 
@@ -847,7 +869,7 @@
 
 /* Scroll line indicator animation */
 .scroll-line {
-  background: linear-gradient(to bottom, hsla(var(--pale-gold), 0.6), transparent);
+  background: linear-gradient(to bottom, hsl(var(--pale-gold) / 0.6), transparent);
   animation: scrollDraw 2s ease-in-out infinite;
 }
 
@@ -880,7 +902,7 @@
    capping their taller content created nested inner scrollbars and
    bottom-anchored overlaps. They flow and scroll with the page instead. */
 @media (max-width: 767px) {
-  :is(#section-1, #section-2, #section-3, #section-4).story-section {
+  :is(#section-1, #section-2, #section-3, #section-4) .story-sticky {
     align-items: flex-end;
     padding-bottom: 1rem;
   }
@@ -895,7 +917,7 @@
   }
 
   .story-section .observatory-panel {
-    background-color: hsla(var(--deep-space), 0.78);
+    background-color: hsl(var(--deep-space) / 0.9);
   }
 }
 
@@ -904,21 +926,21 @@
    this file only holds the focus treatment and its reduced-motion variant. */
 .spotlight-focus {
   box-shadow:
-    0 0 0 1px hsla(var(--antique-brass), 0.5),
-    0 0 24px hsla(var(--antique-brass), 0.25);
+    0 0 0 1px hsl(var(--antique-brass) / 0.5),
+    0 0 24px hsl(var(--antique-brass) / 0.25);
   animation: spotlight-pulse 2.4s ease-in-out infinite;
 }
 
 @keyframes spotlight-pulse {
   0%, 100% {
     box-shadow:
-      0 0 0 1px hsla(var(--antique-brass), 0.5),
-      0 0 20px hsla(var(--antique-brass), 0.22);
+      0 0 0 1px hsl(var(--antique-brass) / 0.5),
+      0 0 20px hsl(var(--antique-brass) / 0.22);
   }
   50% {
     box-shadow:
-      0 0 0 1px hsla(var(--antique-brass), 0.7),
-      0 0 32px hsla(var(--antique-brass), 0.4);
+      0 0 0 1px hsl(var(--antique-brass) / 0.7),
+      0 0 32px hsl(var(--antique-brass) / 0.4);
   }
 }
 
@@ -951,13 +973,15 @@
 /* Playground bottom sheet (mobile). Peek state keeps a 3.5rem grab bar
    visible above the safe area; expanded slides the whole sheet up. */
 .playground-sheet {
-  background-color: hsla(var(--deep-space), 0.88);
+  /* Near-solid: scene glow (Earth atmosphere, sun bloom) bled through the
+     old 0.88 backdrop and washed the expanded sheet out to white-on-white */
+  background-color: hsl(var(--deep-space) / 0.97);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
-  border-top: 1px solid hsla(var(--antique-brass), 0.25);
+  border-top: 1px solid hsl(var(--antique-brass) / 0.25);
   border-radius: 1rem 1rem 0 0;
   box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.45),
-              inset 0 1px 0 0 hsla(var(--pale-gold), 0.1);
+              inset 0 1px 0 0 hsl(var(--pale-gold) / 0.1);
   transform: translateY(0);
   transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
   animation: sheet-up 0.45s cubic-bezier(0.16, 1, 0.3, 1);

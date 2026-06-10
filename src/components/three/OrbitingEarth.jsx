@@ -31,7 +31,9 @@ export const OrbitingEarth = React.memo(function OrbitingEarth({
   useFrame((_, delta) => {
     if (!groupRef.current || !isReady) return;
 
-    const isPinnedSection = currentSection === 3 || currentSection === 4;
+    // Hero pins Earth too, so the close-up camera always has its subject
+    const isPinnedSection =
+      currentSection === 0 || currentSection === 3 || currentSection === 4;
     if (!isPinnedSection) {
       orbitThetaRef.current += delta * 0.1;
     }
@@ -73,6 +75,7 @@ export const OrbitingEarth = React.memo(function OrbitingEarth({
         iceFactor={iceFactor}
         onReady={onEarthReady}
         showAxis={showAxis}
+        axisLabelVisible={currentSection === 3 || currentSection === 4}
         spotlight={spotlight}
       />
       {/* Precession cone is outside Earth's quaternion group so it stays fixed */}

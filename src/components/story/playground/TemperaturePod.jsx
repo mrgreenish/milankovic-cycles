@@ -94,10 +94,10 @@ export function TemperaturePod({
     <div className="observatory-panel p-3 md:p-4 space-y-2.5 w-full md:w-60">
       <div className="flex items-center justify-between">
         <span
-          className="text-[10px] font-mono uppercase tracking-wider text-pale-gold/50"
+          className="text-[10px] font-mono uppercase tracking-wider text-antique-brass"
           title="Annual mean at 65°N — the latitude that drives glacial cycles"
         >
-          Climate · 65°N
+          Climate at 65°N
         </span>
         <span className="text-xs text-stardust-white/70">{label(temperature)}</span>
       </div>
@@ -151,10 +151,10 @@ export function TemperaturePod({
       </div>
 
       <div className="flex items-center justify-between text-[11px]">
-        <span className="text-stardust-white/50">
-          Ice <span className="font-mono text-pale-gold/70">{icePct}%</span>
+        <span className="text-stardust-white/70">
+          Ice <span className="font-mono text-pale-gold/80">{icePct}%</span>
         </span>
-        <span className="text-[10px] font-mono text-pale-gold/50">
+        <span className="text-[10px] font-mono text-pale-gold/75">
           today {todayTemp.toFixed(1)}°C
         </span>
         <span className="text-pale-gold/70 font-mono">

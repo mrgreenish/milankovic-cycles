@@ -400,7 +400,7 @@ export function PlaygroundSection({
               <h2 className="text-xl md:text-2xl leading-tight">
                 Conduct the Climate
               </h2>
-              <p className="text-xs text-stardust-white/60 leading-snug mt-1">
+              <p className="text-xs text-stardust-white/75 leading-snug mt-1">
                 Move one dial at a time to feel its fingerprint on Earth's
                 climate — then play them together.
               </p>
@@ -487,7 +487,7 @@ export function PlaygroundSection({
             }}
           >
             <div className="flex items-start justify-between gap-3">
-              <p className="text-xs text-stardust-white/60 leading-snug">
+              <p className="text-xs text-stardust-white/75 leading-snug">
                 Move one dial at a time to feel its fingerprint on Earth's
                 climate. Collapse this panel to see the orbit.
               </p>
@@ -510,7 +510,7 @@ export function PlaygroundSection({
                     ?.scrollIntoView({ behavior: "smooth" });
                 }, 80);
               }}
-              className="w-full text-center text-xs text-stardust-white/60 hover:text-pale-gold transition-colors py-3"
+              className="w-full text-center text-xs text-stardust-white/75 hover:text-pale-gold transition-colors py-3"
             >
               Continue the story ↓
             </button>

@@ -92,7 +92,7 @@ export function TemperatureIndicator({ temperature }) {
             </span>
           )}
         </div>
-        <span className="text-sm text-stardust-white opacity-60">{getLabel()}</span>
+        <span className="text-sm text-stardust-white opacity-80">{getLabel()}</span>
       </div>
 
       {/* Gradient bar — uses celestial palette */}
@@ -123,15 +123,15 @@ export function TemperatureIndicator({ temperature }) {
         />
       </div>
       <div className="relative flex justify-between text-xs text-stardust-white">
-        <span className="opacity-30">Cold</span>
+        <span className="opacity-60">Cold</span>
         <span
           aria-hidden="true"
-          className="absolute top-0 -translate-x-1/2 text-[10px] font-mono text-pale-gold/60"
+          className="absolute top-0 -translate-x-1/2 text-[11px] font-mono text-pale-gold/80"
           style={{ left: `${todayPct}%` }}
         >
           today
         </span>
-        <span className="opacity-30">Warm</span>
+        <span className="opacity-60">Warm</span>
       </div>
     </div>
   );
