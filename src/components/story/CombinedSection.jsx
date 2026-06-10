@@ -116,8 +116,10 @@ export function CombinedSection({ onParamsChange, onInView }) {
     return () => observer.disconnect();
   }, [onParamsChange]);
 
-  // User grabs the timeline: stop the replay and let them scrub history
+  // User grabs the timeline (pointer or keyboard): stop the replay and let
+  // them scrub history — the replay's own updates never fire onChange.
   const handleTimelineChange = (p) => {
+    setUserOwned(true);
     setProgress(p);
     const params = lerpParams(ICE_AGE, TODAY, p);
     onParamsChange(params);

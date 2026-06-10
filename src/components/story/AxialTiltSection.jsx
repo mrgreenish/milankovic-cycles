@@ -42,7 +42,12 @@ export function AxialTiltSection({ axialTilt, onAxialTiltChange, onInView }) {
             label="Tilt Earth's axis"
             scienceName="Obliquity"
             value={axialTilt}
-            onChange={onAxialTiltChange}
+            onChange={(v) => {
+              // Any real input — pointer or keyboard — takes over from the
+              // scroll scrub; programmatic scrub updates never fire onChange.
+              setUserOwned(true);
+              onAxialTiltChange(v);
+            }}
             min={MIN}
             max={MAX}
             step={0.1}

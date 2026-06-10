@@ -42,7 +42,12 @@ export function PrecessionSection({ precession, onPrecessionChange, onInView }) 
             label="Spin the wobble"
             scienceName="Precession"
             value={precession}
-            onChange={onPrecessionChange}
+            onChange={(v) => {
+              // Any real input — pointer or keyboard — takes over from the
+              // scroll scrub; programmatic scrub updates never fire onChange.
+              setUserOwned(true);
+              onPrecessionChange(v);
+            }}
             min={0}
             max={360}
             step={1}

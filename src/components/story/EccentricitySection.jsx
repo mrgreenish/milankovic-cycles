@@ -45,7 +45,12 @@ export function EccentricitySection({ eccentricity, onEccentricityChange, onInVi
             label="Stretch the orbit"
             scienceName="Eccentricity"
             value={eccentricity}
-            onChange={onEccentricityChange}
+            onChange={(v) => {
+              // Any real input — pointer or keyboard — takes over from the
+              // scroll scrub; programmatic scrub updates never fire onChange.
+              setUserOwned(true);
+              onEccentricityChange(v);
+            }}
             min={MIN}
             max={MAX}
             step={0.001}
