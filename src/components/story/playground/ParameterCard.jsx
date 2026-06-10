@@ -51,17 +51,17 @@ export function ParameterCard({
             <span className="text-sm font-medium text-stardust-white">
               {label}
             </span>
-            <span className="text-[10px] font-mono uppercase tracking-wider text-pale-gold/50">
+            <span className="text-xs font-mono uppercase tracking-wider text-pale-gold/70">
               {scienceName}
             </span>
           </div>
           <div className="text-pale-gold text-base md:text-lg font-medium leading-tight mt-0.5">
             {headline}
           </div>
-          <div className="text-[11px] font-mono text-stardust-white/50 mt-0.5">
+          <div className="text-xs font-mono text-stardust-white/60 mt-0.5">
             {raw} · today {todayStr}
           </div>
-          <p className="text-xs text-stardust-white/50 mt-1 leading-snug">
+          <p className="text-xs text-stardust-white/60 mt-1 leading-snug">
             {intuition}
           </p>
         </div>

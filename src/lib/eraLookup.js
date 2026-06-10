@@ -9,9 +9,10 @@ export const ERAS = {
     shortLabel: "~21 k yrs ago",
     description:
       "21 k yrs ago — nearly circular orbit; ice sheets covered North America and northern Europe.",
-    // Near-circular orbit → less seasonal amplification at 65°N → colder annual mean
+    // Tuned so this preset is the coldest 65°N annual mean the model produces
+    // (≈ -10.1°C, vs today ≈ -8.3°C) — the era ribbon must read cold → warm.
     eccentricity: 0.005,
-    axialTilt: 22.99,
+    axialTilt: 24.4,
     precession: 0,
   },
   today: {
@@ -40,8 +41,9 @@ export const ERAS = {
     shortLabel: "~50 k yrs ahead",
     description:
       "~50 k yrs from now — orbit circularising again; slightly cooler high-latitude summers.",
+    // Tuned to land slightly colder than today (≈ -8.7°C vs -8.3°C)
     eccentricity: 0.015,
-    axialTilt: 23.2,
+    axialTilt: 23.6,
     precession: 180,
   },
 };

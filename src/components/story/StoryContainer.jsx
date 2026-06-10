@@ -10,6 +10,7 @@ import { OrbitingEarth } from "@/components/three/OrbitingEarth";
 import { SceneEffects } from "@/components/three/SceneEffects";
 import { SceneController } from "./SceneController";
 import { StoryProgressBar } from "./StoryProgressBar";
+import { MobileProgressBar } from "./MobileProgressBar";
 
 import { HeroSection } from "./HeroSection";
 import { EarthSunSection } from "./EarthSunSection";
@@ -21,7 +22,7 @@ import { PlaygroundSection } from "./PlaygroundSection";
 import { ClosingSection } from "./ClosingSection";
 
 import {
-  calculateGlobalTemperature,
+  annualMeanClimate65N,
   smoothTemperature,
 } from "@/lib/temperatureUtils";
 
@@ -78,24 +79,14 @@ export function StoryContainer() {
   // averaging across 4 seasons captures the full orbital forcing signal and
   // gives a stable reading that only changes when the user moves a slider.
   useEffect(() => {
-    const seasons = [0, 0.25, 0.5, 0.75];
-    let totalTemp = 0;
-    let totalIce = 0;
-    for (const s of seasons) {
-      const data = calculateGlobalTemperature({
-        latitude: 65,
-        season: s,
-        eccentricity,
-        axialTilt,
-        precession,
-        co2Level,
-        tempOffset: 0,
-      });
-      totalTemp += data.temperature;
-      totalIce += data.iceFactor;
-    }
-    setTemperature(totalTemp / seasons.length);
-    setIceFactor(totalIce / seasons.length);
+    const climate = annualMeanClimate65N({
+      eccentricity,
+      axialTilt,
+      precession,
+      co2Level,
+    });
+    setTemperature(climate.temperature);
+    setIceFactor(climate.iceFactor);
   }, [eccentricity, axialTilt, precession, co2Level]);
 
   // Smooth temperature display using rAF
@@ -242,8 +233,15 @@ export function StoryContainer() {
         </Suspense>
       </div>
 
-      {/* Navigation */}
-      <nav className="fixed top-4 left-4 z-50 flex gap-3 bg-deep-space/40 backdrop-blur-sm rounded-md px-3 py-1.5">
+      {/* Navigation — on mobile it overlaps section content, so show it only
+          on the hero (the closing section has its own About/FAQ buttons) */}
+      <nav
+        className={`fixed top-4 left-4 z-50 flex gap-3 bg-deep-space/40 backdrop-blur-sm rounded-md px-3 py-1.5 transition-opacity duration-500 ${
+          currentSection > 0
+            ? "opacity-0 pointer-events-none md:opacity-100 md:pointer-events-auto"
+            : ""
+        }`}
+      >
         <Link
           href="/about"
           className="text-sm text-stardust-white opacity-60 hover:opacity-100 transition-opacity"
@@ -258,11 +256,12 @@ export function StoryContainer() {
         </Link>
       </nav>
 
-      {/* Progress bar */}
+      {/* Progress indicators — rail on desktop, thin top bar on mobile */}
       <StoryProgressBar
         currentSection={currentSection}
         totalSections={TOTAL_SECTIONS}
       />
+      <MobileProgressBar />
 
       {/* Scrollable content sections */}
       <div className="relative z-10">

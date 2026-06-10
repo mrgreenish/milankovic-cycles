@@ -1,11 +1,14 @@
 "use client";
-import React, { useRef, useEffect, useState } from "react";
-import { normalizeTemperature } from "@/lib/temperatureUtils";
+import React from "react";
+import {
+  TODAY_TEMP_65N,
+  describeRelativeTemperature,
+} from "@/lib/temperatureUtils";
 
-function TemperatureIcon({ temperature }) {
-  // Abstract SVG icons that match the observatory aesthetic
-  if (temperature < 0) {
-    // Glacial — crystalline star
+// Icons keyed to the delta vs today, matching describeRelativeTemperature
+function TemperatureIcon({ delta }) {
+  if (delta <= -1.5) {
+    // Ice-age territory — crystalline star
     return (
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-temp-cold">
         <path d="M12 2v20M2 12h20M4.93 4.93l14.14 14.14M19.07 4.93L4.93 19.07" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
@@ -13,16 +16,16 @@ function TemperatureIcon({ temperature }) {
       </svg>
     );
   }
-  if (temperature < 5) {
-    // Cold — simple snowflake
+  if (delta < -0.5) {
+    // Colder than today — simple snowflake
     return (
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-temp-cold">
         <path d="M12 2v20M2 12h20M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
       </svg>
     );
   }
-  if (temperature < 10) {
-    // Cool — half circle
+  if (delta <= 0.5) {
+    // Like today — half circle
     return (
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-pale-gold opacity-60">
         <path d="M12 4a8 8 0 0 1 0 16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
@@ -30,8 +33,8 @@ function TemperatureIcon({ temperature }) {
       </svg>
     );
   }
-  if (temperature < 15) {
-    // Moderate — circle with rays
+  if (delta <= 5) {
+    // Warmer than today — circle with rays
     return (
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-pale-gold">
         <circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="1.5" />
@@ -39,7 +42,7 @@ function TemperatureIcon({ temperature }) {
       </svg>
     );
   }
-  // Warm — full sun with rays
+  // Much warmer — full sun with rays
   return (
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-temp-warm">
       <circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="1.5" />
@@ -48,60 +51,34 @@ function TemperatureIcon({ temperature }) {
   );
 }
 
+// Gradient spans ±5°C around today so single-slider moves are clearly visible
+const RANGE = 5;
+
 export function TemperatureIndicator({ temperature }) {
-  // Normalize between roughly -5C and 20C range
-  const norm = normalizeTemperature(temperature, -5, 20);
-  const clampedNorm = Math.max(0, Math.min(1, norm));
-  const percentage = clampedNorm * 100;
-
-  // Track delta changes
-  const prevTemp = useRef(temperature);
-  const [delta, setDelta] = useState(null);
-  const deltaTimeout = useRef(null);
-
-  useEffect(() => {
-    const diff = temperature - prevTemp.current;
-    if (Math.abs(diff) > 0.05) {
-      setDelta(diff);
-      clearTimeout(deltaTimeout.current);
-      deltaTimeout.current = setTimeout(() => setDelta(null), 1500);
-    }
-    prevTemp.current = temperature;
-    return () => clearTimeout(deltaTimeout.current);
-  }, [temperature]);
-
-  const getLabel = () => {
-    if (temperature < 0) return "Glacial";
-    if (temperature < 5) return "Cold";
-    if (temperature < 10) return "Cool";
-    if (temperature < 15) return "Moderate";
-    return "Warm";
-  };
+  const delta = temperature - TODAY_TEMP_65N;
+  const percentage = Math.max(0, Math.min(1, (delta + RANGE) / (RANGE * 2))) * 100;
+  const sign = delta > 0.05 ? "+" : delta < -0.05 ? "−" : "±";
 
   return (
     <div className="w-full space-y-2">
-      {/* Big temperature display */}
+      {/* Headline: change relative to today */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <TemperatureIcon temperature={temperature} />
+          <TemperatureIcon delta={delta} />
           <span className="text-2xl font-mono font-bold text-pale-gold">
-            {temperature.toFixed(1)}°C
+            {sign}
+            {Math.abs(delta).toFixed(1)}°C
           </span>
-          {delta !== null && (
-            <span
-              className={`text-sm font-mono font-medium transition-opacity duration-300 ${
-                delta > 0 ? "text-temp-warm" : "text-temp-cold"
-              }`}
-            >
-              {delta > 0 ? "+" : ""}
-              {delta.toFixed(1)}°C
-            </span>
-          )}
+          <span className="text-sm text-stardust-white opacity-60">
+            vs today
+          </span>
         </div>
-        <span className="text-sm text-stardust-white opacity-60">{getLabel()}</span>
+        <span className="text-sm text-stardust-white opacity-70">
+          {describeRelativeTemperature(delta)}
+        </span>
       </div>
 
-      {/* Gradient bar — uses celestial palette */}
+      {/* Gradient bar centered on today */}
       <div
         className="h-2.5 rounded-full overflow-hidden relative"
         style={{
@@ -109,6 +86,12 @@ export function TemperatureIndicator({ temperature }) {
             "linear-gradient(to right, hsl(222 50% 36%), hsl(215 32% 45%), hsl(30 58% 47%), hsl(20 60% 44%), hsl(10 65% 41%))",
         }}
       >
+        {/* Today tick at center */}
+        <div
+          aria-hidden="true"
+          className="absolute top-0 h-full w-[2px] bg-pale-gold/70"
+          style={{ left: "50%", transform: "translateX(-50%)" }}
+        />
         <div
           className="absolute top-0 h-full w-1.5 bg-stardust-white rounded-full transition-all duration-300"
           style={{
@@ -118,9 +101,10 @@ export function TemperatureIndicator({ temperature }) {
           }}
         />
       </div>
-      <div className="flex justify-between text-xs text-stardust-white opacity-30">
-        <span>Cold</span>
-        <span>Warm</span>
+      <div className="flex justify-between text-xs text-stardust-white opacity-60">
+        <span>Colder</span>
+        <span className="text-pale-gold/80">Today</span>
+        <span>Warmer</span>
       </div>
     </div>
   );

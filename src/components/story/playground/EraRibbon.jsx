@@ -17,11 +17,11 @@ export function EraRibbon({ params, activeKey, onSelect }) {
   return (
     <div className="w-full">
       <div className="flex items-baseline justify-between mb-1.5">
-        <span className="text-[10px] font-mono uppercase tracking-wider text-pale-gold/50">
+        <span className="text-xs font-mono uppercase tracking-wider text-pale-gold/70">
           Jump through time
         </span>
         {displayEra && (
-          <span className="text-[10px] font-mono text-pale-gold/70">
+          <span className="text-xs font-mono text-pale-gold/80">
             {nearestKey && !activeKey ? `like ${displayEra.shortLabel}` : displayEra.shortLabel}
           </span>
         )}
@@ -67,10 +67,10 @@ export function EraRibbon({ params, activeKey, onSelect }) {
                 />
                 <span
                   className={[
-                    "text-[10px] leading-tight font-mono whitespace-nowrap transition-colors",
+                    "text-xs leading-tight font-mono whitespace-nowrap transition-colors",
                     isActive || isNearest
                       ? "text-pale-gold"
-                      : "text-stardust-white/50",
+                      : "text-stardust-white/60",
                   ].join(" ")}
                 >
                   {era.name}
@@ -82,7 +82,7 @@ export function EraRibbon({ params, activeKey, onSelect }) {
       </div>
 
       {displayEra && (
-        <p className="text-[11px] text-stardust-white/60 leading-snug mt-1.5">
+        <p className="text-xs text-stardust-white/70 leading-snug mt-1.5">
           {displayEra.description}
         </p>
       )}

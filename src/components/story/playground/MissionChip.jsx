@@ -1,29 +1,28 @@
 "use client";
 import React, { useEffect, useRef, useState } from "react";
+import { TODAY_TEMP_65N } from "@/lib/temperatureUtils";
 
-// Targets are 65°N annual-mean temperatures — the latitude that drives
-// glacial cycles. Today's value sits near -8°C for current orbital config;
-// the achievable range across the playground sliders is roughly -15 to +10°C.
-const TODAY_TEMP = -8;
-
+// Targets are deltas vs today's 65°N annual mean. The achievable range
+// across the playground sliders is roughly -2 to +19°C relative to today,
+// so every mission below is actually reachable.
 const MISSIONS = [
   {
     id: "iceAge",
     label: "Build an ice age",
-    target: "≤ -12°C",
-    check: (t) => t <= -12,
+    target: "≤ −1.5°C vs today",
+    check: (t) => t - TODAY_TEMP_65N <= -1.5,
   },
   {
     id: "warm",
     label: "Warm Earth up",
-    target: "≥ 5°C",
-    check: (t) => t >= 5,
+    target: "≥ +5°C vs today",
+    check: (t) => t - TODAY_TEMP_65N >= 5,
   },
   {
     id: "today",
     label: "Match today",
-    target: `~${TODAY_TEMP}°C`,
-    check: (t) => Math.abs(t - TODAY_TEMP) < 1.2,
+    target: "within 1°C",
+    check: (t) => Math.abs(t - TODAY_TEMP_65N) < 1,
   },
 ];
 

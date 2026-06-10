@@ -1,10 +1,15 @@
 "use client";
 import React, { useEffect, useRef, useState } from "react";
-import { normalizeTemperature } from "@/lib/temperatureUtils";
+import {
+  normalizeTemperature,
+  TODAY_TEMP_65N,
+  describeRelativeTemperature,
+} from "@/lib/temperatureUtils";
 import { ERAS, findNearestEra } from "@/lib/eraLookup";
 
-function TempIcon({ temperature }) {
-  if (temperature < -10) {
+// Icon thresholds mirror describeRelativeTemperature (delta vs today)
+function TempIcon({ delta }) {
+  if (delta <= -1.5) {
     return (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-temp-cold">
         <path d="M12 2v20M2 12h20M4.93 4.93l14.14 14.14M19.07 4.93L4.93 19.07" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
@@ -12,14 +17,14 @@ function TempIcon({ temperature }) {
       </svg>
     );
   }
-  if (temperature < -5) {
+  if (delta < -0.5) {
     return (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-temp-cold">
         <path d="M12 2v20M2 12h20M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
       </svg>
     );
   }
-  if (temperature < 0) {
+  if (delta <= 0.5) {
     return (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-pale-gold opacity-60">
         <path d="M12 4a8 8 0 0 1 0 16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
@@ -27,7 +32,7 @@ function TempIcon({ temperature }) {
       </svg>
     );
   }
-  if (temperature < 5) {
+  if (delta <= 5) {
     return (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-pale-gold">
         <circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="1.5" />
@@ -43,14 +48,17 @@ function TempIcon({ temperature }) {
   );
 }
 
-// Labels are calibrated for the 65°N annual-mean reading (today ≈ -8°C).
-// The achievable range across playground sliders is roughly -15..+10°C.
-function label(t) {
-  if (t < -10) return "Glacial";
-  if (t < -5) return "Cold";
-  if (t < 0) return "Cool";
-  if (t < 5) return "Moderate";
-  return "Warm";
+// The achievable range across the playground sliders is roughly -10..+11°C
+// on the 65°N annual-mean scale (today ≈ -8.3°C).
+const SCALE_MIN = -11;
+const SCALE_MAX = 11;
+
+// Qualitative read of the ice factor — what matters for glaciation is
+// whether winter snow at 65°N survives the summer melt.
+function summerSnowLabel(iceFactor) {
+  if (iceFactor > 0.85) return "survives summer";
+  if (iceFactor > 0.5) return "barely melts";
+  return "melts each summer";
 }
 
 export function TemperaturePod({
@@ -61,8 +69,14 @@ export function TemperaturePod({
   precession,
   focusedParam,
 }) {
-  const norm = normalizeTemperature(temperature, -15, 10);
+  const norm = normalizeTemperature(temperature, SCALE_MIN, SCALE_MAX);
   const pct = Math.max(0, Math.min(1, norm)) * 100;
+  const todayPct =
+    Math.max(
+      0,
+      Math.min(1, normalizeTemperature(TODAY_TEMP_65N, SCALE_MIN, SCALE_MAX))
+    ) * 100;
+  const deltaVsToday = temperature - TODAY_TEMP_65N;
 
   const [ghostTemp, setGhostTemp] = useState(null);
   const focusStartRef = useRef(null);
@@ -82,7 +96,10 @@ export function TemperaturePod({
 
   const ghostPct =
     ghostTemp !== null
-      ? Math.max(0, Math.min(1, normalizeTemperature(ghostTemp, -15, 10))) * 100
+      ? Math.max(
+          0,
+          Math.min(1, normalizeTemperature(ghostTemp, SCALE_MIN, SCALE_MAX))
+        ) * 100
       : null;
 
   const delta =
@@ -96,25 +113,27 @@ export function TemperaturePod({
   );
   const nearestEra = nearestKey ? ERAS[nearestKey] : null;
 
-  const icePct = Math.round(iceFactor * 100);
-
   return (
     <div className="observatory-panel p-3 md:p-4 space-y-2.5 w-full md:w-60">
       <div className="flex items-center justify-between">
         <span
-          className="text-[10px] font-mono uppercase tracking-wider text-pale-gold/50"
+          className="text-xs font-mono uppercase tracking-wider text-pale-gold/70"
           title="Annual mean at 65°N — the latitude that drives glacial cycles"
         >
           Climate · 65°N
         </span>
-        <span className="text-xs text-stardust-white/70">{label(temperature)}</span>
+        <span className="text-xs text-stardust-white/80">
+          {describeRelativeTemperature(deltaVsToday)}
+        </span>
       </div>
 
       <div className="flex items-center gap-2">
-        <TempIcon temperature={temperature} />
+        <TempIcon delta={deltaVsToday} />
         <span className="text-2xl font-mono font-bold text-pale-gold leading-none">
-          {temperature.toFixed(1)}°C
+          {deltaVsToday > 0.05 ? "+" : deltaVsToday < -0.05 ? "−" : "±"}
+          {Math.abs(deltaVsToday).toFixed(1)}°C
         </span>
+        <span className="text-xs text-stardust-white/60">vs today</span>
         {delta !== null && Math.abs(delta) > 0.1 && (
           <span
             className={[
@@ -135,9 +154,15 @@ export function TemperaturePod({
             "linear-gradient(to right, hsl(222 50% 36%), hsl(215 32% 45%), hsl(30 58% 47%), hsl(20 60% 44%), hsl(10 65% 41%))",
         }}
       >
+        <div
+          className="absolute top-0 h-full w-[2px] bg-pale-gold/70"
+          style={{ left: `${todayPct}%`, transform: "translateX(-50%)" }}
+          title="Today"
+          aria-hidden
+        />
         {ghostPct !== null && (
           <div
-            className="absolute top-0 h-full w-[2px] bg-pale-gold/50"
+            className="absolute top-0 h-full w-[2px] bg-stardust-white/40"
             style={{ left: `${ghostPct}%`, transform: "translateX(-50%)" }}
             aria-hidden
           />
@@ -152,11 +177,14 @@ export function TemperaturePod({
         />
       </div>
 
-      <div className="flex items-center justify-between text-[11px]">
-        <span className="text-stardust-white/50">
-          Ice <span className="font-mono text-pale-gold/70">{icePct}%</span>
+      <div className="flex items-center justify-between text-xs">
+        <span className="text-stardust-white/70">
+          Snow{" "}
+          <span className="font-mono text-pale-gold/80">
+            {summerSnowLabel(iceFactor)}
+          </span>
         </span>
-        <span className="text-pale-gold/70 font-mono">
+        <span className="text-pale-gold/80 font-mono">
           {nearestEra ? `like ${nearestEra.shortLabel}` : ""}
         </span>
       </div>

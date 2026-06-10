@@ -164,8 +164,9 @@
 
 /* Custom UI Components */
 .observatory-panel {
-  @apply bg-opacity-70 backdrop-blur-md border border-opacity-30 rounded-lg;
-  background-color: hsla(var(--deep-space), 0.7);
+  @apply backdrop-blur-md border border-opacity-30 rounded-lg;
+  /* Opaque enough that the sun's glow can't wash out body text */
+  background-color: hsla(var(--deep-space), 0.85);
   border-color: hsla(var(--slate-blue), 0.3);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2), 
               0 0 0 1px hsla(var(--antique-brass), 0.1),

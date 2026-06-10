@@ -27,10 +27,10 @@ export function StoryProgressBar({ currentSection, totalSections }) {
         >
           {/* Label - visible on hover or when active */}
           <span
-            className={`text-xs font-mono whitespace-nowrap transition-all duration-300 ${
+            className={`text-xs font-mono whitespace-nowrap px-2 py-0.5 rounded bg-deep-space/80 backdrop-blur-sm transition-all duration-300 ${
               currentSection === i
-                ? "opacity-80 text-pale-gold translate-x-0"
-                : "opacity-0 group-hover:opacity-60 text-stardust-white translate-x-2 group-hover:translate-x-0"
+                ? "opacity-100 text-pale-gold translate-x-0"
+                : "opacity-0 group-hover:opacity-80 text-stardust-white translate-x-2 group-hover:translate-x-0"
             }`}
           >
             {SECTION_LABELS[i]}

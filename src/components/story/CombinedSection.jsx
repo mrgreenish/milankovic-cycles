@@ -1,9 +1,24 @@
 "use client";
 import React, { useEffect, useRef, useState } from "react";
 import { StorySection } from "./StorySection";
+import { ERAS } from "@/lib/eraLookup";
+import {
+  TODAY_TEMP_65N,
+  describeRelativeTemperature,
+} from "@/lib/temperatureUtils";
 
-const ICE_AGE = { eccentricity: 0.019, axialTilt: 22.99, precession: 114 };
-const TODAY = { eccentricity: 0.0167, axialTilt: 23.44, precession: 0 };
+// Animate between the same presets the playground's era ribbon uses,
+// so the temperatures shown here match every other readout on the site.
+const ICE_AGE = {
+  eccentricity: ERAS.iceAge.eccentricity,
+  axialTilt: ERAS.iceAge.axialTilt,
+  precession: ERAS.iceAge.precession,
+};
+const TODAY = {
+  eccentricity: ERAS.today.eccentricity,
+  axialTilt: ERAS.today.axialTilt,
+  precession: ERAS.today.precession,
+};
 const DURATION = 6000;
 const PAUSE = 2000;
 
@@ -102,10 +117,9 @@ export function CombinedSection({ onParamsChange, onInView, temperature }) {
     return () => observer.disconnect();
   }, [onParamsChange]);
 
-  // Interpolated temperature for display
-  const iceTemp = -5;
-  const todayTemp = 14;
-  const displayTemp = iceTemp + (todayTemp - iceTemp) * progress;
+  // Live model temperature, shown relative to today like every other readout
+  const delta = temperature - TODAY_TEMP_65N;
+  const deltaSign = delta > 0.05 ? "+" : delta < -0.05 ? "−" : "±";
 
   return (
     <StorySection id={5} onInView={handleInView}>
@@ -135,15 +149,15 @@ export function CombinedSection({ onParamsChange, onInView, temperature }) {
               />
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm font-mono text-blue-400">
-                ❄️ {iceTemp}°C
-              </span>
+              <span className="text-sm font-mono text-blue-400">❄️ Ice age</span>
               <span className="text-lg font-mono font-bold text-pale-gold">
-                {displayTemp.toFixed(1)}°C
+                {deltaSign}
+                {Math.abs(delta).toFixed(1)}°C{" "}
+                <span className="text-xs font-normal text-stardust-white opacity-60">
+                  vs today · {describeRelativeTemperature(delta)}
+                </span>
               </span>
-              <span className="text-sm font-mono text-yellow-400">
-                ☀️ {todayTemp}°C
-              </span>
+              <span className="text-sm font-mono text-yellow-400">☀️ Today</span>
             </div>
           </div>
 

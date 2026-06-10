@@ -31,7 +31,13 @@ export function OrbitingEarth({
   useFrame((_, delta) => {
     if (!groupRef.current || !isReady) return;
 
-    const isPinnedSection = currentSection === 3 || currentSection === 4;
+    // Pin Earth at perihelion in sections where the camera frames it directly
+    // (hero, tilt, precession, closing) so it never drifts out of shot
+    const isPinnedSection =
+      currentSection === 0 ||
+      currentSection === 3 ||
+      currentSection === 4 ||
+      currentSection === 7;
     if (!isPinnedSection) {
       orbitThetaRef.current += delta * 0.1;
     }

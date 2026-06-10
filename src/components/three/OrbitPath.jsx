@@ -38,6 +38,11 @@ export function OrbitPath({
   ];
 
   const showDistanceLabels = currentSection === 2;
+  // Labels are storytelling props — keep them out of sections where a centered
+  // card covers the scene (Combined, Closing), so they never collide with UI.
+  const labelsSuppressed = currentSection === 5 || currentSection >= 7;
+  // Keep drei Html below page content (z-10) and nav (z-50)
+  const HTML_Z = [5, 0];
 
   const orbitFade =
     !spotlight
@@ -109,7 +114,7 @@ export function OrbitPath({
 
       {showDistanceLabels && (
         <>
-          <Html position={[-a + 2, 2, 0]} center>
+          <Html position={[-a + 2, 2, 0]} center zIndexRange={HTML_Z}>
             <div
               style={{
                 color: "#ef4444",
@@ -125,7 +130,7 @@ export function OrbitPath({
               ← Farther from Sun
             </div>
           </Html>
-          <Html position={[a - 2, 2, 0]} center>
+          <Html position={[a - 2, 2, 0]} center zIndexRange={HTML_Z}>
             <div
               style={{
                 color: "#fbbf24",
@@ -144,20 +149,22 @@ export function OrbitPath({
         </>
       )}
 
-      <Html position={[0, 3, 0]} center>
-        <div
-          style={{
-            color: "#fbbf24",
-            fontSize: "11px",
-            fontWeight: "500",
-            whiteSpace: "nowrap",
-            opacity: 0.7 * orbitFade,
-            textShadow: "0 0 8px rgba(251, 191, 36, 0.5)",
-          }}
-        >
-          Sun ☀️
-        </div>
-      </Html>
+      {!labelsSuppressed && (
+        <Html position={[0, 3, 0]} center zIndexRange={HTML_Z}>
+          <div
+            style={{
+              color: "#fbbf24",
+              fontSize: "11px",
+              fontWeight: "500",
+              whiteSpace: "nowrap",
+              opacity: 0.7 * orbitFade,
+              textShadow: "0 0 8px rgba(251, 191, 36, 0.5)",
+            }}
+          >
+            Sun ☀️
+          </div>
+        </Html>
+      )}
 
       {seasonalMarkers.map((position, index) => (
         <group key={index} position={position}>
@@ -185,8 +192,8 @@ export function OrbitPath({
               opacity={0.3 * markerFade}
             />
           </mesh>
-          {showLabels && (
-            <Html position={[0, 1, 0]} center>
+          {showLabels && !labelsSuppressed && (
+            <Html position={[0, 1, 0]} center zIndexRange={HTML_Z}>
               <div
                 style={{
                   color: "white",

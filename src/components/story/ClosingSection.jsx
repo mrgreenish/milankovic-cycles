@@ -3,14 +3,13 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { StorySection } from "./StorySection";
 import { ERAS } from "@/lib/eraLookup";
+import { TODAY_TEMP_65N } from "@/lib/temperatureUtils";
 
 function buildSnapshotLine(snapshot) {
   if (!snapshot) return null;
   const { temperature, eraKey } = snapshot;
-  // Comparison is against today's 65°N annual mean (~-8°C in the playground
-  // calibration), the same scale as the TemperaturePod reading.
-  const todayTemp = -8;
-  const delta = temperature - todayTemp;
+  // Compared against today's 65°N annual mean — same scale as TemperaturePod.
+  const delta = temperature - TODAY_TEMP_65N;
   const absDelta = Math.abs(delta);
   const direction = delta > 0 ? "warmer" : "colder";
   const magnitude =

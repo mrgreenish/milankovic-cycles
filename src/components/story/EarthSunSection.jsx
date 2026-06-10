@@ -21,7 +21,8 @@ export function EarthSunSection({ onInView }) {
           {/* Interactive hint */}
           <div className="observatory-panel p-4 bg-deep-space bg-opacity-50 text-center">
             <p className="text-sm text-pale-gold opacity-80">
-              👆 The 3D view above shows Earth orbiting the Sun. Keep scrolling to learn about the three orbital changes.
+              The glowing ring in the 3D view is Earth's path around the Sun.
+              Keep scrolling to learn about the three orbital changes.
             </p>
           </div>
         </div>

@@ -33,7 +33,7 @@ export function EccentricitySection({ eccentricity, onEccentricityChange, temper
             min={0.005}
             max={0.058}
             step={0.001}
-            hint="Watch the orbit shape change above"
+            hint="Watch the orbit change shape in the 3D view"
             minLabel="Rounder orbit"
             maxLabel="More oval orbit"
             formatValue={(nextValue) => nextValue.toFixed(3)}

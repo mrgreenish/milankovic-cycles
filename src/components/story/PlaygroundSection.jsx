@@ -47,9 +47,11 @@ export function PlaygroundSection({
   const [activeEraKey, setActiveEraKey] = useState("today");
   const [showGraph, setShowGraph] = useState(false);
   const [graphOpen, setGraphOpen] = useState(false);
+  const [snapshotSaved, setSnapshotSaved] = useState(false);
   const hasInitialized = useRef(false);
   const animRef = useRef(null);
   const stickyTimer = useRef(null);
+  const snapshotTimer = useRef(null);
 
   const handleInView = (id) => {
     onInView(id);
@@ -110,6 +112,7 @@ export function PlaygroundSection({
     return () => {
       cancelAnim();
       clearTimeout(stickyTimer.current);
+      clearTimeout(snapshotTimer.current);
     };
   }, []);
 
@@ -158,45 +161,58 @@ export function PlaygroundSection({
       precession,
       eraKey: activeEraKey,
     });
+    setSnapshotSaved(true);
+    clearTimeout(snapshotTimer.current);
+    snapshotTimer.current = setTimeout(() => setSnapshotSaved(false), 2500);
   };
 
   const params = { eccentricity, axialTilt, precession };
 
   return (
-    <StorySection id={6} onInView={handleInView} className="!items-end pb-6 md:pb-10">
-      <div className="w-full md:pl-[42%] px-4 md:pr-10">
-        <div className="observatory-panel p-4 md:p-5 space-y-3 md:space-y-4 max-w-xl ml-auto">
-          <header className="flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              <h2 className="text-xl md:text-2xl leading-tight">
-                Conduct the Climate
-              </h2>
-              <p className="text-xs text-stardust-white/60 leading-snug mt-1">
-                Move one dial at a time to feel its fingerprint on Earth's
-                climate — then play them together.
-              </p>
+    <StorySection id={6} onInView={handleInView} className="!items-end pb-0 md:pb-10">
+      <div className="w-full px-0 md:pl-[42%] md:px-4 md:pr-10">
+        {/* On mobile this is a bottom sheet capped at ~55vh so the 3D scene
+            stays visible while sliders are dragged; desktop keeps the panel */}
+        <div className="observatory-panel p-4 md:p-5 space-y-3 md:space-y-4 w-full md:max-w-xl md:ml-auto max-md:max-h-[55vh] max-md:overflow-y-auto max-md:overscroll-contain max-md:rounded-b-none max-md:rounded-t-2xl">
+          {/* Sticky readout: handle, header, mission, temperature stay visible
+              while the control list scrolls underneath on mobile */}
+          <div className="max-md:sticky max-md:top-0 max-md:z-10 max-md:-mx-4 max-md:-mt-4 max-md:px-4 max-md:pt-2 max-md:pb-3 max-md:bg-deep-space/95 max-md:backdrop-blur-sm space-y-3">
+            <div
+              className="md:hidden mx-auto h-1 w-10 rounded-full bg-stardust-white/25"
+              aria-hidden="true"
+            />
+            <header className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <h2 className="text-xl md:text-2xl leading-tight">
+                  Conduct the Climate
+                </h2>
+                <p className="text-xs text-stardust-white/60 leading-snug mt-1">
+                  Move one dial at a time to feel its fingerprint on Earth's
+                  climate — then play them together.
+                </p>
+              </div>
+              <button
+                onClick={resetToToday}
+                className="celestial-button text-xs py-1 px-2.5 whitespace-nowrap shrink-0"
+                title="Reset to today's values"
+              >
+                Reset ↻
+              </button>
+            </header>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <MissionChip temperature={temperature} />
             </div>
-            <button
-              onClick={resetToToday}
-              className="celestial-button text-[11px] py-1 px-2.5 whitespace-nowrap shrink-0"
-              title="Reset to today's values"
-            >
-              Reset ↻
-            </button>
-          </header>
 
-          <div className="flex flex-wrap items-center gap-2">
-            <MissionChip temperature={temperature} />
+            <TemperaturePod
+              temperature={temperature}
+              iceFactor={iceFactor}
+              eccentricity={eccentricity}
+              axialTilt={axialTilt}
+              precession={precession}
+              focusedParam={focusedParam}
+            />
           </div>
-
-          <TemperaturePod
-            temperature={temperature}
-            iceFactor={iceFactor}
-            eccentricity={eccentricity}
-            axialTilt={axialTilt}
-            precession={precession}
-            focusedParam={focusedParam}
-          />
 
           <EraRibbon
             params={params}
@@ -261,18 +277,28 @@ export function PlaygroundSection({
           <div className="flex items-center justify-between gap-2 pt-1 border-t border-slate-blue/20">
             <button
               onClick={() => setGraphOpen((v) => !v)}
-              className="text-[11px] text-stardust-white/60 hover:text-pale-gold transition-colors"
+              className="text-xs text-stardust-white/70 hover:text-pale-gold transition-colors"
               aria-expanded={graphOpen}
             >
               {graphOpen ? "▾ Hide" : "▸ Show"} 200-year history
             </button>
             <button
               onClick={handleSnapshot}
-              className="celestial-button text-[11px] py-1 px-2.5"
+              className="celestial-button text-xs py-1 px-2.5"
             >
-              Name this climate →
+              {snapshotSaved ? "Saved ✓" : "Name this climate →"}
             </button>
           </div>
+          <p
+            className={`text-xs text-pale-gold text-right transition-opacity duration-300 ${
+              snapshotSaved ? "opacity-90" : "opacity-0"
+            }`}
+            aria-live="polite"
+          >
+            {snapshotSaved
+              ? "Your climate is saved — you'll see it again at the end ↓"
+              : " "}
+          </p>
 
           {graphOpen && showGraph && (
             <div className="pt-1">

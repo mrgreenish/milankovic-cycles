@@ -494,4 +494,63 @@ export function smoothTemperature(currentTemp, targetTemp, smoothingFactor = 0.5
     return isFinite(currentTemp) ? currentTemp : isFinite(targetTemp) ? targetTemp : 10;
   }
   return currentTemp + smoothingFactor * (targetTemp - currentTemp);
-} 
+}
+
+/**
+ * Annual-mean climate at 65°N — the Milankovitch-critical latitude.
+ * Averages the four seasons so the reading captures the full orbital
+ * forcing signal and stays stable for a given parameter set.
+ *
+ * @returns {{temperature: number, iceFactor: number}}
+ */
+export function annualMeanClimate65N({
+  eccentricity,
+  axialTilt,
+  precession,
+  co2Level = 280,
+}) {
+  const seasons = [0, 0.25, 0.5, 0.75];
+  let temperature = 0;
+  let iceFactor = 0;
+  for (const season of seasons) {
+    const data = calculateGlobalTemperature({
+      latitude: 65,
+      season,
+      eccentricity,
+      axialTilt,
+      precession,
+      co2Level,
+      tempOffset: 0,
+    });
+    temperature += data.temperature;
+    iceFactor += data.iceFactor;
+  }
+  return {
+    temperature: temperature / seasons.length,
+    iceFactor: iceFactor / seasons.length,
+  };
+}
+
+/**
+ * Today's 65°N annual mean (≈ -8.3°C) — the baseline every temperature
+ * readout compares against. An absolute 65°N reading looks alarming out of
+ * context, so the UI always presents temperature relative to this value.
+ */
+export const TODAY_TEMP_65N = annualMeanClimate65N({
+  eccentricity: 0.0167,
+  axialTilt: 23.44,
+  precession: 0,
+}).temperature;
+
+/**
+ * Plain-language label for a temperature delta relative to today.
+ *
+ * @param {number} delta - temperature minus TODAY_TEMP_65N, in °C
+ */
+export function describeRelativeTemperature(delta) {
+  if (delta <= -1.5) return "Ice-age territory";
+  if (delta < -0.5) return "Colder than today";
+  if (delta <= 0.5) return "Like today";
+  if (delta <= 5) return "Warmer than today";
+  return "Much warmer than today";
+}

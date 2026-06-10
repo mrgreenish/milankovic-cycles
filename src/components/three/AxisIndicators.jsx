@@ -56,7 +56,8 @@ export const AxisIndicators = React.memo(function AxisIndicators({ spotlight = n
   return (
     <group>
       <primitive object={arrow} />
-      <Html position={[0, 5.2, 0]} center>
+      {/* zIndexRange keeps the label below page content (z-10) and nav (z-50) */}
+      <Html position={[0, 5.2, 0]} center zIndexRange={[5, 0]}>
         <div
           style={{
             color: "white",

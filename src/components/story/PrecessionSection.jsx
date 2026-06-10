@@ -36,7 +36,7 @@ export function PrecessionSection({ precession, onPrecessionChange, temperature,
             min={0}
             max={360}
             step={1}
-            hint="Watch the axis tip move along the dashed circle above"
+            hint="Watch the axis tip move along the dashed circle"
             minLabel="Today's orientation"
             maxLabel="Full cycle (back to start)"
             formatValue={(nextValue) => `${nextValue.toFixed(0)}°`}

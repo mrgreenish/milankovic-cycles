@@ -133,7 +133,9 @@ export function StorySlider({
 
       {hint && (
         <p className="text-sm text-pale-gold opacity-70 flex items-center gap-1">
-          <span className="inline-block animate-bounce text-xs">↑</span> {hint}
+          {/* The scene sits above the card only on mobile — hide the arrow on desktop */}
+          <span className="inline-block animate-bounce text-xs md:hidden">↑</span>{" "}
+          {hint}
         </p>
       )}
 
@@ -179,15 +181,16 @@ export function StorySlider({
         />
       </div>
 
-      <div className="relative">
-        <div className="flex justify-between gap-4 text-xs text-stardust-white opacity-40">
+      {/* mt keeps the labels clear of the 20-24px slider thumb */}
+      <div className="relative mt-3">
+        <div className="flex justify-between gap-4 text-xs text-stardust-white opacity-60">
           <span>{minLabel || min}</span>
           <span className="text-right">{maxLabel || max}</span>
         </div>
         {todayPct !== null && (
           <span
             aria-hidden="true"
-            className="absolute top-0 text-[10px] font-mono text-pale-gold opacity-70 whitespace-nowrap"
+            className="absolute top-0 text-xs font-mono text-pale-gold opacity-80 whitespace-nowrap"
             style={{
               left: `${todayPct}%`,
               transform: "translateX(-50%)",

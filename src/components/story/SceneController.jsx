@@ -5,9 +5,9 @@ import * as THREE from "three";
 
 // Camera positions and lookAt targets per section
 const SCENE_CONFIGS = {
-  0: { // Hero - moderately close view centered on orbit, Earth always visible
-    camera: [0, 15, 35],
-    lookAt: [0, 0, 0],
+  0: { // Hero - Earth pinned at perihelion, framed small below the title
+    camera: [20, 8, 26],
+    lookAt: [20, 7, 0],
     showSun: false,
     showOrbit: false,
     showAxis: false,
@@ -54,9 +54,9 @@ const SCENE_CONFIGS = {
     showOrbit: true,
     showAxis: true,
   },
-  7: { // Closing - cinematic pullback
-    camera: [0, 12, 30],
-    lookAt: [0, 0, 0],
+  7: { // Closing - calm pullback with Earth pinned off to the side
+    camera: [10, 8, 30],
+    lookAt: [16, 0, 0],
     showSun: false,
     showOrbit: false,
     showAxis: false,
