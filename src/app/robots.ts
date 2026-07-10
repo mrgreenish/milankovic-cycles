@@ -6,6 +6,7 @@ export default function robots(): MetadataRoute.Robots {
       userAgent: "*",
       allow: "/",
     },
-    sitemap: "https://milankovic-cycles.vercel.app/sitemap.xml",
+    sitemap: "https://milankovitchcycles.com/sitemap.xml",
+    host: "https://milankovitchcycles.com",
   };
 }

@@ -10,6 +10,7 @@ import { CycleReadout } from "@/components/experience/CycleReadout";
 import { ReadingCard } from "@/components/experience/ReadingCard";
 import { ChapterNav } from "@/components/experience/ChapterNav";
 import { StartTourLink } from "@/components/experience/StartTourLink";
+import { LEARN_TOPICS } from "@/lib/learn/topics";
 
 const causeSteps = [
   { number: "01", title: "Earth moves", copy: "Its orbit and axis change slowly and predictably." },
@@ -43,7 +44,7 @@ export default function HomePage() {
                 </Link>
               </div>
               <p className="hero__signature">
-                Created by Milutin Milanković&apos;s great-grandson.
+                <Link href="/about">Created by Milutin Milanković&apos;s great-grandson.</Link>
               </p>
             </div>
             <div className="hero__preview" aria-label="The three Milanković cycles">
@@ -221,6 +222,24 @@ export default function HomePage() {
             </section>
           </TourFrame>
         </ExperienceProvider>
+
+        <section className="home-topics" aria-labelledby="home-topics-title">
+          <div>
+            <p className="eyebrow">Go Deeper</p>
+            <h2 id="home-topics-title">Five questions, explained clearly</h2>
+            <p>
+              Read focused, source-backed guides to each orbital motion, the classic 65°N
+              indicator, and the crucial distinction between ice-age pacing and modern warming.
+            </p>
+          </div>
+          <nav aria-label="Milanković cycle topic guides">
+            {LEARN_TOPICS.map((topic) => (
+              <Link href={`/learn/${topic.slug}`} key={topic.slug}>
+                {topic.shortTitle}<span aria-hidden="true">→</span>
+              </Link>
+            ))}
+          </nav>
+        </section>
       </main>
       <SiteFooter />
     </>

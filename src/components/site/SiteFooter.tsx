@@ -10,9 +10,11 @@ export function SiteFooter() {
         </p>
       </div>
       <nav aria-label="Footer navigation">
+        <Link href="/learn">Learn the Cycles</Link>
         <Link href="/lab">Open the Lab</Link>
         <Link href="/sources">Evidence &amp; Sources</Link>
         <Link href="/about">About the Project</Link>
+        <Link href="/educators">For Educators</Link>
         <Link href="/faq">FAQ</Link>
       </nav>
       <p className="site-footer__meta">
@@ -21,4 +23,3 @@ export function SiteFooter() {
     </footer>
   );
 }
-

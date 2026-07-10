@@ -1,10 +1,11 @@
 import Link from "next/link";
 
 const links = [
-  { href: "/", label: "Learn" },
+  { href: "/", label: "Tour" },
+  { href: "/learn", label: "Learn" },
   { href: "/lab", label: "Lab" },
   { href: "/about", label: "About" },
-  { href: "/faq", label: "FAQ" },
+  { href: "/educators", label: "Educators" },
 ];
 
 export function SiteHeader() {
@@ -41,4 +42,3 @@ export function SiteHeader() {
     </header>
   );
 }
-

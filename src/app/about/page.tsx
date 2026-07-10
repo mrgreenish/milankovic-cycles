@@ -5,9 +5,16 @@ import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
 
 export const metadata: Metadata = {
-  title: "About",
+  title: "Milutin Milanković’s Great-Grandson",
   description:
-    "The story of Milutin Milanković, his great-grandson Filip van Harreveld, and this visual science project.",
+    "How Milutin Milanković’s great-grandson Filip van Harreveld turned a family scientific legacy into an interactive climate education project.",
+  alternates: { canonical: "/about" },
+  openGraph: {
+    title: "Milutin Milanković’s Great-Grandson · About the Project",
+    description:
+      "How Filip van Harreveld turned his great-grandfather’s scientific legacy into an interactive climate education project.",
+    url: "/about",
+  },
 };
 
 export default function AboutPage() {
@@ -29,7 +36,7 @@ export default function AboutPage() {
           </div>
           <div>
             <p className="eyebrow">A Family Thread Through Science</p>
-            <h1>Inspired by Milutin Milanković</h1>
+            <h1>His Great-Grandson Brings the Cycles to Life</h1>
             <p className="page-lede">
               Milutin turned patient calculation into a new way of seeing Earth&apos;s climate.
               As his great-grandson, I wanted to make that idea tangible for a new generation.
@@ -79,4 +86,3 @@ export default function AboutPage() {
     </>
   );
 }
-

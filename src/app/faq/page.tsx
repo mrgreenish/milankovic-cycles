@@ -6,6 +6,12 @@ import { SiteFooter } from "@/components/site/SiteFooter";
 export const metadata: Metadata = {
   title: "Frequently Asked Questions",
   description: "Clear answers about Milanković cycles, ice ages, 65°N, and modern warming.",
+  alternates: { canonical: "/faq" },
+  openGraph: {
+    title: "Frequently Asked Questions · Milanković Cycles",
+    description: "Clear answers about Milanković cycles, ice ages, 65°N, and modern warming.",
+    url: "/faq",
+  },
 };
 
 const questions = [
@@ -88,4 +94,3 @@ export default function FaqPage() {
     </>
   );
 }
-

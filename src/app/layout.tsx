@@ -17,7 +17,7 @@ const fraunces = Fraunces({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://milankovic-cycles.vercel.app"),
+  metadataBase: new URL("https://milankovitchcycles.com"),
   title: {
     default: "Milanković Cycles — Why Ice Ages Come and Go",
     template: "%s · Milanković Cycles",
@@ -60,4 +60,3 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     </html>
   );
 }
-
