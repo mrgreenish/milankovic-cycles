@@ -1,11 +1,11 @@
 {
-  "name": "Milanković Cycles Simulation",
+  "name": "Milanković Cycles, Explained Visually",
   "short_name": "Milanković Cycles",
-  "description": "Interactive visualization of Milutin Milanković's astronomical theory of climate changes",
+  "description": "A guided visual tour and validated orbital-insolation lab for understanding Milanković cycles.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#000000",
+  "background_color": "#070A12",
+  "theme_color": "#070A12",
   "icons": [
     {
       "src": "/miltin-milankovic.png",
@@ -19,4 +19,4 @@
       "type": "image/png"
     }
   ]
-} 
+}
