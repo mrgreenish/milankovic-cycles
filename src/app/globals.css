@@ -2482,6 +2482,46 @@ tbody td {
   }
 }
 
+@media (max-width: 760px) {
+  .home-topics,
+  .topic-action {
+    grid-template-columns: 1fr;
+  }
+
+  .home-topics {
+    width: min(100% - 2rem, 700px);
+  }
+
+  .topic-grid__items,
+  .outreach-grid__items,
+  .related-topics > div {
+    grid-template-columns: 1fr;
+  }
+
+  .topic-card:first-child {
+    grid-column: auto;
+  }
+
+  .topic-facts {
+    grid-template-columns: 1fr;
+  }
+
+  .topic-action .button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 430px) {
+  .topic-card {
+    grid-template-columns: auto 1fr;
+    min-height: 0;
+  }
+
+  .topic-card > b {
+    display: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
