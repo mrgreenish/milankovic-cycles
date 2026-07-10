@@ -7,6 +7,12 @@ import { ORBITAL_MILESTONES } from "@/lib/orbital/milestones";
 export const metadata: Metadata = {
   title: "Evidence & Sources",
   description: "Data provenance, equations, reference values, and limitations for the orbital lab.",
+  alternates: { canonical: "/sources" },
+  openGraph: {
+    title: "Evidence & Sources · Milanković Cycles",
+    description: "Data provenance, equations, reference values, and limitations for the orbital lab.",
+    url: "/sources",
+  },
 };
 
 export default function SourcesPage() {
@@ -107,4 +113,3 @@ export default function SourcesPage() {
     </>
   );
 }
-

@@ -7,6 +7,12 @@ import { LabExperience } from "@/components/lab/LabExperience";
 export const metadata: Metadata = {
   title: "Orbital Lab",
   description: "Experiment with eccentricity, obliquity, and precession using validated orbital inputs.",
+  alternates: { canonical: "/lab" },
+  openGraph: {
+    title: "Orbital Lab · Milanković Cycles",
+    description: "Experiment with eccentricity, obliquity, and precession using validated orbital inputs.",
+    url: "/lab",
+  },
 };
 
 export default function LabPage() {
@@ -22,4 +28,3 @@ export default function LabPage() {
     </>
   );
 }
-
