@@ -1,9 +1,13 @@
 import { describe, expect, it } from "vitest";
+import { Vector3 } from "three";
 import {
   aphelionDistanceAu,
+  degreesToRadians,
   ellipseFocusDistance,
   ellipseSemiMinorAxis,
+  latitudeCircleGeometry,
   perihelionDistanceAu,
+  summerSolsticeAxisVector,
 } from "./geometry";
 import {
   calculateDailyMeanInsolation,
@@ -72,5 +76,35 @@ describe("ellipse geometry", () => {
     expect(b * b + c * c).toBeCloseTo(a * a, 10);
     expect(perihelionDistanceAu(eccentricity)).toBeCloseTo(0.95, 10);
     expect(aphelionDistanceAu(eccentricity)).toBeCloseTo(1.05, 10);
+  });
+
+  it("leans the northern axis toward the Sun at northern summer solstice", () => {
+    const parameters = ORBITAL_MILESTONES[2].parameters;
+    const axis = new Vector3(...summerSolsticeAxisVector(parameters));
+    const trueAnomaly = degreesToRadians(
+      270 - parameters.earthPerihelionLongitudeDeg,
+    );
+    const earthToSun = new Vector3(
+      -Math.cos(trueAnomaly),
+      0,
+      -Math.sin(trueAnomaly),
+    );
+
+    expect(axis.length()).toBeCloseTo(1, 10);
+    expect(axis.y).toBeCloseTo(
+      Math.cos(degreesToRadians(parameters.obliquityDeg)),
+      10,
+    );
+    expect(axis.dot(earthToSun)).toBeCloseTo(
+      Math.sin(degreesToRadians(parameters.obliquityDeg)),
+      10,
+    );
+  });
+
+  it("places the 65 degree latitude ring at the correct spherical radius", () => {
+    const ring = latitudeCircleGeometry(1, 65);
+    expect(ring.axisOffset).toBeCloseTo(Math.sin(degreesToRadians(65)), 10);
+    expect(ring.circleRadius).toBeCloseTo(Math.cos(degreesToRadians(65)), 10);
+    expect(ring.axisOffset ** 2 + ring.circleRadius ** 2).toBeCloseTo(1, 10);
   });
 });

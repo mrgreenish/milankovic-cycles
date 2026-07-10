@@ -34,6 +34,14 @@ export function displayEccentricity(eccentricity: number, scale: OrbitScale) {
   return scale === "5x" ? Math.min(eccentricity * 5, 0.35) : eccentricity;
 }
 
+export function latitudeCircleGeometry(radius: number, latitudeDeg: number) {
+  const latitude = degreesToRadians(latitudeDeg);
+  return {
+    axisOffset: radius * Math.sin(latitude),
+    circleRadius: radius * Math.cos(latitude),
+  };
+}
+
 export function geocentricSolarLongitudeAtPerihelion(
   parameters: OrbitalParameters,
 ) {
@@ -48,3 +56,21 @@ export function seasonOfClosestApproach(parameters: OrbitalParameters) {
   return "Northern winter";
 }
 
+export function summerSolsticeAxisVector(
+  parameters: Pick<
+    OrbitalParameters,
+    "obliquityDeg" | "earthPerihelionLongitudeDeg"
+  >,
+): [number, number, number] {
+  const trueAnomaly = degreesToRadians(
+    270 - parameters.earthPerihelionLongitudeDeg,
+  );
+  const tilt = degreesToRadians(parameters.obliquityDeg);
+  const horizontal = Math.sin(tilt);
+
+  return [
+    -Math.cos(trueAnomaly) * horizontal,
+    Math.cos(tilt),
+    -Math.sin(trueAnomaly) * horizontal,
+  ];
+}

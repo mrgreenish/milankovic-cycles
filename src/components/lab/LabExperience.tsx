@@ -28,6 +28,7 @@ import type {
   OrbitScale,
   OrbitalMilestoneId,
   OrbitalParameters,
+  OrbitalVisualFocus,
 } from "@/lib/orbital/types";
 import { SceneLoader } from "@/components/experience/SceneLoader";
 
@@ -36,13 +37,15 @@ type LabState = {
   scale: OrbitScale;
   invalidFields: string[];
   selectedPreset: OrbitalMilestoneId | null;
+  visualFocus: OrbitalVisualFocus;
 };
 
 type LabAction =
-  | { type: "parameter"; key: keyof OrbitalParameters; value: number }
+  | { type: "parameter"; key: keyof OrbitalParameters; value: number; focus: OrbitalVisualFocus }
   | { type: "preset"; id: OrbitalMilestoneId; parameters: OrbitalParameters }
   | { type: "reset" }
   | { type: "scale"; scale: OrbitScale }
+  | { type: "focus"; focus: OrbitalVisualFocus }
   | { type: "dismiss-invalid" };
 
 function labReducer(state: LabState, action: LabAction): LabState {
@@ -52,6 +55,7 @@ function labReducer(state: LabState, action: LabAction): LabState {
         ...state,
         parameters: { ...state.parameters, [action.key]: action.value },
         selectedPreset: null,
+        visualFocus: action.focus,
       };
     case "preset":
       return {
@@ -59,6 +63,7 @@ function labReducer(state: LabState, action: LabAction): LabState {
         parameters: { ...action.parameters },
         selectedPreset: action.id,
         invalidFields: [],
+        visualFocus: "combined",
       };
     case "reset":
       return {
@@ -66,9 +71,12 @@ function labReducer(state: LabState, action: LabAction): LabState {
         parameters: { ...PRESENT_PARAMETERS },
         selectedPreset: "presentJ2000",
         invalidFields: [],
+        visualFocus: "combined",
       };
     case "scale":
-      return { ...state, scale: action.scale };
+      return { ...state, scale: action.scale, visualFocus: "shape" };
+    case "focus":
+      return { ...state, visualFocus: action.focus };
     case "dismiss-invalid":
       return { ...state, invalidFields: [] };
   }
@@ -88,6 +96,7 @@ type SliderProps = {
   displayValue: string;
   onChange: (value: number) => void;
   onCommit: () => void;
+  onFocus: () => void;
 };
 
 function LabSlider({
@@ -104,6 +113,7 @@ function LabSlider({
   displayValue,
   onChange,
   onCommit,
+  onFocus,
 }: SliderProps) {
   const marker = ((today - min) / (max - min)) * 100;
   const style = { "--today-position": `${marker}%` } as CSSProperties;
@@ -122,6 +132,8 @@ function LabSlider({
         max={max}
         step={step}
         aria-valuetext={valueText}
+        onFocus={onFocus}
+        onPointerDown={onFocus}
         onChange={(event) => onChange(Number(event.target.value))}
         onPointerUp={onCommit}
         onKeyUp={onCommit}
@@ -141,6 +153,7 @@ export function LabExperience() {
   const [state, dispatch] = useReducer(labReducer, {
     ...initial,
     selectedPreset: null,
+    visualFocus: "combined",
   });
   const [announcement, setAnnouncement] = useState("");
   const [shareStatus, setShareStatus] = useState("");
@@ -209,10 +222,22 @@ export function LabExperience() {
             parameters={state.parameters}
             scale={state.scale}
             chapter="together"
+            focus={state.visualFocus}
             reducedMotion={reducedMotion}
           />
           <div className="tour-scene-panel__caption">
-            <div><span>Interactive Geometry</span><strong>Earth · Sun · 65°N</strong></div>
+            <div>
+              <span>Now showing</span>
+              <strong>
+                {state.visualFocus === "shape"
+                  ? "Orbit shape vs today"
+                  : state.visualFocus === "tilt"
+                    ? "Close-up axis tilt"
+                    : state.visualFocus === "direction"
+                      ? "Northern summer position"
+                      : "Earth · Sun · 65°N"}
+              </strong>
+            </div>
             <span className="scale-badge">Shape {state.scale === "5x" ? "×5" : "actual"}</span>
           </div>
         </div>
@@ -291,8 +316,9 @@ export function LabExperience() {
             maxLabel="More elliptical"
             displayValue={state.parameters.eccentricity.toFixed(4)}
             valueText={`${state.parameters.eccentricity.toFixed(4)} eccentricity`}
-            onChange={(value) => dispatch({ type: "parameter", key: "eccentricity", value })}
+            onChange={(value) => dispatch({ type: "parameter", key: "eccentricity", value, focus: "shape" })}
             onCommit={commitReading}
+            onFocus={() => dispatch({ type: "focus", focus: "shape" })}
           />
           <div className="lab-control__facts"><span>Closest: {perihelionDistanceAu(state.parameters.eccentricity).toFixed(3)} AU</span><span>Farthest: {aphelionDistanceAu(state.parameters.eccentricity).toFixed(3)} AU</span><span>Sunlight contrast: {fluxContrast.toFixed(1)}%</span></div>
 
@@ -308,8 +334,9 @@ export function LabExperience() {
             maxLabel="Stronger seasons"
             displayValue={`${state.parameters.obliquityDeg.toFixed(2)}°`}
             valueText={`${state.parameters.obliquityDeg.toFixed(2)} degrees`}
-            onChange={(value) => dispatch({ type: "parameter", key: "obliquityDeg", value })}
+            onChange={(value) => dispatch({ type: "parameter", key: "obliquityDeg", value, focus: "tilt" })}
             onCommit={commitReading}
+            onFocus={() => dispatch({ type: "focus", focus: "tilt" })}
           />
 
           <LabSlider
@@ -324,8 +351,9 @@ export function LabExperience() {
             maxLabel="360°"
             displayValue={`${state.parameters.earthPerihelionLongitudeDeg.toFixed(1)}°`}
             valueText={`${state.parameters.earthPerihelionLongitudeDeg.toFixed(1)} degrees, ${seasonOfClosestApproach(state.parameters)}`}
-            onChange={(value) => dispatch({ type: "parameter", key: "earthPerihelionLongitudeDeg", value })}
+            onChange={(value) => dispatch({ type: "parameter", key: "earthPerihelionLongitudeDeg", value, focus: "direction" })}
             onCommit={commitReading}
+            onFocus={() => dispatch({ type: "focus", focus: "direction" })}
           />
         </section>
 

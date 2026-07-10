@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { useExperience } from "./ExperienceProvider";
 import { SceneLoader } from "./SceneLoader";
 import { TourProgress } from "./TourProgress";
+import type { OrbitalVisualFocus } from "@/lib/orbital/types";
 
 const sceneCopy: Record<string, { eyebrow: string; title: string }> = {
   "big-idea": { eyebrow: "The Big Idea", title: "Sunlight moves before climate does" },
@@ -17,6 +18,14 @@ const sceneCopy: Record<string, { eyebrow: string; title: string }> = {
 export function TourFrame({ children }: { children: ReactNode }) {
   const { parameters, scale, activeChapter, reducedMotion } = useExperience();
   const copy = sceneCopy[activeChapter] ?? sceneCopy["big-idea"];
+  const visualFocus: OrbitalVisualFocus =
+    activeChapter === "orbit-shape"
+      ? "shape"
+      : activeChapter === "axis-tilt"
+        ? "tilt"
+        : activeChapter === "axis-direction"
+          ? "direction"
+          : "combined";
 
   return (
     <>
@@ -28,6 +37,7 @@ export function TourFrame({ children }: { children: ReactNode }) {
               parameters={parameters}
               scale={scale}
               chapter={activeChapter}
+              focus={visualFocus}
               reducedMotion={reducedMotion}
             />
             <div className="tour-scene-panel__caption">
@@ -44,4 +54,3 @@ export function TourFrame({ children }: { children: ReactNode }) {
     </>
   );
 }
-
