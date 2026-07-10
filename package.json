@@ -1,19 +1,21 @@
 {
   "name": "milankovic-visualization",
   "version": "0.1.0",
-  "description": "Milankovitch Cycles Climate Model",
+  "description": "A guided, interactive explanation of the Milankovic cycles",
   "private": true,
+  "engines": {
+    "node": ">=20.9.0"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "test": "node src/examples/test-climate-model.js",
-    "test:additional": "node src/examples/additional-feedbacks.js",
-    "test:regional": "node src/examples/regional-visualization.js",
-    "test:validate": "node scripts/validate-parameters.js",
-    "test:scene": "node src/tests/scene-scientific-test.js",
-    "fix:presets": "node scripts/fix-presets.js"
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "check": "npm run lint && npm run typecheck && npm test && npm run build"
   },
   "keywords": [
     "climate",
@@ -24,33 +26,27 @@
   "author": "Filip van Harreveld",
   "license": "MIT",
   "dependencies": {
-    "@radix-ui/react-label": "^2.0.2",
-    "@radix-ui/react-select": "^2.0.0",
-    "@radix-ui/react-slider": "^1.1.2",
-    "@radix-ui/react-slot": "^1.0.2",
-    "@react-three/drei": "^9.121.4",
-    "@react-three/fiber": "^8.17.14",
-    "@react-three/postprocessing": "^2.19.1",
-    "@vercel/analytics": "^1.5.0",
-    "class-variance-authority": "^0.7.0",
-    "clsx": "^2.1.0",
-    "gsap": "^3.12.7",
-    "lucide-react": "^0.358.0",
-    "next": "14.2.35",
-    "next-transpile-modules": "^10.0.1",
-    "postprocessing": "^6.36.7",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "tailwind-merge": "^2.2.1",
-    "tailwindcss-animate": "^1.0.7",
-    "three": "^0.173.0"
+    "@react-three/drei": "10.7.7",
+    "@react-three/fiber": "9.6.1",
+    "@vercel/analytics": "1.6.1",
+    "next": "16.2.10",
+    "react": "19.2.7",
+    "react-dom": "19.2.7",
+    "sharp": "0.34.5",
+    "three": "0.185.1"
   },
   "devDependencies": {
-    "@eslint/eslintrc": "^3",
-    "autoprefixer": "^10.4.18",
-    "eslint": "^9",
-    "eslint-config-next": "15.1.6",
-    "postcss": "^8.4.35",
-    "tailwindcss": "^3.4.1"
+    "@axe-core/playwright": "4.11.1",
+    "@playwright/test": "1.61.1",
+    "@testing-library/jest-dom": "6.9.1",
+    "@testing-library/react": "16.3.2",
+    "@types/node": "24.10.1",
+    "@types/react": "19.2.7",
+    "@types/react-dom": "19.2.3",
+    "eslint": "9.39.1",
+    "eslint-config-next": "16.2.10",
+    "jsdom": "28.1.0",
+    "typescript": "5.9.3",
+    "vitest": "4.1.10"
   }
 }
