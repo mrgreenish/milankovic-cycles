@@ -24,6 +24,7 @@ import {
 } from "@/lib/orbital/insolation";
 import { ORBITAL_MILESTONES } from "@/lib/orbital/milestones";
 import { parseLabQuery, serializeLabQuery } from "@/lib/orbital/query";
+import { SITE_URL } from "@/lib/site";
 import type {
   OrbitScale,
   OrbitalMilestoneId,
@@ -181,10 +182,13 @@ export function LabExperience() {
   useEffect(() => {
     if (updateTimer.current) clearTimeout(updateTimer.current);
     updateTimer.current = setTimeout(() => {
-      router.replace(
-        `/lab?${serializeLabQuery(state.parameters, state.scale)}`,
-        { scroll: false },
-      );
+      const query = serializeLabQuery(state.parameters, state.scale);
+      const isPresentDay = query === serializeLabQuery(PRESENT_PARAMETERS, "5x");
+      // Only put state in the URL once it differs from the present-day
+      // default, so plain /lab stays the single URL people copy and link.
+      const target = isPresentDay ? "/lab" : `/lab?${query}`;
+      if (`${window.location.pathname}${window.location.search}` === target) return;
+      router.replace(target, { scroll: false });
     }, 180);
     return () => {
       if (updateTimer.current) clearTimeout(updateTimer.current);
@@ -199,7 +203,7 @@ export function LabExperience() {
   };
 
   const shareSetup = async () => {
-    const url = `${window.location.origin}/lab?${serializeLabQuery(state.parameters, state.scale)}`;
+    const url = `${SITE_URL}/lab?${serializeLabQuery(state.parameters, state.scale)}`;
     try {
       await navigator.clipboard.writeText(url);
       track("lab_share", { method: "clipboard" });
