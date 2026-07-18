@@ -42,9 +42,16 @@ test("tour navigation updates hash and focuses the destination", async ({ page }
 
 test("malformed Lab state resets safely and remains shareable", async ({ page }) => {
   await page.goto("/lab?e=bad&o=99&p=-1&scale=bad");
-  await expect(page.getByRole("status")).toContainText("reset to the present reference");
-  await expect(page.getByLabel("Axis Tilt · Obliquity")).toHaveValue("23.44");
-  await expect(page).toHaveURL(/e=0\.016702&o=23\.4393&p=102\.918&scale=5x/);
+  await expect(
+    page.getByRole("status").filter({ hasText: "reset to the present reference" }),
+  ).toBeVisible();
+  const tilt = page.getByLabel("Axis Tilt · Obliquity");
+  await expect(tilt).toHaveValue("23.44");
+  // Invalid values reset to the present-day default, whose canonical URL is bare /lab.
+  await expect(page).toHaveURL(/\/lab$/);
+  // Once the state differs from the default, it is captured in the URL again.
+  await tilt.press("ArrowUp");
+  await expect(page).toHaveURL(/o=23\.45/);
 });
 
 for (const route of ["/", "/lab", "/about", "/faq", "/sources"]) {

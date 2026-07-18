@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Fraunces } from "next/font/google";
 import localFont from "next/font/local";
 import { Analytics } from "@vercel/analytics/next";
+import { SITE_URL } from "@/lib/site";
 import "./globals.css";
 
 const switzer = localFont({
@@ -17,7 +18,7 @@ const fraunces = Fraunces({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://milankovitchcycles.com"),
+  metadataBase: new URL(SITE_URL),
   title: {
     default: "Milanković Cycles — Why Ice Ages Come and Go",
     template: "%s · Milanković Cycles",

@@ -24,6 +24,7 @@ import {
 } from "@/lib/orbital/insolation";
 import { ORBITAL_MILESTONES } from "@/lib/orbital/milestones";
 import { parseLabQuery, serializeLabQuery } from "@/lib/orbital/query";
+import { SITE_URL } from "@/lib/site";
 import type {
   OrbitScale,
   OrbitalMilestoneId,
@@ -146,6 +147,14 @@ function LabSlider({
   );
 }
 
+// The present-day default state belongs at bare /lab; any other state is
+// carried in the query string. Keeps one canonical URL in circulation.
+function labPath(parameters: OrbitalParameters, scale: OrbitScale) {
+  const query = serializeLabQuery(parameters, scale);
+  if (query === serializeLabQuery(PRESENT_PARAMETERS, "5x")) return "/lab";
+  return `/lab?${query}`;
+}
+
 export function LabExperience() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -181,10 +190,11 @@ export function LabExperience() {
   useEffect(() => {
     if (updateTimer.current) clearTimeout(updateTimer.current);
     updateTimer.current = setTimeout(() => {
-      router.replace(
-        `/lab?${serializeLabQuery(state.parameters, state.scale)}`,
-        { scroll: false },
-      );
+      // Only put state in the URL once it differs from the present-day
+      // default, so plain /lab stays the single URL people copy and link.
+      const target = labPath(state.parameters, state.scale);
+      if (`${window.location.pathname}${window.location.search}` === target) return;
+      router.replace(target, { scroll: false });
     }, 180);
     return () => {
       if (updateTimer.current) clearTimeout(updateTimer.current);
@@ -199,7 +209,7 @@ export function LabExperience() {
   };
 
   const shareSetup = async () => {
-    const url = `${window.location.origin}/lab?${serializeLabQuery(state.parameters, state.scale)}`;
+    const url = `${SITE_URL}${labPath(state.parameters, state.scale)}`;
     try {
       await navigator.clipboard.writeText(url);
       track("lab_share", { method: "clipboard" });

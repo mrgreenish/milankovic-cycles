@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { LEARN_TOPICS, TOPIC_BY_SLUG } from "@/lib/learn/topics";
+import { SITE_URL } from "@/lib/site";
 
 type TopicPageProps = {
   params: Promise<{ slug: string }>;
@@ -44,16 +45,16 @@ export default async function TopicPage({ params }: TopicPageProps) {
     "@type": "Article",
     headline: topic.title,
     description: topic.description,
-    mainEntityOfPage: `https://milankovitchcycles.com/learn/${topic.slug}`,
+    mainEntityOfPage: `${SITE_URL}/learn/${topic.slug}`,
     author: {
       "@type": "Person",
       name: "Filip van Harreveld",
-      url: "https://milankovitchcycles.com/about",
+      url: `${SITE_URL}/about`,
     },
     publisher: {
       "@type": "Organization",
       name: "Milanković Cycles",
-      url: "https://milankovitchcycles.com",
+      url: SITE_URL,
     },
   };
 
