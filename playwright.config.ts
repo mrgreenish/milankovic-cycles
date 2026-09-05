@@ -11,7 +11,25 @@ export default defineConfig({
   },
   projects: [
     { name: "mobile", use: { ...devices["iPhone 13"] } },
-    { name: "desktop", use: { ...devices["Desktop Chrome"] } },
+    {
+      name: "desktop",
+      use: {
+        ...devices["Desktop Chrome"],
+        // WebGL needs an explicit backend in automated Chromium. On macOS use
+        // installed Chrome + Metal; CI uses software WebGL for correctness only.
+        channel: process.platform === "darwin" ? "chrome" : undefined,
+        launchOptions: {
+          args:
+            process.platform === "darwin"
+              ? [
+                  "--use-angle=metal",
+                  "--enable-webgl",
+                  "--ignore-gpu-blocklist",
+                ]
+              : ["--enable-unsafe-swiftshader"],
+        },
+      },
+    },
   ],
   webServer: {
     command: "npm run dev",

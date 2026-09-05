@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Line } from "@react-three/drei";
 import { Vector3 } from "three";
@@ -18,6 +18,12 @@ import type {
   OrbitalParameters,
   OrbitalVisualFocus,
 } from "@/lib/orbital/types";
+import { Earth } from "./space/Earth";
+import { Sun } from "./space/Sun";
+import { StarField } from "./space/StarField";
+import { SceneRuntime, useGraphicsQuality } from "./space/SceneRuntime";
+import { useSpaceTextures, type SpaceTextures } from "./space/textures";
+import { QUALITY, type GraphicsQuality } from "./space/quality";
 
 export type SceneClientProps = {
   parameters: OrbitalParameters;
@@ -56,11 +62,7 @@ function summerSolsticePosition(
   const radius =
     (SEMI_MAJOR_AXIS * (1 - eccentricity * eccentricity)) /
     (1 + eccentricity * Math.cos(trueAnomaly));
-  return [
-    radius * Math.cos(trueAnomaly),
-    0,
-    radius * Math.sin(trueAnomaly),
-  ];
+  return [radius * Math.cos(trueAnomaly), 0, radius * Math.sin(trueAnomaly)];
 }
 
 function tiltArcPoints(
@@ -79,22 +81,21 @@ function tiltArcPoints(
   return points;
 }
 
-function InvalidateOnChange({ token }: { token: string }) {
-  const invalidate = useThree((state) => state.invalidate);
-  useEffect(() => invalidate(), [invalidate, token]);
-  return null;
-}
-
 function CameraRig({
   focus,
   earthPosition,
   reducedMotion,
+  eccentricity,
 }: {
   focus: OrbitalVisualFocus;
   earthPosition: [number, number, number];
   reducedMotion: boolean;
+  eccentricity: number;
 }) {
-  const { camera, invalidate } = useThree();
+  const camera = useThree((state) => state.camera);
+  const aspect = useThree(
+    (state) => state.size.width / Math.max(1, state.size.height),
+  );
   const currentTarget = useRef(new Vector3(0, 0, 0));
 
   const desiredTarget = useMemo(
@@ -106,29 +107,31 @@ function CameraRig({
   );
 
   const desiredPosition = useMemo(() => {
-    if (focus !== "tilt") return new Vector3(0, 7.2, 11.2);
+    if (focus !== "tilt") {
+      // Retain the existing view angle, but fit the complete orbit in tall panels.
+      const base = new Vector3(0, 7.2, 11.2);
+      const halfWidth = SEMI_MAJOR_AXIS * (1 + eccentricity) + 0.8;
+      const visibleHalfWidth =
+        Math.tan(degreesToRadians(43 / 2)) * base.length() * aspect;
+      return base.multiplyScalar(Math.max(1, halfWidth / visibleHalfWidth));
+    }
     const earth = new Vector3(...earthPosition);
     const radial = earth.clone().setY(0).normalize();
     const tangent = new Vector3(-radial.z, 0, radial.x);
+    const distance = Math.max(1, 0.48 / aspect);
     return earth
-      .add(tangent.multiplyScalar(3.6))
-      .add(new Vector3(0, 1.5, 0));
-  }, [earthPosition, focus]);
+      .add(tangent.multiplyScalar(3.6 * distance))
+      .add(new Vector3(0, 1.5 * distance, 0));
+  }, [earthPosition, focus, aspect, eccentricity]);
 
-  useEffect(() => invalidate(), [desiredPosition, desiredTarget, invalidate]);
-
-  useFrame(() => {
-    const positionDistance = camera.position.distanceTo(desiredPosition);
-    const targetDistance = currentTarget.current.distanceTo(desiredTarget);
-    const amount = reducedMotion ? 1 : 0.16;
+  useFrame((_, delta) => {
+    const amount = reducedMotion
+      ? 1
+      : 1 - Math.exp(-10.46 * Math.min(delta, 0.05));
 
     camera.position.lerp(desiredPosition, amount);
     currentTarget.current.lerp(desiredTarget, amount);
     camera.lookAt(currentTarget.current);
-
-    if (!reducedMotion && (positionDistance > 0.004 || targetDistance > 0.004)) {
-      invalidate();
-    }
   });
 
   return null;
@@ -138,25 +141,29 @@ function EarthModel({
   position,
   parameters,
   focus,
+  textures,
 }: {
   position: [number, number, number];
   parameters: OrbitalParameters;
   focus: OrbitalVisualFocus;
+  textures: SpaceTextures;
 }) {
   const closeUp = focus === "tilt";
-  const radius = closeUp ? 0.56 : focus === "direction" ? 0.43 : 0.36;
+  const radius = closeUp ? 0.56 : 0.46;
   const axisLength = closeUp ? 1.35 : 0.82;
   const latitudeRing = latitudeCircleGeometry(radius, 65);
-  const axisYaw = degreesToRadians(
-    parameters.earthPerihelionLongitudeDeg + 90,
-  );
+  const axisYaw = degreesToRadians(parameters.earthPerihelionLongitudeDeg + 90);
   const axis = summerSolsticeAxisVector(parameters);
   const todayAxis = summerSolsticeAxisVector({
     obliquityDeg: PRESENT_PARAMETERS.obliquityDeg,
     earthPerihelionLongitudeDeg: parameters.earthPerihelionLongitudeDeg,
   });
   const axisPoints: [number, number, number][] = [
-    axis.map((component) => -component * axisLength) as [number, number, number],
+    axis.map((component) => -component * axisLength) as [
+      number,
+      number,
+      number,
+    ],
     axis.map((component) => component * axisLength) as [number, number, number],
   ];
   const todayAxisPoints: [number, number, number][] = [
@@ -178,11 +185,7 @@ function EarthModel({
         parameters.earthPerihelionLongitudeDeg,
         closeUp ? 1.25 : 0.7,
       ),
-    [
-      closeUp,
-      parameters.earthPerihelionLongitudeDeg,
-      parameters.obliquityDeg,
-    ],
+    [closeUp, parameters.earthPerihelionLongitudeDeg, parameters.obliquityDeg],
   );
 
   return (
@@ -190,7 +193,10 @@ function EarthModel({
       {closeUp ? (
         <>
           <Line
-            points={[[0, -axisLength, 0], [0, axisLength, 0]]}
+            points={[
+              [0, -axisLength, 0],
+              [0, axisLength, 0],
+            ]}
             color="#a9b4c5"
             opacity={0.26}
             transparent
@@ -215,31 +221,13 @@ function EarthModel({
 
       <group rotation={[0, axisYaw, 0]}>
         <group rotation={[0, 0, degreesToRadians(parameters.obliquityDeg)]}>
-          <mesh>
-            <sphereGeometry args={[radius, 48, 48]} />
-            <meshStandardMaterial
-              color="#3d83bd"
-              roughness={0.74}
-              metalness={0.05}
-            />
-          </mesh>
-          <mesh rotation={[Math.PI / 2.7, 0, 0.4]}>
-            <torusGeometry
-              args={[radius * 0.86, radius * 0.07, 12, 72, 2.8]}
-            />
-            <meshStandardMaterial color="#9bcfc2" roughness={0.9} />
-          </mesh>
+          <Earth radius={radius} textures={textures} />
           <mesh
             rotation={[Math.PI / 2, 0, 0]}
             position={[0, latitudeRing.axisOffset, 0]}
           >
             <torusGeometry
-              args={[
-                latitudeRing.circleRadius,
-                closeUp ? 0.025 : 0.014,
-                8,
-                48,
-              ]}
+              args={[latitudeRing.circleRadius, closeUp ? 0.025 : 0.014, 8, 48]}
             />
             <meshBasicMaterial color="#85c7f2" />
           </mesh>
@@ -259,10 +247,17 @@ function OrbitalModel({
   scale,
   focus,
   reducedMotion,
+  onAssetsReady,
+  onFailure,
 }: Pick<
   SceneClientProps,
   "parameters" | "scale" | "focus" | "reducedMotion"
->) {
+> & { onAssetsReady: (ready: boolean) => void; onFailure?: () => void }) {
+  const quality = useGraphicsQuality();
+  const textures = useSpaceTextures(quality, focus === "tilt", onFailure);
+  useEffect(() => {
+    if (textures) onAssetsReady(true);
+  }, [textures, onAssetsReady]);
   const eccentricity = displayEccentricity(parameters.eccentricity, scale);
   const presentEccentricity = displayEccentricity(
     PRESENT_PARAMETERS.eccentricity,
@@ -309,14 +304,9 @@ function OrbitalModel({
         focus={focus}
         earthPosition={earthPosition}
         reducedMotion={reducedMotion}
+        eccentricity={eccentricity}
       />
-      <ambientLight intensity={0.54} />
-      <pointLight
-        position={[0, 0.7, 0]}
-        intensity={75}
-        distance={18}
-        color="#f6b065"
-      />
+      <StarField />
 
       {focus === "shape" ? (
         <Line
@@ -398,24 +388,7 @@ function OrbitalModel({
         </>
       ) : null}
 
-      <mesh position={[0, 0, 0]}>
-        <sphereGeometry args={[0.4, 36, 36]} />
-        <meshStandardMaterial
-          color="#f08a4b"
-          emissive="#f08a4b"
-          emissiveIntensity={3.4}
-          roughness={0.55}
-        />
-      </mesh>
-      <mesh position={[0, 0, 0]}>
-        <sphereGeometry args={[0.64, 24, 24]} />
-        <meshBasicMaterial
-          color="#f08a4b"
-          transparent
-          opacity={0.075}
-          depthWrite={false}
-        />
-      </mesh>
+      {textures ? <Sun noise={textures.noise} /> : null}
 
       {focus === "combined" ? (
         <Line
@@ -427,11 +400,14 @@ function OrbitalModel({
         />
       ) : null}
 
-      <EarthModel
-        position={earthPosition}
-        parameters={parameters}
-        focus={focus}
-      />
+      {textures ? (
+        <EarthModel
+          position={earthPosition}
+          parameters={parameters}
+          focus={focus}
+          textures={textures}
+        />
+      ) : null}
     </>
   );
 }
@@ -439,41 +415,42 @@ function OrbitalModel({
 export default function SceneClient({
   parameters,
   scale,
-  chapter,
   focus,
   reducedMotion,
   onReady,
   onFailure,
 }: SceneClientProps) {
-  const token = `${parameters.eccentricity}-${parameters.obliquityDeg}-${parameters.earthPerihelionLongitudeDeg}-${scale}-${chapter}-${focus}`;
+  const [assetsReady, setAssetsReady] = useState(false);
+  const [quality, setQuality] = useState<GraphicsQuality>("medium");
 
   return (
     <Canvas
       aria-hidden="true"
-      frameloop="demand"
-      dpr={[1, 1.5]}
+      frameloop="never"
+      dpr={[1, QUALITY[quality].dpr]}
       camera={{ position: [0, 7.2, 11.2], fov: 43, near: 0.1, far: 100 }}
       gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
       onCreated={({ gl }) => {
         gl.setClearColor(0x070a12, 0);
-        gl.domElement.addEventListener(
-          "webglcontextlost",
-          (event) => {
-            event.preventDefault();
-            onFailure?.();
-          },
-          { once: true },
-        );
-        onReady?.();
+        gl.toneMappingExposure = 1.05;
       }}
     >
-      <InvalidateOnChange token={token} />
-      <OrbitalModel
-        parameters={parameters}
-        scale={scale}
-        focus={focus}
-        reducedMotion={reducedMotion}
-      />
+      <SceneRuntime
+        ready={assetsReady}
+        onReady={onReady}
+        onFailure={onFailure}
+        quality={quality}
+        onQualityChange={setQuality}
+      >
+        <OrbitalModel
+          parameters={parameters}
+          scale={scale}
+          focus={focus}
+          reducedMotion={reducedMotion}
+          onAssetsReady={setAssetsReady}
+          onFailure={onFailure}
+        />
+      </SceneRuntime>
     </Canvas>
   );
 }
