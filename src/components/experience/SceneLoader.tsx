@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import {
   Component,
   useCallback,
+  useEffect,
   useState,
   type CSSProperties,
   type ReactNode,
@@ -164,6 +165,12 @@ export function SceneLoader({
 }) {
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
+  useEffect(() => {
+    // A motion-preference change destroys the Canvas; its old readiness must not
+    // hide the poster while a fresh renderer and texture bundle are starting.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (reducedMotion) setReady(false);
+  }, [reducedMotion]);
   const visualFocus = focus ?? focusFromChapter(chapter);
   const reading = calculateSummerInsolation(parameters);
   const poster = (
@@ -188,7 +195,7 @@ export function SceneLoader({
       className="scene-viewport"
       role="img"
       aria-label={accessibleLabel}
-      data-ready={ready && !failed ? "true" : "false"}
+      data-ready={ready && !failed && !reducedMotion ? "true" : "false"}
     >
       <div className="scene-viewport__poster">{poster}</div>
       {!failed && !reducedMotion ? (

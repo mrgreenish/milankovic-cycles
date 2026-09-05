@@ -1,0 +1,110 @@
+[
+  {
+    "file": "day-1024.ktx2",
+    "width": 1024,
+    "height": 512,
+    "bytes": 69682
+  },
+  {
+    "file": "day-1024.webp",
+    "width": 1024,
+    "height": 512,
+    "bytes": 54126
+  },
+  {
+    "file": "detail-1024.ktx2",
+    "width": 1024,
+    "height": 512,
+    "bytes": 230770
+  },
+  {
+    "file": "detail-1024.webp",
+    "width": 1024,
+    "height": 512,
+    "bytes": 218652
+  },
+  {
+    "file": "night-1024.ktx2",
+    "width": 1024,
+    "height": 512,
+    "bytes": 16526
+  },
+  {
+    "file": "night-1024.webp",
+    "width": 1024,
+    "height": 512,
+    "bytes": 10300
+  },
+  {
+    "file": "clouds-1024.ktx2",
+    "width": 1024,
+    "height": 512,
+    "bytes": 114473
+  },
+  {
+    "file": "clouds-1024.webp",
+    "width": 1024,
+    "height": 512,
+    "bytes": 169120
+  },
+  {
+    "file": "day-2048.ktx2",
+    "width": 2048,
+    "height": 1024,
+    "bytes": 199198
+  },
+  {
+    "file": "day-2048.webp",
+    "width": 2048,
+    "height": 1024,
+    "bytes": 184428
+  },
+  {
+    "file": "detail-2048.ktx2",
+    "width": 2048,
+    "height": 1024,
+    "bytes": 846732
+  },
+  {
+    "file": "detail-2048.webp",
+    "width": 2048,
+    "height": 1024,
+    "bytes": 885480
+  },
+  {
+    "file": "night-2048.ktx2",
+    "width": 2048,
+    "height": 1024,
+    "bytes": 53820
+  },
+  {
+    "file": "night-2048.webp",
+    "width": 2048,
+    "height": 1024,
+    "bytes": 42590
+  },
+  {
+    "file": "clouds-2048.ktx2",
+    "width": 2048,
+    "height": 1024,
+    "bytes": 390495
+  },
+  {
+    "file": "clouds-2048.webp",
+    "width": 2048,
+    "height": 1024,
+    "bytes": 590882
+  },
+  {
+    "file": "day-4096.ktx2",
+    "width": 4096,
+    "height": 2048,
+    "bytes": 671499
+  },
+  {
+    "file": "day-4096.webp",
+    "width": 4096,
+    "height": 2048,
+    "bytes": 603092
+  }
+]
