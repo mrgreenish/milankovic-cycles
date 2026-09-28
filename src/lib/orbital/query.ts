@@ -25,7 +25,12 @@ function parseField(
   if (raw === null) return PRESENT_PARAMETERS[parameterKey];
   const value = Number(raw);
   const range = bounds[parameterKey];
-  if (!Number.isFinite(value) || value < range.min || value > range.max) {
+  if (
+    !raw.trim() ||
+    !Number.isFinite(value) ||
+    value < range.min ||
+    value > range.max
+  ) {
     invalidFields.push(queryKey);
     return PRESENT_PARAMETERS[parameterKey];
   }
@@ -69,3 +74,9 @@ export function serializeLabQuery(
   return query.toString();
 }
 
+export function labPath(parameters: OrbitalParameters, scale: OrbitScale) {
+  const query = serializeLabQuery(parameters, scale);
+  return query === serializeLabQuery(PRESENT_PARAMETERS, "5x")
+    ? "/lab"
+    : `/lab?${query}`;
+}

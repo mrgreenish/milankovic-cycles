@@ -20,17 +20,17 @@ const fraunces = Fraunces({
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "Milanković Cycles — Why Ice Ages Come and Go",
+    default: "Milanković Cycles — Why ice ages come and go",
     template: "%s · Milanković Cycles",
   },
   description:
-    "A guided visual tour of eccentricity, obliquity, and precession—and how they redistribute northern summer sunlight.",
+    "Earth’s orbit and tilt change slowly. Explore how they alter summer sunlight in the far north, where cooler summers can help winter snow survive.",
   manifest: "/manifest.json",
   alternates: { canonical: "/" },
   openGraph: {
-    title: "Milanković Cycles — Why Ice Ages Come and Go",
+    title: "Milanković Cycles — Why ice ages come and go",
     description:
-      "Explore the three slow orbital motions that pace Earth’s ice-age rhythm.",
+      "Change Earth’s orbit, tilt, and precession to see how northern summer sunlight responds.",
     type: "website",
     url: "/",
     images: [
@@ -51,7 +51,9 @@ export const viewport: Viewport = {
   themeColor: "#070A12",
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default function RootLayout({
+  children,
+}: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" className={`${switzer.variable} ${fraunces.variable}`}>
       <body>

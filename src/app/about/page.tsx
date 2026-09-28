@@ -5,14 +5,14 @@ import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
 
 export const metadata: Metadata = {
-  title: "Milutin Milanković’s Great-Grandson",
+  title: "Why I built this",
   description:
-    "How Milutin Milanković’s great-grandson Filip van Harreveld turned a family scientific legacy into an interactive climate education project.",
+    "Filip van Harreveld on his great-grandfather Milutin Milanković and building a way to explore his work.",
   alternates: { canonical: "/about" },
   openGraph: {
-    title: "Milutin Milanković’s Great-Grandson · About the Project",
+    title: "Why I built this · Milanković Cycles",
     description:
-      "How Filip van Harreveld turned his great-grandfather’s scientific legacy into an interactive climate education project.",
+      "Filip van Harreveld on his great-grandfather Milutin Milanković and the idea behind this project.",
     url: "/about",
   },
 };
@@ -35,50 +35,70 @@ export default function AboutPage() {
             <p>Milutin Milanković · 1879–1958</p>
           </div>
           <div>
-            <p className="eyebrow">A Family Thread Through Science</p>
-            <h1>His Great-Grandson Brings the Cycles to Life</h1>
+            <p className="eyebrow">A family connection</p>
+            <h1>Why I built this</h1>
             <p className="page-lede">
-              Milutin turned patient calculation into a new way of seeing Earth&apos;s climate.
-              As his great-grandson, I wanted to make that idea tangible for a new generation.
+              Milutin Milanković was my great-grandfather. I built this site to
+              share an idea he spent much of his life working on: how changes in
+              Earth&apos;s orbit affect its climate.
             </p>
             <p>
-              He spent decades calculating how sunlight changes across seasons and latitudes as
-              Earth&apos;s orbit and axis slowly shift. His work helped establish the astronomical
-              pacing of glacial and interglacial cycles.
+              He spent decades calculating how sunlight changes across seasons
+              and latitudes as Earth&apos;s orbit and axis slowly shift. His
+              work helped establish the astronomical pacing of glacial and
+              interglacial cycles.
             </p>
             <p>
-              My own tools are design, software, and interactive storytelling. This project is
-              where those skills meet his legacy: not a monument, but an invitation to understand
-              the idea by moving it yourself.
+              I work with design and software. Here, you can change the orbit
+              and tilt yourself, and see how the amount of summer sunlight
+              changes. That is how I wanted to explain his work.
             </p>
-            <p className="signature-block"><strong>Filip van Harreveld</strong><span>Creative developer &amp; great-grandson of Milutin Milanković</span></p>
+            <p className="signature-block">
+              <strong>Filip van Harreveld</strong>
+              <span>
+                Creative developer &amp; great-grandson of Milutin Milanković
+              </span>
+            </p>
           </div>
         </section>
 
         <section className="editorial-section editorial-grid">
-          <div><p className="eyebrow">About the Project</p><h2>Built for curious beginners</h2></div>
+          <div>
+            <p className="eyebrow">About the project</p>
+            <h2>Built for curious beginners</h2>
+          </div>
           <div>
             <p>
-              The guided tour uses plain language first and scientific terminology beside it.
-              The Lab uses the La2004 astronomical solution and a transparent summer-insolation
-              calculation rather than pretending to predict temperature or ice-sheet size.
+              The tour introduces the three orbital motions. The lab lets you
+              combine them and compare dates from the La2004 astronomical
+              solution. It calculates summer sunlight; it does not predict
+              temperature or ice-sheet size.
             </p>
             <p>
-              The scene exaggerates orbit shape when requested because real eccentricity is almost
-              impossible to see at screen scale. Every calculation still uses the true value.
+              The scene exaggerates orbit shape when requested because real
+              eccentricity is almost impossible to see at screen scale. Every
+              calculation still uses the true value.
             </p>
             <div className="button-row">
-              <Link className="button button--primary" href="/">Start the Tour</Link>
-              <Link className="button button--secondary" href="/sources">Read the Method</Link>
+              <Link className="button button--primary" href="/">
+                Start the tour
+              </Link>
+              <Link className="button button--secondary" href="/sources">
+                Read the method
+              </Link>
             </div>
           </div>
         </section>
 
         <section className="contact-card">
-          <div><p className="eyebrow">Questions or Corrections?</p><h2>Help make it better</h2></div>
+          <div>
+            <p className="eyebrow">Questions or corrections?</p>
+            <h2>Help make it better</h2>
+          </div>
           <p>
-            Scientific clarity matters here. If you notice an inaccuracy or have a useful source,
-            contact Filip through <a href="https://filipvanharreveld.com">filipvanharreveld.com</a>.
+            If you notice an inaccuracy, have a useful source, or want to get in
+            touch, you can reach me through{" "}
+            <a href="https://filipvanharreveld.com">filipvanharreveld.com</a>.
           </p>
         </section>
       </main>

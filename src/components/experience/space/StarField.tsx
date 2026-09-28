@@ -3,7 +3,11 @@
 import { useMemo, useRef } from "react";
 import type { ShaderMaterial } from "three";
 import { useFrame } from "@react-three/fiber";
-import { animationTime, useGraphicsQuality } from "./SceneRuntime";
+import {
+  animationTime,
+  useAmbientTime,
+  useGraphicsQuality,
+} from "./SceneRuntime";
 
 function stars() {
   let seed = 7331;
@@ -30,13 +34,16 @@ export function StarField() {
   const data = useMemo(() => stars(), []);
   const material = useRef<ShaderMaterial>(null);
   const quality = useGraphicsQuality();
+  const ambientTime = useAmbientTime();
   const uniforms = useMemo(
     () => ({ uTime: { value: 0 }, uDpr: { value: 1 } }),
     [],
   );
-  useFrame(({ clock, gl }) => {
+  useFrame(({ gl }) => {
     if (material.current) {
-      material.current.uniforms.uTime.value = animationTime(clock.elapsedTime);
+      material.current.uniforms.uTime.value = animationTime(
+        ambientTime.current,
+      );
       material.current.uniforms.uDpr.value = gl.getPixelRatio();
     }
   });

@@ -66,11 +66,11 @@ function SceneGuide({
   const reading = calculateSummerInsolation(parameters);
   const delta = reading.deltaFromPresentWm2;
 
-  let eyebrow = "Northern summer signal";
+  let eyebrow = "Summer sunlight · 65°N";
   let metric = `${Math.round(reading.dailyMeanTopOfAtmosphereWm2)} W/m²`;
   let detail =
     Math.abs(delta) < 0.5
-      ? "At the present reference"
+      ? "Today’s reference · J2000"
       : `${Math.abs(delta).toFixed(0)} W/m² ${delta > 0 ? "stronger" : "weaker"} than today`;
   let startLabel = "Weaker summer";
   let endLabel = "Stronger summer";
@@ -82,10 +82,9 @@ function SceneGuide({
   );
 
   if (focus === "shape") {
-    const spread = parameters.eccentricity * 2;
-    eyebrow = "Orbit shape · current vs today";
-    metric = `${spread.toFixed(3)} AU near–far spread`;
-    detail = "Solid orbit is current · faint orbit is today";
+    eyebrow = "Orbit shape";
+    metric = `e = ${parameters.eccentricity.toFixed(4)}`;
+    detail = "Gold: your orbit · blue: today’s shape";
     startLabel = "Rounder";
     endLabel = "More elliptical";
     currentPosition = clampPercent(
@@ -96,9 +95,9 @@ function SceneGuide({
     );
   } else if (focus === "tilt") {
     const tiltDelta = parameters.obliquityDeg - PRESENT_PARAMETERS.obliquityDeg;
-    eyebrow = "Axis tilt · close-up";
+    eyebrow = "Axis tilt";
     metric = `${parameters.obliquityDeg.toFixed(2)}°`;
-    detail = `${tiltDelta >= 0 ? "+" : ""}${tiltDelta.toFixed(2)}° vs today · ${Math.round(reading.dailyMeanTopOfAtmosphereWm2)} W/m² at 65°N`;
+    detail = `${tiltDelta >= 0 ? "+" : ""}${tiltDelta.toFixed(2)}° from today’s tilt`;
     startLabel = "22.1° · milder";
     endLabel = "24.5° · stronger";
     currentPosition = clampPercent(
@@ -110,7 +109,7 @@ function SceneGuide({
   } else if (focus === "direction") {
     eyebrow = "Season at closest approach";
     metric = seasonOfClosestApproach(parameters);
-    detail = `Northern summer is ${reading.earthSunDistanceAu.toFixed(3)} AU from the Sun · ${Math.round(reading.dailyMeanTopOfAtmosphereWm2)} W/m²`;
+    detail = `Northern summer: ${reading.earthSunDistanceAu.toFixed(3)} AU from the Sun`;
     startLabel = "0°";
     endLabel = "360°";
     currentPosition = clampPercent(
@@ -165,6 +164,7 @@ export function SceneLoader({
 }) {
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
+  const [motionPaused, setMotionPaused] = useState(false);
   useEffect(() => {
     // A motion-preference change destroys the Canvas; its old readiness must not
     // hide the poster while a fresh renderer and texture bundle are starting.
@@ -183,37 +183,76 @@ export function SceneLoader({
 
   const accessibleLabel =
     visualFocus === "shape"
-      ? `Orbit shape comparison. Current eccentricity ${parameters.eccentricity.toFixed(4)}; the faint orbit is today's reference.`
+      ? `Orbit shape comparison. Current eccentricity ${parameters.eccentricity.toFixed(4)}; the blue outline is the J2000 eccentricity reference of 0.0167.`
       : visualFocus === "tilt"
-        ? `Close-up of Earth's axis at ${parameters.obliquityDeg.toFixed(2)} degrees, compared with today's axis.`
+        ? `Close-up of Earth's axis at ${parameters.obliquityDeg.toFixed(2)} degrees, compared with the J2000 tilt of 23.44 degrees.`
         : visualFocus === "direction"
           ? `Earth's northern summer position around the orbit. Closest approach occurs in ${seasonOfClosestApproach(parameters).toLowerCase()}. The blue reference marks today's season angle while the other settings stay fixed.`
           : `Earth and Sun geometry producing ${Math.round(reading.dailyMeanTopOfAtmosphereWm2)} watts per square metre at 65 degrees north in summer.`;
 
   return (
-    <div
-      className="scene-viewport"
-      role="img"
-      aria-label={accessibleLabel}
-      data-ready={ready && !failed && !reducedMotion ? "true" : "false"}
-    >
-      <div className="scene-viewport__poster">{poster}</div>
-      {!failed && !reducedMotion ? (
-        <SceneErrorBoundary fallback={poster} onFailure={handleFailure}>
-          <div className="scene-viewport__canvas">
-            <SceneClient
-              parameters={parameters}
-              scale={scale}
-              chapter={chapter}
-              focus={visualFocus}
-              reducedMotion={reducedMotion}
-              onReady={() => setReady(true)}
-              onFailure={handleFailure}
-            />
-          </div>
-        </SceneErrorBoundary>
-      ) : null}
+    <div className="scene-container">
       <SceneGuide parameters={parameters} focus={visualFocus} />
+      <div
+        className="scene-viewport"
+        role="img"
+        aria-label={accessibleLabel}
+        data-ready={ready && !failed && !reducedMotion ? "true" : "false"}
+      >
+        <div className="scene-viewport__poster">{poster}</div>
+        {!failed && !reducedMotion ? (
+          <SceneErrorBoundary fallback={poster} onFailure={handleFailure}>
+            <div className="scene-viewport__canvas">
+              <SceneClient
+                parameters={parameters}
+                scale={scale}
+                chapter={chapter}
+                focus={visualFocus}
+                reducedMotion={reducedMotion}
+                motionPaused={motionPaused}
+                onReady={() => setReady(true)}
+                onFailure={handleFailure}
+              />
+            </div>
+          </SceneErrorBoundary>
+        ) : null}
+      </div>
+      <div className="scene-toolbar">
+        <div className="scene-toolbar__reference">
+          {visualFocus !== "combined" ? (
+            <span className="scene-reference">
+              Reference{" "}
+              {visualFocus === "shape"
+                ? "e = 0.0167"
+                : visualFocus === "tilt"
+                  ? "tilt 23.44°"
+                  : "angle 102.9°"}{" "}
+              · J2000
+            </span>
+          ) : null}
+          <span className="scale-badge">
+            {scale === "5x" ? "Orbit shape ×5" : "True orbit shape"}
+          </span>
+        </div>
+        <button
+          type="button"
+          className="motion-button"
+          aria-pressed={motionPaused || reducedMotion}
+          disabled={reducedMotion || failed}
+          onClick={() => setMotionPaused((paused) => !paused)}
+        >
+          <span aria-hidden="true">
+            {motionPaused || reducedMotion ? "▷" : "Ⅱ"}
+          </span>
+          {reducedMotion
+            ? "Reduced motion"
+            : failed
+              ? "Static diagram"
+              : motionPaused
+                ? "Resume motion"
+                : "Pause motion"}
+        </button>
+      </div>
     </div>
   );
 }

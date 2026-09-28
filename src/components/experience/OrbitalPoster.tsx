@@ -1,3 +1,6 @@
+"use client";
+
+import { useId } from "react";
 import {
   degreesToRadians,
   displayEccentricity,
@@ -18,8 +21,7 @@ const Y_PROJECTION = 0.58;
 
 function orbitGeometry(eccentricity: number) {
   return {
-    semiMinorAxis:
-      SEMI_MAJOR_AXIS * Math.sqrt(1 - eccentricity * eccentricity),
+    semiMinorAxis: SEMI_MAJOR_AXIS * Math.sqrt(1 - eccentricity * eccentricity),
     focusDistance: SEMI_MAJOR_AXIS * eccentricity,
   };
 }
@@ -44,6 +46,7 @@ export function OrbitalPoster({
   scale: OrbitScale;
   focus: OrbitalVisualFocus;
 }) {
+  const gradientId = useId();
   const eccentricity = displayEccentricity(parameters.eccentricity, scale);
   const presentEccentricity = displayEccentricity(
     PRESENT_PARAMETERS.eccentricity,
@@ -87,12 +90,8 @@ export function OrbitalPoster({
     const presentAxis = axisLine(PRESENT_PARAMETERS.obliquityDeg);
 
     return (
-      <svg
-        className="orbital-poster"
-        viewBox="0 0 640 440"
-        aria-hidden="true"
-      >
-        <PosterDefinitions />
+      <svg className="orbital-poster" viewBox="0 35 640 330" aria-hidden="true">
+        <PosterDefinitions id={gradientId} />
         <g opacity=".28" stroke="#ffd97a" strokeWidth="2">
           <line x1="70" y1="154" x2="205" y2="174" />
           <line x1="70" y1="205" x2="205" y2="205" />
@@ -110,7 +109,7 @@ export function OrbitalPoster({
         <line
           {...presentAxis}
           stroke="#85c7f2"
-          strokeOpacity=".46"
+          strokeOpacity=".72"
           strokeWidth="3"
           strokeDasharray="5 7"
         />
@@ -118,11 +117,12 @@ export function OrbitalPoster({
           cx={CENTER_X}
           cy={CENTER_Y}
           r={earthRadius}
-          fill="url(#poster-earth)"
+          fill={`url(#${gradientId}-earth)`}
           stroke="#d9f1ff"
           strokeOpacity=".7"
         />
         <ellipse
+          transform={`rotate(${parameters.obliquityDeg} ${CENTER_X} ${CENTER_Y})`}
           cx={CENTER_X}
           cy={CENTER_Y - latitudeRing.axisOffset}
           rx={latitudeRing.circleRadius}
@@ -138,23 +138,19 @@ export function OrbitalPoster({
           strokeLinecap="round"
         />
         <circle cx={currentAxis.x2} cy={currentAxis.y2} r="6" fill="#ffd97a" />
-        <text x="320" y="374" textAnchor="middle">
-          Gold: your tilt · blue dashed: today
+        <text x="405" y="110" className="poster-label">
+          {parameters.obliquityDeg.toFixed(2)}°
         </text>
-        <text x="320" y="402" textAnchor="middle" className="orbital-poster__muted">
-          65°N band highlighted on Earth
+        <text x="405" y="161" className="poster-label poster-label--ice">
+          65°N
         </text>
       </svg>
     );
   }
 
   return (
-    <svg
-      className="orbital-poster"
-      viewBox="0 0 640 440"
-      aria-hidden="true"
-    >
-      <PosterDefinitions />
+    <svg className="orbital-poster" viewBox="0 35 640 330" aria-hidden="true">
+      <PosterDefinitions id={gradientId} />
       {focus === "shape" ? (
         <ellipse
           cx={CENTER_X - presentOrbit.focusDistance}
@@ -163,7 +159,7 @@ export function OrbitalPoster({
           ry={presentOrbit.semiMinorAxis * Y_PROJECTION}
           fill="none"
           stroke="#85c7f2"
-          strokeOpacity=".28"
+          strokeOpacity=".65"
           strokeWidth="2"
           strokeDasharray="5 7"
         />
@@ -225,10 +221,30 @@ export function OrbitalPoster({
           />
         </>
       ) : null}
-      <circle cx={CENTER_X} cy={CENTER_Y} r="58" fill="url(#poster-sun)" />
+      <circle
+        cx={CENTER_X}
+        cy={CENTER_Y}
+        r="58"
+        fill={`url(#${gradientId}-sun)`}
+      />
       <circle cx={CENTER_X} cy={CENTER_Y} r="15" fill="#ffd785" />
+      {focus === "direction" ? (
+        <circle
+          cx={earth.x}
+          cy={earth.y}
+          r="26"
+          fill="none"
+          stroke="#ffd97a"
+          strokeWidth="2"
+        />
+      ) : null}
       <g transform={`translate(${earth.x} ${earth.y})`}>
-        <circle r="19" fill="url(#poster-earth)" stroke="#d9f1ff" strokeOpacity=".7" />
+        <circle
+          r="19"
+          fill={`url(#${gradientId}-earth)`}
+          stroke="#d9f1ff"
+          strokeOpacity=".7"
+        />
         <line
           x1={-orbitAxis.x}
           y1={-orbitAxis.y}
@@ -238,31 +254,63 @@ export function OrbitalPoster({
           strokeWidth="2"
         />
       </g>
-      <text x="320" y="370" textAnchor="middle">
-        {focus === "direction"
-          ? "Blue: your summer · ghost: today’s season angle"
-          : focus === "shape"
-            ? "Gold: your orbit · blue dashed: today"
-            : "Sun at one focus · Earth shown at northern summer"}
-      </text>
-      <text x="320" y="398" textAnchor="middle" className="orbital-poster__muted">
-        {scale === "5x"
-          ? "Orbit shape exaggerated 5× for visibility"
-          : "Orbit shown at actual scale"}
-      </text>
+      {focus === "shape" ? (
+        <>
+          <text
+            x={CENTER_X + SEMI_MAJOR_AXIS * (1 - eccentricity)}
+            y={CENTER_Y + 34}
+            textAnchor="middle"
+            className="poster-label"
+          >
+            Closest
+          </text>
+          <text
+            x={CENTER_X - SEMI_MAJOR_AXIS * (1 + eccentricity)}
+            y={CENTER_Y + 34}
+            textAnchor="middle"
+            className="poster-label poster-label--ice"
+          >
+            Farthest
+          </text>
+        </>
+      ) : null}
+      {focus === "direction"
+        ? [
+            { label: "Spring", longitude: 0 },
+            { label: "Summer", longitude: 90 },
+            { label: "Autumn", longitude: 180 },
+            { label: "Winter", longitude: 270 },
+          ].map(({ label, longitude }) => {
+            const point = summerPosition(
+              eccentricity,
+              parameters.earthPerihelionLongitudeDeg + 90 - longitude,
+            );
+            return (
+              <text
+                key={label}
+                x={point.x}
+                y={point.y + (point.y > CENTER_Y ? 30 : -28)}
+                textAnchor="middle"
+                className={`poster-label${label === "Summer" ? " poster-label--summer" : ""}`}
+              >
+                {label}
+              </text>
+            );
+          })
+        : null}
     </svg>
   );
 }
 
-function PosterDefinitions() {
+function PosterDefinitions({ id }: { id: string }) {
   return (
     <defs>
-      <radialGradient id="poster-sun" cx="50%" cy="50%" r="50%">
+      <radialGradient id={`${id}-sun`} cx="50%" cy="50%" r="50%">
         <stop offset="0" stopColor="#fff4bd" />
         <stop offset="0.45" stopColor="#f08a4b" />
         <stop offset="1" stopColor="#f08a4b" stopOpacity="0" />
       </radialGradient>
-      <radialGradient id="poster-earth" cx="35%" cy="30%" r="70%">
+      <radialGradient id={`${id}-earth`} cx="35%" cy="30%" r="70%">
         <stop offset="0" stopColor="#c8edff" />
         <stop offset="0.45" stopColor="#4b91c8" />
         <stop offset="1" stopColor="#122a49" />

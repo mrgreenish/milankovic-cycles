@@ -10,7 +10,11 @@ import {
   sphereVertex,
 } from "./shaders";
 import { QUALITY } from "./quality";
-import { animationTime, useGraphicsQuality } from "./SceneRuntime";
+import {
+  animationTime,
+  useAmbientTime,
+  useGraphicsQuality,
+} from "./SceneRuntime";
 import type { SpaceTextures } from "./textures";
 
 // This group lives INSIDE the existing tilt/yaw transforms. Daily rotation only
@@ -26,6 +30,7 @@ export function Earth({
   const surfaceMaterial = useRef<ShaderMaterial>(null);
   const cloudMaterial = useRef<ShaderMaterial>(null);
   const quality = useGraphicsQuality();
+  const ambientTime = useAmbientTime();
   const config = QUALITY[quality];
   const uniforms = useMemo(
     () => ({
@@ -40,8 +45,8 @@ export function Earth({
     [textures, config.detail],
   );
 
-  useFrame(({ clock }) => {
-    const time = animationTime(clock.elapsedTime);
+  useFrame(() => {
+    const time = animationTime(ambientTime.current);
     if (surfaceMaterial.current)
       surfaceMaterial.current.uniforms.uTime.value = time;
     if (cloudMaterial.current)
