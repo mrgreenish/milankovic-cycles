@@ -5,6 +5,7 @@ import {
   getMeltPressureCopy,
   getOrbitalMeltPressure,
 } from "@/lib/orbital/insolation";
+import { formatSunlightDelta } from "@/lib/orbital/controls";
 import { useExperience } from "./ExperienceProvider";
 
 export function ReadingCard() {
@@ -14,27 +15,28 @@ export function ReadingCard() {
   const delta = reading.deltaFromPresentWm2;
 
   return (
-    <aside className="reading-card" aria-label="Northern summer sunlight reading">
-      <p className="eyebrow">Classic Northern Ice-Sheet Indicator</p>
-      <h3>Northern Summer Sunlight</h3>
+    <aside
+      className="reading-card"
+      aria-label="Northern summer sunlight reading"
+    >
+      <p className="eyebrow">Your combined settings</p>
+      <h3>Summer sunlight at 65°N</h3>
       <p className="reading-card__definition">
-        Daily average at 65°N on the summer solstice, at the top of the atmosphere.
+        Daily average at 65°N on the summer solstice, at the top of the
+        atmosphere.
       </p>
       <div className="reading-card__value">
         <strong>{Math.round(reading.dailyMeanTopOfAtmosphereWm2)}</strong>
         <span>W/m²</span>
       </div>
-      <p className="reading-card__delta">
-        {Math.abs(delta) < 0.5
-          ? "Present reference"
-          : `${Math.abs(delta).toFixed(0)} W/m² ${delta > 0 ? "more" : "less"} than present`}
+      <p className="reading-card__delta">{formatSunlightDelta(delta)}</p>
+      <p className="reading-card__interpretation">
+        {getMeltPressureCopy(pressure)}
       </p>
-      <p className="reading-card__interpretation">{getMeltPressureCopy(pressure)}</p>
       <p className="reading-card__caveat">
-        This is an orbital tendency, not a forecast of ice-sheet size. Greenhouse gases,
-        oceans, snowfall, existing ice, and long response times also matter.
+        This measures sunlight, not temperature or ice-sheet size. The
+        comparison uses the J2000 reference, for the year 2000.
       </p>
     </aside>
   );
 }
-

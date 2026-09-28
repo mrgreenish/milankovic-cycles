@@ -40,9 +40,9 @@ test("all scene focuses render and share the unchanged orbital controls", async 
     await page.locator(`#${id}`).press("Home");
     await expect(viewport).toHaveAttribute("data-ready", "true");
   }
-  await page.getByRole("button", { name: "Actual Scale", exact: true }).click();
+  await page.getByRole("button", { name: "Actual scale", exact: true }).click();
   await expect(page).toHaveURL(/scale=actual/);
-  await page.getByRole("button", { name: "Reset All", exact: true }).click();
+  await page.getByRole("button", { name: "Reset all", exact: true }).click();
   await expect(page.locator(".scene-guide")).toHaveAttribute(
     "data-focus",
     "combined",
@@ -90,8 +90,12 @@ test("unrecoverable asset failure leaves a working poster and controls", async (
     "opacity",
     "1",
   );
-  await page.getByLabel("Axis Tilt · Obliquity").press("ArrowUp");
-  await expect(page.getByLabel("Axis Tilt · Obliquity")).toHaveValue("23.45");
+  await page
+    .getByRole("slider", { name: "Axis tilt", exact: true })
+    .press("ArrowUp");
+  await expect(
+    page.getByRole("slider", { name: "Axis tilt", exact: true }),
+  ).toHaveValue("23.45");
 });
 
 test("the poster stays visible until the baseline textures have rendered", async ({
@@ -235,4 +239,42 @@ test("quality changes replace textures without retaining old GPU maps", async ({
       ),
     )
     .toBeLessThanOrEqual(1.01);
+});
+
+test("pausing ambient motion keeps the controls and camera working", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/lab");
+  const canvas = page.locator(".scene-viewport canvas");
+  await expect(page.locator(".scene-viewport")).toHaveAttribute(
+    "data-ready",
+    "true",
+    { timeout: 20000 },
+  );
+  await page.getByRole("button", { name: "Pause motion", exact: true }).click();
+  await expect(canvas).toHaveAttribute("data-motion", "paused");
+  const frozen = await canvas.getAttribute("data-ambient-time");
+  const frames = Number((await canvas.getAttribute("data-frames")) ?? 0);
+  await page
+    .getByRole("button", { name: "More tilt · 24.5°", exact: true })
+    .click();
+  await expect(page.locator(".scene-guide")).toHaveAttribute(
+    "data-focus",
+    "tilt",
+  );
+  await expect(page.getByRole("slider", { name: "Axis tilt" })).toHaveValue(
+    "24.5",
+  );
+  await expect
+    .poll(async () => Number(await canvas.getAttribute("data-frames")))
+    .toBeGreaterThan(frames);
+  await expect(canvas).toHaveAttribute("data-ambient-time", frozen!);
+  await page
+    .getByRole("button", { name: "Resume motion", exact: true })
+    .click();
+  await expect(canvas).toHaveAttribute("data-motion", "running");
+  await expect
+    .poll(async () => Number(await canvas.getAttribute("data-ambient-time")))
+    .toBeGreaterThan(Number(frozen));
 });

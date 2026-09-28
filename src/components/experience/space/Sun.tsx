@@ -18,7 +18,11 @@ import {
   sphereVertex,
   sunFragment,
 } from "./shaders";
-import { animationTime, useGraphicsQuality } from "./SceneRuntime";
+import {
+  animationTime,
+  useAmbientTime,
+  useGraphicsQuality,
+} from "./SceneRuntime";
 import { QUALITY } from "./quality";
 
 function ribbonGeometry() {
@@ -55,6 +59,7 @@ function ribbonGeometry() {
 }
 
 function Prominence({ index }: { index: number }) {
+  const ambientTime = useAmbientTime();
   const geometry = useMemo(() => ribbonGeometry(), []);
   const material = useRef<ShaderMaterial>(null);
   const uniforms = useMemo(
@@ -62,9 +67,11 @@ function Prominence({ index }: { index: number }) {
     [index],
   );
   useEffect(() => () => geometry.dispose(), [geometry]);
-  useFrame(({ clock }) => {
+  useFrame(() => {
     if (material.current)
-      material.current.uniforms.uTime.value = animationTime(clock.elapsedTime);
+      material.current.uniforms.uTime.value = animationTime(
+        ambientTime.current,
+      );
   });
   return (
     <mesh
@@ -90,6 +97,7 @@ function Prominence({ index }: { index: number }) {
 
 export function Sun({ noise }: { noise: Texture }) {
   const quality = useGraphicsQuality();
+  const ambientTime = useAmbientTime();
   const rotating = useRef<Group>(null);
   const surfaceMaterial = useRef<ShaderMaterial>(null);
   const glowMaterial = useRef<ShaderMaterial>(null);
@@ -101,17 +109,17 @@ export function Sun({ noise }: { noise: Texture }) {
     }),
     [noise, quality],
   );
-  useFrame(({ clock }) => {
+  useFrame(() => {
     if (surfaceMaterial.current)
       surfaceMaterial.current.uniforms.uTime.value = animationTime(
-        clock.elapsedTime,
+        ambientTime.current,
       );
     if (glowMaterial.current)
       glowMaterial.current.uniforms.uTime.value = animationTime(
-        clock.elapsedTime,
+        ambientTime.current,
       );
     if (rotating.current)
-      rotating.current.rotation.y = animationTime(clock.elapsedTime) * 0.016;
+      rotating.current.rotation.y = animationTime(ambientTime.current) * 0.016;
   });
   return (
     <group name="sun-visual" scale={1.25}>

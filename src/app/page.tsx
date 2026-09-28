@@ -1,247 +1,279 @@
 import Link from "next/link";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
-import {
-  ExperienceProvider,
-} from "@/components/experience/ExperienceProvider";
+import { ExperienceProvider } from "@/components/experience/ExperienceProvider";
 import { TourFrame } from "@/components/experience/TourFrame";
 import { TourParameterSlider } from "@/components/experience/TourParameterSlider";
 import { CycleReadout } from "@/components/experience/CycleReadout";
 import { ReadingCard } from "@/components/experience/ReadingCard";
 import { ChapterNav } from "@/components/experience/ChapterNav";
 import { StartTourLink } from "@/components/experience/StartTourLink";
+import { HeroVisual } from "@/components/experience/HeroVisual";
+import { LabLink } from "@/components/experience/LabLink";
 import { LEARN_TOPICS } from "@/lib/learn/topics";
+import type { ParameterKey } from "@/lib/orbital/controls";
 
-const causeSteps = [
-  { number: "01", title: "Earth moves", copy: "Its orbit and axis change slowly and predictably." },
-  { number: "02", title: "Sunlight shifts", copy: "Different seasons and latitudes receive different amounts." },
-  { number: "03", title: "Summer decides", copy: "Cool northern summers leave more winter snow unmelted." },
-  { number: "04", title: "Feedbacks amplify", copy: "Ice, oceans, greenhouse gases, and snowfall grow the response." },
+const cycles: {
+  id: string;
+  title: string;
+  term: string;
+  period: string;
+  parameter: ParameterKey;
+  focus: "shape" | "tilt" | "direction";
+  intro: string;
+  explanation: string;
+  detail: string;
+}[] = [
+  {
+    id: "orbit-shape",
+    title: "Stretch the orbit",
+    term: "Eccentricity",
+    period: "~100,000 years",
+    parameter: "eccentricity",
+    focus: "shape",
+    intro:
+      "Earth’s orbit changes from nearly circular to slightly more elliptical. Try both ends of the range and watch the distances change.",
+    explanation:
+      "Sunlight is stronger when Earth is closer to the Sun. A more elliptical orbit increases the difference between the closest and farthest points.",
+    detail:
+      "The Sun stays at one focus of the ellipse. Eccentricity has only a small effect on total annual sunlight, but it strengthens the seasonal effect of precession. The diagram enlarges eccentricity 5×; every calculation uses the real value.",
+  },
+  {
+    id: "axis-tilt",
+    title: "Lean Earth’s axis",
+    term: "Obliquity",
+    period: "~41,000 years",
+    parameter: "obliquityDeg",
+    focus: "tilt",
+    intro:
+      "Earth’s tilt varies from about 22.1° to 24.5°. Increase it and see how northern summer daylight and sunlight respond.",
+    explanation:
+      "More tilt brings longer, brighter summers to high northern latitudes. Those summers can melt more of the previous winter’s snow.",
+    detail:
+      "The angle is measured from a line perpendicular to Earth’s orbital plane. The blue reference shows today’s tilt with your other settings held fixed. Tilt strengthens seasons in both hemispheres, which have their summers six months apart.",
+  },
+  {
+    id: "axis-direction",
+    title: "Change when summer falls",
+    term: "Precession",
+    period: "~23,000 years",
+    parameter: "earthPerihelionLongitudeDeg",
+    focus: "direction",
+    intro:
+      "Earth’s axis slowly changes direction. Together with the turning orbital ellipse, this shifts the seasons around the orbit.",
+    explanation:
+      "A northern summer near the Sun receives more sunlight than one at the far end of the orbit. The effect is reversed for southern summers.",
+    detail:
+      "Axial precession takes about 26,000 years. Climate responds to its combination with the rotating orbital ellipse, with cycles near 19,000 and 23,000 years. The blue reference shows today’s season angle while your orbit shape and tilt stay fixed.",
+  },
 ];
 
 export default function HomePage() {
   return (
-    <>
+    <ExperienceProvider>
       <SiteHeader />
       <main id="main-content">
-        <ExperienceProvider>
-          <section className="hero" aria-labelledby="hero-title">
-            <div className="hero__orbit" aria-hidden="true">
-              <span className="hero__sun" />
-              <span className="hero__earth" />
+        <section className="hero" aria-labelledby="hero-title">
+          <div className="hero__content">
+            <p className="eyebrow">Milanković cycles</p>
+            <h1 id="hero-title">Why do ice ages come and go?</h1>
+            <p className="hero__summary">
+              Earth’s orbit and tilt change slowly. They alter summer sunlight
+              in the far north, where cooler summers can help winter snow
+              survive.
+            </p>
+            <div className="button-row">
+              <StartTourLink />
+              <LabLink className="button button--secondary">
+                Open the lab <span aria-hidden="true">↗</span>
+              </LabLink>
             </div>
-            <div className="hero__content">
-              <p className="eyebrow">Milanković Cycles, Explained Visually</p>
-              <h1 id="hero-title">Why Do Ice Ages Come and Go?</h1>
-              <p className="hero__summary">
-                Three slow changes in Earth&apos;s orbit and axis redistribute sunlight.
-                Cooler northern summers can let snow survive; climate feedbacks amplify the change.
+            <p className="hero__signature">
+              <Link href="/about">
+                By Filip van Harreveld
+                <span>Milutin Milanković’s great-grandson</span>
+              </Link>
+            </p>
+          </div>
+          <HeroVisual />
+        </section>
+        <TourFrame>
+          <section className="tour-chapter" id="big-idea" data-tour-step>
+            <div className="chapter-heading">
+              <p className="eyebrow">01 / The idea</p>
+              <h2 tabIndex={-1}>How summer sunlight affects ice</h2>
+              <p className="chapter-lede">
+                For an ice sheet to grow, some winter snow must survive the
+                summer. Small changes in sunlight can help that happen, year
+                after year.
               </p>
-              <div className="button-row">
-                <StartTourLink />
-                <Link className="button button--secondary" href="/lab">
-                  Open the Lab <span aria-hidden="true">↗</span>
-                </Link>
-              </div>
-              <p className="hero__signature">
-                <Link href="/about">Created by Milutin Milanković&apos;s great-grandson.</Link>
+            </div>
+            <ol className="cause-chain">
+              <li>
+                <span>01</span>
+                <div>
+                  <h3>Earth’s orbit and axis change</h3>
+                  <p>
+                    These slow motions shift where and when sunlight arrives.
+                  </p>
+                </div>
+              </li>
+              <li>
+                <span>02</span>
+                <div>
+                  <h3>Cooler summers leave snow behind</h3>
+                  <p>Over many years, surviving snow can build into ice.</p>
+                </div>
+              </li>
+              <li>
+                <span>03</span>
+                <div>
+                  <h3>Ice and climate affect each other</h3>
+                  <p>
+                    Reflective ice, oceans, and greenhouse gases can amplify the
+                    change.
+                  </p>
+                </div>
+              </li>
+            </ol>
+            <details className="science-detail">
+              <summary>Why measure sunlight at 65° north?</summary>
+              <p>
+                This latitude crosses northern Canada and Scandinavia, near the
+                regions where large ice sheets grew. Summer sunlight here is a
+                useful benchmark for comparing orbital changes. Scientists call
+                incoming solar energy <em>insolation</em>.
               </p>
-            </div>
-            <div className="hero__preview" aria-label="The three Milanković cycles">
-              <span><b>Stretch</b><small>Orbit shape · ~100,000 years</small></span>
-              <span><b>Lean</b><small>Axis tilt · ~41,000 years</small></span>
-              <span><b>Wobble</b><small>Axis direction · ~23,000 years</small></span>
-            </div>
+            </details>
+            <ChapterNav chapterId="big-idea" />
           </section>
-
-          <TourFrame>
-            <section className="tour-chapter" id="big-idea" data-tour-step>
+          {cycles.map((cycle, index) => (
+            <section
+              className="tour-chapter"
+              id={cycle.id}
+              data-tour-step
+              key={cycle.id}
+            >
               <div className="chapter-heading">
-                <p className="eyebrow">Step 1 · The Big Idea</p>
-                <h2 tabIndex={-1}>The 30-Second Answer</h2>
-                <p className="chapter-lede">
-                  Milanković cycles do not simply make the whole planet hotter or colder.
-                  They redistribute incoming sunlight—<em>insolation</em>—by season and latitude.
-                </p>
+                <div className="chapter-heading__meta">
+                  <p className="eyebrow">
+                    0{index + 2} / {cycle.term}
+                  </p>
+                  <span className="period-pill">{cycle.period}</span>
+                </div>
+                <h2 tabIndex={-1}>{cycle.title}</h2>
+                <p className="chapter-lede">{cycle.intro}</p>
               </div>
-              <ol className="cause-chain">
-                {causeSteps.map((step) => (
-                  <li key={step.number}>
-                    <span>{step.number}</span>
-                    <div><h3>{step.title}</h3><p>{step.copy}</p></div>
-                  </li>
-                ))}
-              </ol>
-              <div className="explain-card explain-card--blue">
-                <p className="eyebrow">Why 65° North?</p>
-                <h3>The latitude where great northern ice sheets grew</h3>
+              <TourParameterSlider parameter={cycle.parameter} />
+              <CycleReadout cycle={cycle.focus} />
+              <div className="chapter-explanation">
+                <h3>Effect on summer sunlight</h3>
+                <p>{cycle.explanation}</p>
+              </div>
+              <details className="science-detail">
+                <summary>About this comparison</summary>
+                <p>{cycle.detail}</p>
                 <p>
-                  Around Alaska, northern Canada, and Scandinavia, a cool summer can leave some
-                  winter snow behind. Repeat that for many years and ice can accumulate. This is
-                  why northern summer sunlight at 65°N became the classic orbital indicator.
+                  “Today” uses the J2000 reference, for the year 2000. The
+                  sunlight comparison uses all three present-day reference
+                  values.
                 </p>
-              </div>
-              <ChapterNav chapterId="big-idea" />
+              </details>
+              <ChapterNav chapterId={cycle.id} />
             </section>
-
-            <section className="tour-chapter" id="orbit-shape" data-tour-step>
-              <div className="chapter-heading">
-                <div className="chapter-heading__meta">
-                  <p className="eyebrow">Step 2 · The Stretch</p>
-                  <span className="period-pill">~100,000 years</span>
-                </div>
-                <h2 tabIndex={-1}>Orbit Shape <span>· Eccentricity</span></h2>
-                <p className="chapter-lede">
-                  Earth&apos;s orbit shifts between nearly circular and slightly more elliptical.
-                  The Sun remains at one focus—not at the center.
-                </p>
-              </div>
-              <div className="three-facts">
-                <article><span>What moves</span><h3>The orbit stretches</h3><p>The difference between closest and farthest approach grows.</p></article>
-                <article><span>What changes</span><h3>Distance contrast</h3><p>Sunlight is stronger at perihelion and weaker at aphelion.</p></article>
-                <article><span>Why climate cares</span><h3>It amplifies timing</h3><p>Eccentricity strengthens or weakens the seasonal effect of precession.</p></article>
-              </div>
-              <TourParameterSlider
-                parameter="eccentricity"
-                label="Stretch the orbit"
-                min={0.005}
-                max={0.058}
-                step={0.0001}
-                minLabel="Rounder"
-                maxLabel="More elliptical"
-                format="eccentricity"
-              />
-              <CycleReadout cycle="shape" />
-              <p className="scale-note">The diagram exaggerates orbit shape 5× so the real, subtle change is visible.</p>
-              <ChapterNav chapterId="orbit-shape" />
-            </section>
-
-            <section className="tour-chapter" id="axis-tilt" data-tour-step>
-              <div className="chapter-heading">
-                <div className="chapter-heading__meta">
-                  <p className="eyebrow">Step 3 · The Lean</p>
-                  <span className="period-pill">~41,000 years</span>
-                </div>
-                <h2 tabIndex={-1}>Axis Tilt <span>· Obliquity</span></h2>
-                <p className="chapter-lede">
-                  Earth&apos;s axis leans between about 22.1° and 24.5°. More tilt intensifies
-                  seasons—especially at high latitudes.
-                </p>
-              </div>
-              <div className="three-facts">
-                <article><span>What moves</span><h3>The axis leans</h3><p>The angle changes by only 2.4°, slowly and continuously.</p></article>
-                <article><span>What changes</span><h3>Season strength</h3><p>More tilt brings brighter high-latitude summers and darker winters.</p></article>
-                <article><span>Why climate cares</span><h3>Summer melt</h3><p>Stronger northern summers can remove more of the previous winter&apos;s snow.</p></article>
-              </div>
-              <TourParameterSlider
-                parameter="obliquityDeg"
-                label="Lean Earth's axis"
-                min={22.1}
-                max={24.5}
-                step={0.01}
-                minLabel="Milder seasons"
-                maxLabel="Stronger seasons"
-                format="degrees"
-              />
-              <CycleReadout cycle="tilt" />
-              <ChapterNav chapterId="axis-tilt" />
-            </section>
-
-            <section className="tour-chapter" id="axis-direction" data-tour-step>
-              <div className="chapter-heading">
-                <div className="chapter-heading__meta">
-                  <p className="eyebrow">Step 4 · The Wobble</p>
-                  <span className="period-pill">~23,000-year climate cycle</span>
-                </div>
-                <h2 tabIndex={-1}>Axis Direction <span>· Precession</span></h2>
-                <p className="chapter-lede">
-                  Earth&apos;s axis traces a slow circle. Together with the rotating orbital ellipse,
-                  this changes which season occurs near the Sun.
-                </p>
-              </div>
-              <div className="three-facts">
-                <article><span>What moves</span><h3>The axis points elsewhere</h3><p>Like a spinning top, its direction changes while the tilt remains.</p></article>
-                <article><span>What changes</span><h3>Season meets distance</h3><p>Northern summer can occur nearer perihelion or aphelion.</p></article>
-                <article><span>Why climate cares</span><h3>Opposite hemispheres</h3><p>One hemisphere gets stronger seasonal contrast while the other gets less.</p></article>
-              </div>
-              <TourParameterSlider
-                parameter="earthPerihelionLongitudeDeg"
-                label="Move the season of closest approach"
-                min={0}
-                max={359.9}
-                step={0.1}
-                minLabel="0°"
-                maxLabel="360°"
-                format="degrees"
-              />
-              <CycleReadout cycle="direction" />
-              <ChapterNav chapterId="axis-direction" />
-            </section>
-
-            <section className="tour-chapter" id="together" data-tour-step>
-              <div className="chapter-heading">
-                <p className="eyebrow">Step 5 · The Combined Signal</p>
-                <h2 tabIndex={-1}>No Single Cycle Is an Ice-Age Switch</h2>
-                <p className="chapter-lede">
-                  Shape, tilt, and direction combine to change northern summer sunlight.
-                  The climate system then responds over thousands of years.
-                </p>
-              </div>
-              <ReadingCard />
-              <div className="feedback-grid">
-                <article><span aria-hidden="true">❄</span><h3>Weaker northern summers</h3><p>More winter snow may survive, all else equal.</p></article>
-                <article><span aria-hidden="true">◌</span><h3>Ice reflects sunlight</h3><p>Growing bright surfaces can reinforce cooling.</p></article>
-                <article><span aria-hidden="true">≈</span><h3>Oceans &amp; gases respond</h3><p>Slow feedbacks make the climate response much larger than the orbital nudge.</p></article>
-              </div>
-              <ChapterNav chapterId="together" />
-            </section>
-
-            <section className="tour-chapter tour-chapter--recap" id="recap" data-tour-step>
-              <div className="chapter-heading">
-                <p className="eyebrow">Step 6 · Recap</p>
-                <h2 tabIndex={-1}>Three Motions. One Changing Pattern of Sunlight.</h2>
-              </div>
-              <ol className="takeaways">
-                <li><span>1</span><p>Earth&apos;s orbit and axis change predictably over tens of thousands of years.</p></li>
-                <li><span>2</span><p>Those motions redistribute sunlight by season and latitude—especially northern summer.</p></li>
-                <li><span>3</span><p>Snow, ice, oceans, greenhouse gases, and time amplify the orbital pacing.</p></li>
-              </ol>
-              <div className="modern-warming-note">
-                <p className="eyebrow">An Important Distinction</p>
-                <h3>Milanković cycles do not explain today&apos;s rapid warming</h3>
+          ))}
+          <section className="tour-chapter" id="together" data-tour-step>
+            <div className="chapter-heading">
+              <p className="eyebrow">05 / Together</p>
+              <h2 tabIndex={-1}>Your changes add up</h2>
+              <p className="chapter-lede">
+                This is the summer sunlight produced by the settings you tried.
+                Each motion contributes; the climate response also depends on
+                ice, oceans, snowfall, and greenhouse gases.
+              </p>
+            </div>
+            <ReadingCard />
+            <p className="chapter-explanation">
+              Weaker summers can help snow survive. As ice grows, it reflects
+              more sunlight and can reinforce cooling. These responses unfold
+              over thousands of years.
+            </p>
+            <ChapterNav chapterId="together" />
+          </section>
+          <section
+            className="tour-chapter tour-chapter--recap"
+            id="recap"
+            data-tour-step
+          >
+            <div className="chapter-heading">
+              <p className="eyebrow">06 / Recap</p>
+              <h2 tabIndex={-1}>The seasons change the balance</h2>
+            </div>
+            <ol className="takeaways">
+              <li>
+                <span>1</span>
                 <p>
-                  Orbital cycles unfold over tens of thousands of years. Modern warming is far
-                  faster and is driven primarily by human greenhouse-gas emissions.
+                  Orbit shape changes the difference between Earth’s closest and
+                  farthest distances from the Sun.
                 </p>
+              </li>
+              <li>
+                <span>2</span>
+                <p>
+                  Tilt changes the strength of the seasons. Precession shifts
+                  their position along the orbit.
+                </p>
+              </li>
+              <li>
+                <span>3</span>
+                <p>
+                  Together, they change summer sunlight. The rest of the climate
+                  system determines how much ice grows or melts.
+                </p>
+              </li>
+            </ol>
+            <div className="modern-warming-note">
+              <h3>What about today’s warming?</h3>
+              <p>
+                Orbital cycles unfold over tens of thousands of years. Today’s
+                rapid warming is driven primarily by human greenhouse-gas
+                emissions.
+              </p>
+              <Link href="/learn/modern-climate-change">
+                Read the explanation →
+              </Link>
+            </div>
+            <div className="recap-cta">
+              <div>
+                <p className="eyebrow">Keep experimenting</p>
+                <h3>Take your settings to the lab</h3>
               </div>
-              <div className="recap-cta">
-                <div><p className="eyebrow">Now Make the Pattern Yourself</p><h3>Experiment with all three cycles</h3></div>
-                <Link className="button button--primary" href="/lab">Open the Orbital Lab <span aria-hidden="true">→</span></Link>
-              </div>
-              <ChapterNav chapterId="recap" />
-            </section>
-          </TourFrame>
-        </ExperienceProvider>
-
+              <LabLink className="button button--primary">
+                Continue in the lab <span aria-hidden="true">↗</span>
+              </LabLink>
+            </div>
+            <ChapterNav chapterId="recap" />
+          </section>
+        </TourFrame>
         <section className="home-topics" aria-labelledby="home-topics-title">
           <div>
-            <p className="eyebrow">Go Deeper</p>
-            <h2 id="home-topics-title">Five questions, explained clearly</h2>
+            <p className="eyebrow">Further reading</p>
+            <h2 id="home-topics-title">A closer look at the science</h2>
             <p>
-              Read focused, source-backed guides to each orbital motion, the classic 65°N
-              indicator, and the crucial distinction between ice-age pacing and modern warming.
+              Read about each motion, the 65°N measurement, and modern warming.
             </p>
           </div>
           <nav aria-label="Milanković cycle topic guides">
             {LEARN_TOPICS.map((topic) => (
-              <Link href={`/learn/${topic.slug}`} key={topic.slug}>
-                {topic.shortTitle}<span aria-hidden="true">→</span>
+              <Link key={topic.slug} href={`/learn/${topic.slug}`}>
+                {topic.shortTitle}
+                <span aria-hidden="true">→</span>
               </Link>
             ))}
           </nav>
         </section>
       </main>
       <SiteFooter />
-    </>
+    </ExperienceProvider>
   );
 }

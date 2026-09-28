@@ -4,12 +4,14 @@ import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
 
 export const metadata: Metadata = {
-  title: "Frequently Asked Questions",
-  description: "Clear answers about Milanković cycles, ice ages, 65°N, and modern warming.",
+  title: "Frequently asked questions",
+  description:
+    "Questions about Milanković cycles, ice ages, 65°N, and modern warming.",
   alternates: { canonical: "/faq" },
   openGraph: {
-    title: "Frequently Asked Questions · Milanković Cycles",
-    description: "Clear answers about Milanković cycles, ice ages, 65°N, and modern warming.",
+    title: "Frequently asked questions · Milanković Cycles",
+    description:
+      "Questions about Milanković cycles, ice ages, 65°N, and modern warming.",
     url: "/faq",
   },
 };
@@ -29,7 +31,8 @@ const questions = [
   },
   {
     id: "does-eccentricity-cause-ice-ages",
-    question: "Does the 100,000-year eccentricity cycle cause ice ages by itself?",
+    question:
+      "Does the 100,000-year eccentricity cycle cause ice ages by itself?",
     answer:
       "No. Eccentricity changes Earth–Sun distance contrast and modulates precession, but its effect on global annual sunlight is small. Ice-age timing emerges from the combined orbital signal and a climate system with ice, ocean, carbon, and other feedbacks.",
   },
@@ -43,13 +46,13 @@ const questions = [
     id: "is-the-orbit-to-scale",
     question: "Is the orbit shown to scale?",
     answer:
-      "The Lab defaults to a clearly labeled 5× exaggeration because real changes in eccentricity are nearly invisible on a screen. Choose Actual Scale to see the physical geometry. All numerical calculations always use the real eccentricity.",
+      "The lab enlarges orbit shape 5× by default because real changes in eccentricity are nearly invisible on a screen. Choose Actual scale to see the physical geometry. All numerical calculations always use the real eccentricity.",
   },
   {
     id: "is-this-a-climate-prediction",
     question: "Does the Lab predict temperature or future ice sheets?",
     answer:
-      "No. It calculates daily-mean sunlight at the top of the atmosphere for a specific latitude and season. The snow-survival wording is a conditional orbital tendency, not a temperature, ice-volume, or future-climate prediction.",
+      "No. It calculates daily-mean sunlight at the top of the atmosphere for a specific latitude and season. Less summer sunlight can help snow survive, but temperature and ice-sheet size also depend on the wider climate system.",
   },
   {
     id: "modern-warming",
@@ -71,23 +74,31 @@ export default function FaqPage() {
       <SiteHeader />
       <main id="main-content" className="editorial-page editorial-page--narrow">
         <header className="page-hero">
-          <p className="eyebrow">Deeper Questions</p>
-          <h1>Frequently Asked Questions</h1>
+          <p className="eyebrow">More questions</p>
+          <h1>Frequently asked questions</h1>
           <p className="page-lede">
-            The short version is in the tour. Here are the details people usually ask next.
+            The short version is in the tour. Here are the details people
+            usually ask next.
           </p>
         </header>
         <section className="faq-list" aria-label="Milanković cycle questions">
           {questions.map((item) => (
             <details key={item.id} id={item.id}>
-              <summary><span>{item.question}</span><span aria-hidden="true">+</span></summary>
-              <div><p>{item.answer}</p></div>
+              <summary>
+                <span>{item.question}</span>
+                <span aria-hidden="true">+</span>
+              </summary>
+              <div>
+                <p>{item.answer}</p>
+              </div>
             </details>
           ))}
         </section>
         <div className="page-end-cta">
-          <p>Want to see the answer move?</p>
-          <Link className="button button--primary" href="/">Return to the Tour</Link>
+          <p>Try changing the orbit yourself.</p>
+          <Link className="button button--primary" href="/">
+            Return to the tour
+          </Link>
         </div>
       </main>
       <SiteFooter />

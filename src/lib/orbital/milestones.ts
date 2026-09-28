@@ -1,18 +1,22 @@
 import { calculateSummerInsolation } from "./insolation";
+import { serializeLabQuery } from "./query";
 import type {
   OrbitalMilestone,
   OrbitalMilestoneId,
   OrbitalParameters,
 } from "./types";
 
-type MilestoneFixture = Omit<OrbitalMilestone, "expectedReading" | "sourceId"> & {
+type MilestoneFixture = Omit<
+  OrbitalMilestone,
+  "expectedReading" | "sourceId"
+> & {
   expectedDailyMeanWm2: number;
 };
 
 const fixtures: MilestoneFixture[] = [
   {
     id: "lgm21k",
-    label: "Last Glacial Maximum",
+    label: "Last glacial maximum",
     shortLabel: "21,000 years ago",
     description:
       "An orbital state during the last glacial maximum. Existing ice, low greenhouse gases, and climate history also mattered.",
@@ -40,9 +44,10 @@ const fixtures: MilestoneFixture[] = [
   },
   {
     id: "presentJ2000",
-    label: "Present Reference",
+    label: "Today’s reference",
     shortLabel: "J2000",
-    description: "The J2000 astronomical reference used as the comparison baseline.",
+    description:
+      "The J2000 astronomical reference used as the comparison baseline.",
     kyrFromJ2000: 0,
     parameters: {
       eccentricity: 0.016702362,
@@ -53,7 +58,7 @@ const fixtures: MilestoneFixture[] = [
   },
   {
     id: "future50k",
-    label: "50,000 Years From Now",
+    label: "50,000 years from now",
     shortLabel: "Orbital geometry",
     description:
       "A calculated future orbital geometry, not a prediction of future climate or ice sheets.",
@@ -86,7 +91,18 @@ export const MILESTONE_BY_ID = Object.fromEntries(
   ORBITAL_MILESTONES.map((milestone) => [milestone.id, milestone]),
 ) as Record<OrbitalMilestoneId, OrbitalMilestone>;
 
-export function copyParameters(parameters: OrbitalParameters): OrbitalParameters {
+export function copyParameters(
+  parameters: OrbitalParameters,
+): OrbitalParameters {
   return { ...parameters };
 }
 
+// Match at shared-link precision so reloaded links still identify their preset.
+export function matchingMilestone(parameters: OrbitalParameters) {
+  const key = serializeLabQuery(parameters, "actual");
+  return (
+    ORBITAL_MILESTONES.find(
+      (milestone) => serializeLabQuery(milestone.parameters, "actual") === key,
+    ) ?? null
+  );
+}

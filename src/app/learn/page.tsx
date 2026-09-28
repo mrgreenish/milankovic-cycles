@@ -5,7 +5,7 @@ import { SiteHeader } from "@/components/site/SiteHeader";
 import { LEARN_TOPICS } from "@/lib/learn/topics";
 
 const description =
-  "Clear, source-backed guides to eccentricity, obliquity, precession, 65°N summer insolation, and modern climate change.";
+  "How orbit shape, tilt, and precession affect summer sunlight, and why they do not explain modern warming.";
 
 export const metadata: Metadata = {
   title: "Learn the Milanković Cycles",
@@ -24,22 +24,26 @@ export default function LearnPage() {
       <SiteHeader />
       <main id="main-content" className="editorial-page learn-hub">
         <header className="page-hero">
-          <p className="eyebrow">The Orbital Climate Guide</p>
-          <h1>Understand Each Milanković Cycle</h1>
+          <p className="eyebrow">Go a little further</p>
+          <h1>How the cycles work</h1>
           <p className="page-lede">
-            Start with one motion, then connect the full pattern. These concise guides separate
-            astronomical geometry, seasonal sunlight, climate feedbacks, and modern warming.
+            Explore one motion at a time, find out why northern summers matter
+            for ice, or read how orbital cycles differ from modern warming.
           </p>
         </header>
 
         <section className="topic-grid" aria-labelledby="topic-grid-title">
           <div className="section-heading">
-            <p className="eyebrow">Five Focused Guides</p>
+            <p className="eyebrow">Five guides</p>
             <h2 id="topic-grid-title">Choose a question</h2>
           </div>
           <div className="topic-grid__items">
             {LEARN_TOPICS.map((topic, index) => (
-              <Link className="topic-card" href={`/learn/${topic.slug}`} key={topic.slug}>
+              <Link
+                className="topic-card"
+                href={`/learn/${topic.slug}`}
+                key={topic.slug}
+              >
                 <span>0{index + 1}</span>
                 <div>
                   <h3>{topic.shortTitle}</h3>
@@ -51,19 +55,13 @@ export default function LearnPage() {
           </div>
         </section>
 
-        <section className="authority-panel">
-          <p className="eyebrow">A Family Thread Through Science</p>
-          <h2>Explained by Milutin Milanković’s great-grandson</h2>
+        <aside className="article-author">
           <p>
-            Filip van Harreveld built this project to make his great-grandfather’s patient
-            calculations tangible for a new generation—combining original scientific sources,
-            transparent equations, visual storytelling, and an interactive orbital lab.
+            By <Link href="/about">Filip van Harreveld</Link>, great-grandson of
+            Milutin Milanković.
           </p>
-          <div className="button-row">
-            <Link className="button button--primary" href="/about">Read the family story</Link>
-            <Link className="button button--secondary" href="/educators">For educators &amp; publishers</Link>
-          </div>
-        </section>
+          <Link href="/educators">Teaching ideas and citation →</Link>
+        </aside>
       </main>
       <SiteFooter />
     </>

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Line } from "@react-three/drei";
+import { Html, Line } from "@react-three/drei";
 import { Vector3 } from "three";
 import {
   degreesToRadians,
@@ -31,6 +31,7 @@ export type SceneClientProps = {
   chapter: string;
   focus: OrbitalVisualFocus;
   reducedMotion: boolean;
+  motionPaused?: boolean;
   onReady?: () => void;
   onFailure?: () => void;
 };
@@ -109,7 +110,12 @@ function CameraRig({
   const desiredPosition = useMemo(() => {
     if (focus !== "tilt") {
       // Retain the existing view angle, but fit the complete orbit in tall panels.
-      const base = new Vector3(0, 7.2, 11.2);
+      const base =
+        aspect > 2
+          ? new Vector3(0, 2.6, 10.7)
+          : focus === "shape"
+            ? new Vector3(0, 16, 3)
+            : new Vector3(0, 7.2, 11.2);
       const halfWidth = SEMI_MAJOR_AXIS * (1 + eccentricity) + 0.8;
       const visibleHalfWidth =
         Math.tan(degreesToRadians(43 / 2)) * base.length() * aspect;
@@ -118,7 +124,7 @@ function CameraRig({
     const earth = new Vector3(...earthPosition);
     const radial = earth.clone().setY(0).normalize();
     const tangent = new Vector3(-radial.z, 0, radial.x);
-    const distance = Math.max(1, 0.48 / aspect);
+    const distance = Math.max(aspect > 2 ? 0.65 : 1, 0.48 / aspect);
     return earth
       .add(tangent.multiplyScalar(3.6 * distance))
       .add(new Vector3(0, 1.5 * distance, 0));
@@ -149,8 +155,11 @@ function EarthModel({
   textures: SpaceTextures;
 }) {
   const closeUp = focus === "tilt";
+  const compact = useThree(
+    (state) => state.size.width / Math.max(1, state.size.height) > 2,
+  );
   const radius = closeUp ? 0.56 : 0.46;
-  const axisLength = closeUp ? 1.35 : 0.82;
+  const axisLength = closeUp && !compact ? 1.35 : 0.82;
   const latitudeRing = latitudeCircleGeometry(radius, 65);
   const axisYaw = degreesToRadians(parameters.earthPerihelionLongitudeDeg + 90);
   const axis = summerSolsticeAxisVector(parameters);
@@ -183,9 +192,14 @@ function EarthModel({
       tiltArcPoints(
         parameters.obliquityDeg,
         parameters.earthPerihelionLongitudeDeg,
-        closeUp ? 1.25 : 0.7,
+        closeUp && !compact ? 1.25 : 0.7,
       ),
-    [closeUp, parameters.earthPerihelionLongitudeDeg, parameters.obliquityDeg],
+    [
+      closeUp,
+      compact,
+      parameters.earthPerihelionLongitudeDeg,
+      parameters.obliquityDeg,
+    ],
   );
 
   return (
@@ -205,7 +219,7 @@ function EarthModel({
           <Line
             points={todayAxisPoints}
             color="#85c7f2"
-            opacity={0.5}
+            opacity={0.72}
             transparent
             lineWidth={2}
           />
@@ -233,6 +247,26 @@ function EarthModel({
           </mesh>
         </group>
       </group>
+      {closeUp ? (
+        <>
+          <Html
+            position={[
+              axis[0] * axisLength,
+              axis[1] * axisLength + 0.15,
+              axis[2] * axisLength,
+            ]}
+            center
+            zIndexRange={[2, 0]}
+          >
+            <span className="space-label">
+              {parameters.obliquityDeg.toFixed(2)}°
+            </span>
+          </Html>
+          <Html position={[0.72, 0.5, 0]} center zIndexRange={[2, 0]}>
+            <span className="space-label space-label--ice">65°N</span>
+          </Html>
+        </>
+      ) : null}
       <Line
         points={axisPoints}
         color={closeUp ? "#ffd97a" : "#f6f0e5"}
@@ -312,7 +346,7 @@ function OrbitalModel({
         <Line
           points={presentOrbitPoints}
           color="#85c7f2"
-          opacity={0.28}
+          opacity={0.65}
           transparent
           lineWidth={1.35}
         />
@@ -341,6 +375,18 @@ function OrbitalModel({
             transparent
             lineWidth={1.5}
           />
+          <Html position={[perihelion[0], 0, 0.65]} center zIndexRange={[2, 0]}>
+            <span className="space-label">
+              Closest
+              <small>{(1 - parameters.eccentricity).toFixed(3)} AU</small>
+            </span>
+          </Html>
+          <Html position={[aphelion[0], 0, 0.65]} center zIndexRange={[2, 0]}>
+            <span className="space-label space-label--ice">
+              Farthest
+              <small>{(1 + parameters.eccentricity).toFixed(3)} AU</small>
+            </span>
+          </Html>
           <mesh position={perihelion}>
             <sphereGeometry args={[0.11, 18, 18]} />
             <meshBasicMaterial color="#f08a4b" />
@@ -354,10 +400,41 @@ function OrbitalModel({
 
       {focus === "direction" ? (
         <>
+          {[
+            { label: "Spring", longitude: 0 },
+            { label: "Summer", longitude: 90 },
+            { label: "Autumn", longitude: 180 },
+            { label: "Winter", longitude: 270 },
+          ].map(({ label, longitude }) => {
+            const angle = degreesToRadians(
+              longitude + 180 - parameters.earthPerihelionLongitudeDeg,
+            );
+            const radius =
+              (SEMI_MAJOR_AXIS * (1 - eccentricity ** 2)) /
+              (1 + eccentricity * Math.cos(angle));
+            return (
+              <Html
+                key={label}
+                position={[
+                  (radius + 0.55) * Math.cos(angle),
+                  label === "Summer" ? 0.8 : 0,
+                  (radius + 0.55) * Math.sin(angle),
+                ]}
+                center
+                zIndexRange={[2, 0]}
+              >
+                <span
+                  className={`space-label${label === "Summer" ? " space-label--summer" : ""}`}
+                >
+                  {label}
+                </span>
+              </Html>
+            );
+          })}
           <Line
             points={[[0, 0, 0], todayDirectionPosition]}
             color="#a9b4c5"
-            opacity={0.28}
+            opacity={0.65}
             transparent
             lineWidth={1.2}
           />
@@ -368,6 +445,10 @@ function OrbitalModel({
             transparent
             lineWidth={2.5}
           />
+          <mesh position={earthPosition} rotation={[-Math.PI / 2, 0, 0]}>
+            <ringGeometry args={[0.62, 0.67, 48]} />
+            <meshBasicMaterial color="#ffd97a" />
+          </mesh>
           <mesh position={todayDirectionPosition}>
             <sphereGeometry args={[0.32, 24, 24]} />
             <meshBasicMaterial
@@ -417,6 +498,7 @@ export default function SceneClient({
   scale,
   focus,
   reducedMotion,
+  motionPaused = false,
   onReady,
   onFailure,
 }: SceneClientProps) {
@@ -437,6 +519,7 @@ export default function SceneClient({
     >
       <SceneRuntime
         ready={assetsReady}
+        motionPaused={motionPaused}
         onReady={onReady}
         onFailure={onFailure}
         quality={quality}

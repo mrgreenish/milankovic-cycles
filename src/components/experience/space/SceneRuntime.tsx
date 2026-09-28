@@ -4,6 +4,7 @@ import {
   createContext,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   type ReactNode,
   type RefObject,
@@ -24,6 +25,9 @@ declare global {
   }
 }
 
+const AmbientTimeContext = createContext<{ current: number }>({ current: 0 });
+export const useAmbientTime = () => useContext(AmbientTimeContext);
+
 const QualityContext = createContext<GraphicsQuality>("medium");
 export const useGraphicsQuality = () => useContext(QualityContext);
 export const animationTime = (elapsed: number) =>
@@ -35,6 +39,7 @@ export function SceneRuntime({
   onReady,
   onFailure,
   quality,
+  motionPaused = false,
   onQualityChange,
 }: {
   children: ReactNode;
@@ -42,21 +47,25 @@ export function SceneRuntime({
   onReady?: () => void;
   onFailure?: () => void;
   quality: GraphicsQuality;
+  motionPaused?: boolean;
   onQualityChange: (quality: GraphicsQuality) => void;
 }) {
   const get = useThree((state) => state.get);
-  const callbacks = useRef({ ready, onReady, onFailure });
+  const ambientTime = useMemo(() => ({ current: 0 }), []);
+  const callbacks = useRef({ ready, onReady, onFailure, motionPaused });
   useEffect(() => {
-    callbacks.current = { ready, onReady, onFailure };
-  }, [ready, onReady, onFailure]);
+    callbacks.current = { ready, onReady, onFailure, motionPaused };
+  }, [ready, onReady, onFailure, motionPaused]);
 
   useEffect(
-    () => runRenderer(get(), callbacks, onQualityChange),
-    [get, onQualityChange],
+    () => runRenderer(get(), callbacks, onQualityChange, ambientTime),
+    [get, onQualityChange, ambientTime],
   );
   return (
     <QualityContext.Provider value={quality}>
-      {children}
+      <AmbientTimeContext.Provider value={ambientTime}>
+        {children}
+      </AmbientTimeContext.Provider>
     </QualityContext.Provider>
   );
 }
@@ -66,10 +75,12 @@ function runRenderer(
   { gl, advance, setDpr, clock }: RootState,
   callbacks: RefObject<{
     ready: boolean;
+    motionPaused: boolean;
     onReady?: () => void;
     onFailure?: () => void;
   }>,
   setQuality: (quality: GraphicsQuality) => void,
+  ambientTime: { current: number },
 ) {
   const canvas = gl.domElement;
   let inView = false;
@@ -129,9 +140,15 @@ function runRenderer(
     }
     lastTick = now;
     if (!lastRender || now - lastRender >= interval - 1) {
-      elapsed += animationDelta(
+      const step = animationDelta(
         lastRender ? (now - lastRender) / 1000 : 1 / 60,
       );
+      elapsed += step;
+      if (!callbacks.current.motionPaused) ambientTime.current += step;
+      canvas.dataset.motion = callbacks.current.motionPaused
+        ? "paused"
+        : "running";
+      canvas.dataset.ambientTime = ambientTime.current.toFixed(3);
       lastRender = now;
       const start = performance.now();
       try {

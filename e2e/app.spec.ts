@@ -11,41 +11,57 @@ const viewports = [
 ];
 
 for (const viewport of viewports) {
-  test(`tour fits ${viewport.width}×${viewport.height}`, async ({ page }) => {
+  test(`tour fits ${viewport.width}×${viewport.height}`, async ({
+    page,
+  }, testInfo) => {
     await page.setViewportSize(viewport);
     await page.goto("/");
 
     const layout = await page.evaluate(() => ({
       clientWidth: document.documentElement.clientWidth,
       scrollWidth: document.documentElement.scrollWidth,
-      nestedScrollers: [...document.querySelectorAll("main *")].filter((element) => {
-        const style = getComputedStyle(element);
-        return (
-          element.scrollHeight > element.clientHeight + 4 &&
-          (style.overflowY === "auto" || style.overflowY === "scroll")
-        );
-      }).length,
+      nestedScrollers: [...document.querySelectorAll("main *")].filter(
+        (element) => {
+          const style = getComputedStyle(element);
+          return (
+            element.scrollHeight > element.clientHeight + 4 &&
+            (style.overflowY === "auto" || style.overflowY === "scroll")
+          );
+        },
+      ).length,
     }));
 
     expect(layout.scrollWidth).toBe(layout.clientWidth);
     expect(layout.nestedScrollers).toBe(0);
-    await expect(page.getByRole("heading", { name: "Why Do Ice Ages Come and Go?" })).toBeVisible();
+    if (viewport.width === 1440 && testInfo.project.name === "desktop") {
+      await page.evaluate(() => document.fonts.ready);
+      await page.screenshot({ path: "artifacts/polish/hero-desktop.png" });
+    }
+    await expect(
+      page.getByRole("heading", { name: "Why do ice ages come and go?" }),
+    ).toBeVisible();
   });
 }
 
-test("tour navigation updates hash and focuses the destination", async ({ page }) => {
+test("tour navigation updates hash and focuses the destination", async ({
+  page,
+}) => {
   await page.goto("/");
-  await page.getByRole("link", { name: "Start the 4-Minute Tour" }).click();
+  await page.getByRole("link", { name: "Start the tour" }).click();
   await expect(page).toHaveURL(/#big-idea$/);
-  await expect(page.getByRole("heading", { name: "The 30-Second Answer" })).toBeFocused();
+  await expect(
+    page.getByRole("heading", { name: "How summer sunlight affects ice" }),
+  ).toBeFocused();
 });
 
-test("malformed Lab state resets safely and remains shareable", async ({ page }) => {
+test("malformed Lab state resets safely and remains shareable", async ({
+  page,
+}) => {
   await page.goto("/lab?e=bad&o=99&p=-1&scale=bad");
   await expect(
-    page.getByRole("status").filter({ hasText: "reset to the present reference" }),
+    page.getByRole("status").filter({ hasText: "reset to today’s reference" }),
   ).toBeVisible();
-  const tilt = page.getByLabel("Axis Tilt · Obliquity");
+  const tilt = page.getByRole("slider", { name: "Axis tilt", exact: true });
   await expect(tilt).toHaveValue("23.44");
   // Invalid values reset to the present-day default, whose canonical URL is bare /lab.
   await expect(page).toHaveURL(/\/lab$/);
@@ -59,7 +75,8 @@ for (const route of ["/", "/lab", "/about", "/faq", "/sources"]) {
     await page.goto(route);
     const results = await new AxeBuilder({ page }).analyze();
     const serious = results.violations.filter(
-      (violation) => violation.impact === "serious" || violation.impact === "critical",
+      (violation) =>
+        violation.impact === "serious" || violation.impact === "critical",
     );
     expect(serious).toEqual([]);
   });

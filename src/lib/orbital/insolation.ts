@@ -38,9 +38,7 @@ export function calculateDailyMeanInsolation(
     (1 - eccentricity * eccentricity) /
     (1 + eccentricity * Math.cos(solarLongitude - solarLongitudeAtPerihelion));
 
-  const declination = Math.asin(
-    Math.sin(obliquity) * Math.sin(solarLongitude),
-  );
+  const declination = Math.asin(Math.sin(obliquity) * Math.sin(solarLongitude));
   const hourAngleCosine = -Math.tan(latitude) * Math.tan(declination);
 
   let sunsetHourAngle: number;
@@ -54,13 +52,10 @@ export function calculateDailyMeanInsolation(
 
   const geometricTerm =
     sunsetHourAngle * Math.sin(latitude) * Math.sin(declination) +
-    Math.cos(latitude) *
-      Math.cos(declination) *
-      Math.sin(sunsetHourAngle);
+    Math.cos(latitude) * Math.cos(declination) * Math.sin(sunsetHourAngle);
 
   const dailyMeanTopOfAtmosphereWm2 =
-    (SOLAR_CONSTANT_WM2 / (Math.PI * earthSunDistanceAu ** 2)) *
-    geometricTerm;
+    (SOLAR_CONSTANT_WM2 / (Math.PI * earthSunDistanceAu ** 2)) * geometricTerm;
 
   return {
     dailyMeanTopOfAtmosphereWm2: Math.max(0, dailyMeanTopOfAtmosphereWm2),
@@ -108,11 +103,10 @@ export function getOrbitalMeltPressure(
 
 export function getMeltPressureCopy(pressure: OrbitalMeltPressure) {
   if (pressure === "less-summer-melt") {
-    return "Weaker summer sunlight. All else equal, winter snow has more chance to survive.";
+    return "Weaker summer sunlight can help winter snow survive.";
   }
   if (pressure === "more-summer-melt") {
-    return "Stronger summer sunlight. All else equal, more summer melting is favored.";
+    return "Stronger summer sunlight can melt more winter snow.";
   }
-  return "Close to present-day orbital summer-melt pressure.";
+  return "Summer sunlight is close to today’s level.";
 }
-

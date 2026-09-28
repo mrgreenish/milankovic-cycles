@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LabLink } from "@/components/experience/LabLink";
 
 export function SiteFooter() {
   return (
@@ -6,19 +7,19 @@ export function SiteFooter() {
       <div>
         <p className="site-footer__title">Milanković Cycles</p>
         <p className="site-footer__copy">
-          A visual guide to the slow orbital motions that pace Earth&apos;s ice-age rhythm.
+          Explore how Earth&apos;s orbit and tilt change summer sunlight.
         </p>
       </div>
       <nav aria-label="Footer navigation">
-        <Link href="/learn">Learn the Cycles</Link>
-        <Link href="/lab">Open the Lab</Link>
-        <Link href="/sources">Evidence &amp; Sources</Link>
-        <Link href="/about">About the Project</Link>
-        <Link href="/educators">For Educators</Link>
+        <Link href="/learn">Learn the cycles</Link>
+        <LabLink>Open the lab</LabLink>
+        <Link href="/sources">Sources and method</Link>
+        <Link href="/about">About the project</Link>
+        <Link href="/educators">For educators</Link>
         <Link href="/faq">FAQ</Link>
       </nav>
       <p className="site-footer__meta">
-        Created by Filip van Harreveld · Great-grandson of Milutin Milanković
+        By Filip van Harreveld · Great-grandson of Milutin Milanković
       </p>
     </footer>
   );
