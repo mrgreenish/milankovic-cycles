@@ -11,6 +11,7 @@ import {
   NormalBlending,
   Vector2,
   Vector4,
+  type Mesh,
   type ShaderMaterial,
 } from "three";
 import { LINE_KIND, lineFragment, lineVertex, type LineKind } from "./lineShader";
@@ -77,6 +78,7 @@ export function ParamLine({
 }) {
   const frame = useSceneFrame();
   const material = useRef<ShaderMaterial>(null);
+  const mesh = useRef<Mesh>(null);
   const geometry = useMemo(() => stripGeometry(segments), [segments]);
   useEffect(() => () => geometry.dispose(), [geometry]);
   const uniforms = useMemo<LineUniforms>(
@@ -106,9 +108,12 @@ export function ParamLine({
     // The quad is wider than the visible core to leave room for the halo.
     live.uWidth.value = width * viewport.dpr * 1.4;
     update(live, frame);
+    // The fragment shader already discards the whole line below this opacity.
+    // Skip the draw call too, keeping exactly the same visible pixels.
+    if (mesh.current) mesh.current.visible = live.uOpacity.value >= 0.004;
   });
   return (
-    <mesh geometry={geometry} frustumCulled={false} renderOrder={1}>
+    <mesh ref={mesh} geometry={geometry} frustumCulled={false} renderOrder={1}>
       <shaderMaterial
         ref={material}
         vertexShader={lineVertex}
