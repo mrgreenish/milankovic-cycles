@@ -1,9 +1,10 @@
 "use client";
 
-import { useLayoutEffect, useMemo, useRef } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import {
   BackSide,
+  SphereGeometry,
   type Camera,
   type Group,
   type ShaderMaterial,
@@ -34,6 +35,13 @@ export function Earth({ textures }: { textures: SpaceTextures }) {
   const quality = useGraphicsQuality();
   const ambientTime = useAmbientTime();
   const config = QUALITY[quality];
+  // All three layers have identical vertices; their mesh scales and shaders
+  // provide the surface, clouds and atmosphere. Upload the sphere only once.
+  const geometry = useMemo(
+    () => new SphereGeometry(1, config.segments, config.segments / 2),
+    [config.segments],
+  );
+  useEffect(() => () => geometry.dispose(), [geometry]);
   const uniforms = useMemo(
     () => ({
       uDay: { value: textures.day },
@@ -95,8 +103,7 @@ export function Earth({ textures }: { textures: SpaceTextures }) {
   return (
     <group ref={body} name="earth-visual">
       <group ref={rotating}>
-        <mesh name="earth-surface" onBeforeRender={forInset}>
-          <sphereGeometry args={[1, config.segments, config.segments / 2]} />
+        <mesh name="earth-surface" geometry={geometry} onBeforeRender={forInset}>
           <shaderMaterial
             ref={surfaceMaterial}
             vertexShader={sphereVertex}
@@ -104,8 +111,7 @@ export function Earth({ textures }: { textures: SpaceTextures }) {
             uniforms={uniforms}
           />
         </mesh>
-        <mesh name="earth-clouds" scale={1.009} renderOrder={2}>
-          <sphereGeometry args={[1, config.segments, config.segments / 2]} />
+        <mesh name="earth-clouds" geometry={geometry} scale={1.009} renderOrder={2}>
           <shaderMaterial
             ref={cloudMaterial}
             vertexShader={sphereVertex}
@@ -118,10 +124,10 @@ export function Earth({ textures }: { textures: SpaceTextures }) {
       </group>
       <mesh
         name="earth-atmosphere"
+        geometry={geometry}
         scale={quality === "low" ? 1.025 : 1.035}
         renderOrder={3}
       >
-        <sphereGeometry args={[1, config.segments, config.segments / 2]} />
         <shaderMaterial
           vertexShader={sphereVertex}
           fragmentShader={atmosphereFragment}
