@@ -16,6 +16,7 @@ import type {
   OrbitalVisualFocus,
 } from "@/lib/orbital/types";
 import { Earth } from "./Earth";
+import { createLabelProjection } from "./labelProjection";
 import { bodyOrientation } from "./orientation";
 import { ParamLine } from "./ParamLine";
 import {
@@ -63,26 +64,10 @@ function Label({
   const anchor = useRef<Group>(null);
   const element = useRef<HTMLSpanElement>(null);
   const visible = useRef(false);
-  const screen = useRef<[number, number]>([0, 0]);
   const project = useMemo(() => {
-    const point = new Vector3();
-    return (
-      object: Object3D,
-      camera: Camera,
-      size: { width: number; height: number },
-    ) => {
-      // Html only writes a transform when its projected position changes.
-      // Freeze invisible labels so hovering does not move 11 hidden DOM nodes.
-      if (visible.current) {
-        point.setFromMatrixPosition(object.matrixWorld).project(camera);
-        // Html retains this tuple to compare with the next frame.
-        screen.current = [
-          ((point.x + 1) * size.width) / 2,
-          ((1 - point.y) * size.height) / 2,
-        ];
-      }
-      return screen.current;
-    };
+    const calculate = createLabelProjection();
+    return (object: Object3D, camera: Camera, size: { width: number; height: number }) =>
+      calculate(object, camera, size, visible.current);
   }, []);
   useFrame(({ camera }) => {
     const opacity = blend(frame, weight) * (fade ? fade(frame) : 1);
