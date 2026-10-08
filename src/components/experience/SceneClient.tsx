@@ -14,8 +14,10 @@ import type { SceneLive } from "./sceneLive";
 import { CameraRig } from "./space/CameraRig";
 import { ClimateInset, type InsetRect } from "./space/ClimateInset";
 import { OrbitScene } from "./space/OrbitScene";
+import { EarthGeometryProvider, InsetEarth } from "./space/Earth";
 import {
   SceneStateProvider,
+  MainSceneState,
   defaultTargets,
   useSceneFrame,
   type SceneTargets,
@@ -38,6 +40,7 @@ export type SceneClientProps = {
   ice?: number;
   /** A moment in La2004, in thousands of years from J2000; null when the orbit was set by hand. */
   timeKyr?: number | null;
+  clockPlaying?: boolean;
   /** Take ice from the measured record at the scene's clock rather than from `ice`. */
   iceFollowsClock?: boolean;
   /** A second, small view of Earth from above the pole; null for none. */
@@ -79,6 +82,7 @@ function SceneContents({
   focus,
   ice = 0,
   timeKyr = null,
+  clockPlaying = false,
   iceFollowsClock = false,
   inset = null,
   stageShift = 0,
@@ -94,6 +98,7 @@ function SceneContents({
   | "focus"
   | "ice"
   | "timeKyr"
+  | "clockPlaying"
   | "iceFollowsClock"
   | "inset"
   | "stageShift"
@@ -125,6 +130,7 @@ function SceneContents({
       perihelionDeg: parameters.earthPerihelionLongitudeDeg,
       ice: Math.min(1.1, Math.max(-0.25, ice)),
       timeKyr: live?.current.scrub ?? timeKyr,
+      clockPlaying,
       scale,
       iceFollowsClock,
       stageShift,
@@ -147,13 +153,18 @@ function SceneContents({
 
   return (
     <SceneStateProvider targets={targets}>
-      <CameraRig live={live} />
       <StarField />
-      {textures ? (
-        <World>
-          <OrbitScene parameters={parameters} textures={textures} />
-        </World>
-      ) : null}
+      <EarthGeometryProvider>
+        <MainSceneState>
+          <CameraRig live={live} />
+          {textures ? (
+            <World>
+              <OrbitScene parameters={parameters} textures={textures} />
+            </World>
+          ) : null}
+        </MainSceneState>
+        {textures && inset ? <InsetEarth textures={textures} /> : null}
+      </EarthGeometryProvider>
       <ClimateInset rect={inset} />
     </SceneStateProvider>
   );

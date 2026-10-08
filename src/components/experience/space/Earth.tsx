@@ -1,6 +1,14 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  type ReactNode,
+} from "react";
 import { useFrame } from "@react-three/fiber";
 import {
   BackSide,
@@ -22,11 +30,36 @@ import {
   useGraphicsQuality,
 } from "./SceneRuntime";
 import { useSceneFrame } from "./SceneState";
+import { bodyOrientation } from "./orientation";
 import type { SpaceTextures } from "./textures";
+
+const GeometryContext = createContext<SphereGeometry | null>(null);
+
+/** Both camera views and all Earth layers reuse one set of sphere buffers. */
+export function EarthGeometryProvider({ children }: { children: ReactNode }) {
+  const quality = useGraphicsQuality();
+  const segments = QUALITY[quality].segments;
+  const geometry = useMemo(
+    () => new SphereGeometry(1, segments, segments / 2),
+    [segments],
+  );
+  useEffect(() => () => geometry.dispose(), [geometry]);
+  return (
+    <GeometryContext.Provider value={geometry}>
+      {children}
+    </GeometryContext.Provider>
+  );
+}
 
 // This group lives INSIDE the existing tilt/yaw transforms. Daily rotation only
 // affects the surface and weather; the polar axis and latitude ring stay fixed.
-export function Earth({ textures }: { textures: SpaceTextures }) {
+export function Earth({
+  textures,
+  layer = 0,
+}: {
+  textures: SpaceTextures;
+  layer?: 0 | 1;
+}) {
   const frame = useSceneFrame();
   const body = useRef<Group>(null);
   const rotating = useRef<Group>(null);
@@ -35,13 +68,8 @@ export function Earth({ textures }: { textures: SpaceTextures }) {
   const quality = useGraphicsQuality();
   const ambientTime = useAmbientTime();
   const config = QUALITY[quality];
-  // All three layers have identical vertices; their mesh scales and shaders
-  // provide the surface, clouds and atmosphere. Upload the sphere only once.
-  const geometry = useMemo(
-    () => new SphereGeometry(1, config.segments, config.segments / 2),
-    [config.segments],
-  );
-  useEffect(() => () => geometry.dispose(), [geometry]);
+  const geometry = useContext(GeometryContext);
+  if (!geometry) throw new Error("Earth needs an EarthGeometryProvider");
   const uniforms = useMemo(
     () => ({
       uDay: { value: textures.day },
@@ -60,14 +88,13 @@ export function Earth({ textures }: { textures: SpaceTextures }) {
     [textures, config.detail],
   );
 
-  // Layer 1 is the Earth alone: the climate globe's camera sees only this.
+  // The main and climate cameras draw their own pose, using the same geometry.
   useLayoutEffect(() => {
-    body.current?.traverse((object) => object.layers.enable(1));
-  }, [textures]);
+    body.current?.traverse((object) => object.layers.set(layer));
+  }, [textures, layer]);
 
-  // The climate globe wants the 65°N line and thinner clouds whatever the main
-  // view is doing. The uniforms are shared, so set them just for that pass; the
-  // next frame's useFrame puts the main values back before the main pass.
+  // The climate globe keeps the 65°N line and thinner clouds whatever the main
+  // view is doing. Surface and cloud layers share this globe's uniforms.
   const forInset = (_renderer: unknown, _scene: unknown, camera: Camera) => {
     if (!camera.userData.inset) return;
     const live = surfaceMaterial.current?.uniforms;
@@ -136,6 +163,29 @@ export function Earth({ textures }: { textures: SpaceTextures }) {
           depthWrite={false}
         />
       </mesh>
+    </group>
+  );
+}
+
+/** The top globe keeps the original clock, orientation, spin and shading. */
+export function InsetEarth({ textures }: { textures: SpaceTextures }) {
+  const frame = useSceneFrame();
+  const world = useRef<Group>(null);
+  const position = useRef<Group>(null);
+  const body = useRef<Group>(null);
+  useFrame(() => {
+    if (world.current) world.current.rotation.y = frame.yaw;
+    position.current?.position.copy(frame.earthLocal);
+    if (body.current)
+      bodyOrientation(frame.axisLocal, frame.yaw, body.current.quaternion);
+  });
+  return (
+    <group ref={world} name="climate-earth-world">
+      <group ref={position}>
+        <group ref={body}>
+          <Earth textures={textures} layer={1} />
+        </group>
+      </group>
     </group>
   );
 }

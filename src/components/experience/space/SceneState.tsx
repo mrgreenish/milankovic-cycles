@@ -13,6 +13,7 @@ import { iceRawAt, orbitalStateAt } from "@/lib/orbital/timeline";
 import type { OrbitScale, OrbitalVisualFocus } from "@/lib/orbital/types";
 import { smoothDamp } from "./smoothDamp";
 import { stepSpin } from "./spin";
+import { createTimelineTransition, stepTimelineTransition } from "./timelineTransition";
 import {
   animationTime,
   useAmbientTime,
@@ -86,6 +87,8 @@ export type SceneTargets = {
    * however the page updates. Null follows the three orbit values above.
    */
   timeKyr: number | null;
+  /** Playback follows every cycle; a large scrub can take a calmer visual route. */
+  clockPlaying: boolean;
   scale: OrbitScale;
   /** Take ice from the measured record at the clock's time instead of `ice`. */
   iceFollowsClock: boolean;
@@ -143,6 +146,7 @@ export const defaultTargets: SceneTargets = {
   perihelionDeg: 102.9,
   ice: 0,
   timeKyr: null,
+  clockPlaying: false,
   scale: "5x",
   iceFollowsClock: false,
   heroProgress: 0,
@@ -324,6 +328,12 @@ function advance(frame: SceneFrame, targets: SceneTargets, delta: number, time: 
   // Earth keeps circling the orbit in the shape view: that is real motion.
   if (frame.travel > 0.02) moved += 1;
 
+  updateOrbitPose(frame, time);
+  frame.ready = true;
+  return moved;
+}
+
+function updateOrbitPose(frame: SceneFrame, time: number) {
   // Earth waits at northern midsummer unless the shape view sets it travelling.
   const parked = (3 * Math.PI) / 2 - frame.peri;
   const travelling = trueAnomalyFromMean(time * TRAVEL_RATE, frame.e);
@@ -335,8 +345,6 @@ function advance(frame: SceneFrame, targets: SceneTargets, delta: number, time: 
   frame.earth.copy(frame.earthLocal).applyAxisAngle(UP, frame.yaw);
   axisDirection(frame.tilt, frame.peri, frame.axisLocal);
   frame.axis.copy(frame.axisLocal).applyAxisAngle(UP, frame.yaw);
-  frame.ready = true;
-  return moved;
 }
 
 const SceneFrameContext = createContext<SceneFrame | null>(null);
@@ -371,6 +379,51 @@ export function SceneStateProvider({
   }, -3);
   return (
     <SceneFrameContext.Provider value={frame}>
+      {children}
+    </SceneFrameContext.Provider>
+  );
+}
+
+/** The lower diagram may take a short route; the outer frame still drives the inset. */
+export function MainSceneState({ children }: { children: React.ReactNode }) {
+  const source = useSceneFrame();
+  const ambient = useAmbientTime();
+  const activity = useSceneActivity();
+  const state = useMemo(() => {
+    const frame = createFrame();
+    return {
+      frame,
+      motion: createTimelineTransition(),
+      vectors: {
+        earthLocal: frame.earthLocal,
+        earth: frame.earth,
+        axisLocal: frame.axisLocal,
+        axis: frame.axis,
+      },
+    };
+  }, []);
+  useFrame((_, delta) => {
+    const { frame, motion, vectors } = state;
+    const { e, tilt, peri, spin } = frame;
+    Object.assign(frame, source, vectors);
+    const pose = stepTimelineTransition(motion, source, delta);
+    if (pose) {
+      Object.assign(frame, pose);
+      updateOrbitPose(frame, animationTime(ambient.current));
+      const moved =
+        Math.abs(frame.e - e) + Math.abs(frame.tilt - tilt) +
+        Math.abs(wrapPi(frame.peri - peri)) + Math.abs(wrapPi(frame.spin - spin));
+      if (moved > 4e-4) wakeScene(activity, 350);
+    } else {
+      frame.earthLocal.copy(source.earthLocal);
+      frame.earth.copy(source.earth);
+      frame.axisLocal.copy(source.axisLocal);
+      frame.axis.copy(source.axis);
+    }
+    window.__ORBITAL_SCENE_TEST__?.mainProbe?.(frame);
+  }, -2.5);
+  return (
+    <SceneFrameContext.Provider value={state.frame}>
       {children}
     </SceneFrameContext.Provider>
   );

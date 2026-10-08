@@ -32,6 +32,8 @@ declare global {
       quality?: GraphicsQuality;
       /** Called with the scene's eased frame on every update; for tests and profiling. */
       probe?: (frame: unknown) => void;
+      /** Main diagram pose, which can take a short route during large scrubs. */
+      mainProbe?: (frame: unknown) => void;
     };
   }
 }

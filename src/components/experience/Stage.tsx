@@ -234,6 +234,7 @@ export function Stage({
   drag = null,
   onScale,
   timeKyr = null,
+  clockPlaying = false,
   iceFollowsClock = false,
   globe = null,
   children,
@@ -250,6 +251,7 @@ export function Stage({
   onScale?: (scale: OrbitScale) => void;
   /** The moment shown, so the scene can step through time smoothly; null for a hand-set orbit. */
   timeKyr?: number | null;
+  clockPlaying?: boolean;
   iceFollowsClock?: boolean;
   /** When set, a second small view of Earth from above the pole shows ice and temperature. */
   globe?: ClimateGlobe;
@@ -370,6 +372,7 @@ export function Stage({
                 focus={focus}
                 ice={ice}
                 timeKyr={timeKyr}
+                clockPlaying={clockPlaying}
                 iceFollowsClock={iceFollowsClock}
                 inset={inset}
                 stageShift={shift}

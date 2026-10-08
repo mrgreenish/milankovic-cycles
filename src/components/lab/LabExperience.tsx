@@ -281,6 +281,7 @@ export function LabExperience() {
           scale={state.scale}
           ice={climate.iceShare}
           timeKyr={state.timeKyr}
+          clockPlaying={clockPlaying}
           iceFollowsClock
           globe={{ iceShare: climate.iceShare, deltaTempC: climate.deltaTempC }}
           reducedMotion={reducedMotion}
