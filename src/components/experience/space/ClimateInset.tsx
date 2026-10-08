@@ -56,12 +56,22 @@ export function ClimateInset({ rect }: { rect: InsetRect | null }) {
     // Keep the picture behind (stars, orbit lines) and only clear depth, so the
     // globe sits over it like a lens rather than punching a square hole.
     const auto = gl.autoClear;
+    const autoUpdate = scene.matrixWorldAutoUpdate;
     gl.autoClear = false;
-    gl.clearDepth();
-    gl.render(scene, camera);
-    gl.autoClear = auto;
-    gl.setScissorTest(false);
-    gl.setViewport(0, 0, size.width, size.height);
+    // The main pass already updated every world matrix. Only the inset camera
+    // moves between passes (Earth's onBeforeRender changes uniforms), so reuse
+    // those matrices instead of walking and recomputing the scene a second time.
+    // Three still updates the unparented camera independently.
+    scene.matrixWorldAutoUpdate = false;
+    try {
+      gl.clearDepth();
+      gl.render(scene, camera);
+    } finally {
+      scene.matrixWorldAutoUpdate = autoUpdate;
+      gl.autoClear = auto;
+      gl.setScissorTest(false);
+      gl.setViewport(0, 0, size.width, size.height);
+    }
   }, 1);
 
   return null;

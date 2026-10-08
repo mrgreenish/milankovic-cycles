@@ -85,6 +85,7 @@ export function TourStage() {
       scale={ex.scale}
       ice={ice}
       timeKyr={clock ? ex.timeKyr : null}
+      clockPlaying={ex.playing?.kind === "time"}
       iceFollowsClock={clock}
       globe={globe}
       reducedMotion={ex.reducedMotion}
