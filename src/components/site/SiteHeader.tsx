@@ -18,7 +18,7 @@ export function SiteHeader() {
   const experience = useOptionalExperience();
   const destination = (href: string) =>
     href === "/lab" && experience
-      ? labPath(experience.parameters, experience.scale)
+      ? labPath(experience.parameters, experience.scale, experience.timeKyr)
       : href;
   const menu = useRef<HTMLDetailsElement>(null);
   const isActive = (href: string) =>
