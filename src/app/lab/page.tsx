@@ -7,12 +7,12 @@ import { LabExperience } from "@/components/lab/LabExperience";
 export const metadata: Metadata = {
   title: "Orbital lab",
   description:
-    "Change Earth’s orbit and tilt, then compare summer sunlight at 65°N.",
+    "Change Earth’s orbit, tilt and wobble, or travel back 800,000 years, and compare midsummer sunlight at 65°N.",
   alternates: { canonical: "/lab" },
   openGraph: {
     title: "Orbital lab · Milanković Cycles",
     description:
-      "Change Earth’s orbit and tilt, then compare summer sunlight at 65°N.",
+      "Change Earth’s orbit, tilt and wobble, or travel back 800,000 years, and compare midsummer sunlight at 65°N.",
     url: "/lab",
   },
 };

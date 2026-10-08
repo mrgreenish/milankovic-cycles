@@ -31,25 +31,17 @@ test("all scene focuses render and share the unchanged orbital controls", async 
     ["lab-precession", "direction"],
   ]) {
     await page.locator(`#${id}`).focus();
-    await expect(page.locator(".scene-guide")).toHaveAttribute(
-      "data-focus",
-      focus,
-    );
+    await expect(page.locator(".stage")).toHaveAttribute("data-focus", focus);
     await page.locator(`#${id}`).press("End");
     await expect(viewport).toHaveAttribute("data-ready", "true");
     await page.locator(`#${id}`).press("Home");
     await expect(viewport).toHaveAttribute("data-ready", "true");
   }
-  await page.getByRole("button", { name: "Actual scale", exact: true }).click();
+  await page.getByRole("button", { name: "True shape", exact: true }).click();
   await expect(page).toHaveURL(/scale=actual/);
   await page.getByRole("button", { name: "Reset all", exact: true }).click();
-  await expect(page.locator(".scene-guide")).toHaveAttribute(
-    "data-focus",
-    "combined",
-  );
-  await page
-    .getByRole("button", { name: "Exaggerated 5×", exact: true })
-    .click();
+  await expect(page.locator(".stage")).toHaveAttribute("data-focus", "combined");
+  await page.getByRole("button", { name: "Stretched ×5", exact: true }).click();
   await expect(page).toHaveURL(/\/lab$/);
   expect(errors).toEqual([]);
 });
@@ -257,12 +249,9 @@ test("pausing ambient motion keeps the controls and camera working", async ({
   const frozen = await canvas.getAttribute("data-ambient-time");
   const frames = Number((await canvas.getAttribute("data-frames")) ?? 0);
   await page
-    .getByRole("button", { name: "More tilt · 24.5°", exact: true })
+    .getByRole("button", { name: "Most tilt · 24.5°", exact: true })
     .click();
-  await expect(page.locator(".scene-guide")).toHaveAttribute(
-    "data-focus",
-    "tilt",
-  );
+  await expect(page.locator(".stage")).toHaveAttribute("data-focus", "tilt");
   await expect(page.getByRole("slider", { name: "Axis tilt" })).toHaveValue(
     "24.5",
   );
@@ -277,4 +266,90 @@ test("pausing ambient motion keeps the controls and camera working", async ({
   await expect
     .poll(async () => Number(await canvas.getAttribute("data-ambient-time")))
     .toBeGreaterThan(Number(frozen));
+});
+
+test("the title scene renders behind the headline", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator(".scene-viewport")).toHaveAttribute(
+    "data-ready",
+    "true",
+    { timeout: 20000 },
+  );
+  await expect(page.locator(".stage")).toHaveAttribute("data-focus", "hero");
+  await page.getByRole("link", { name: "Start the tour", exact: true }).click();
+  await expect(page.locator(".stage")).toHaveAttribute("data-focus", "idea");
+});
+
+test("pointing at a title card previews that motion", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name === "mobile", "Hover on desktop");
+  await page.goto("/");
+  await expect(page.locator(".scene-viewport")).toHaveAttribute(
+    "data-ready",
+    "true",
+    { timeout: 20000 },
+  );
+  await page
+    .getByRole("navigation", { name: "Explore a cycle" })
+    .getByRole("link", { name: /Stretch/ })
+    .hover();
+  await expect(page.locator(".stage")).toHaveAttribute("data-focus", "shape");
+  await page.mouse.move(700, 100);
+  await expect(page.locator(".stage")).toHaveAttribute("data-focus", "hero");
+});
+
+test("a rendered globe holds the place of the scene while it loads", async ({
+  page,
+}) => {
+  let release: () => void = () => {};
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  await page.route("**/textures/space/**", async (route) => {
+    await gate;
+    await route.continue();
+  });
+  await page.goto("/", { waitUntil: "domcontentloaded" });
+  const globe = page.locator(".globe-poster img");
+  await expect(globe).toBeVisible();
+  // naturalWidth is density-corrected for srcset images, so check the file itself.
+  await expect
+    .poll(() =>
+      globe.evaluate(
+        (img: HTMLImageElement) =>
+          img.complete && img.naturalWidth > 0 && img.currentSrc,
+      ),
+    )
+    .toMatch(/globe-poster-\d+\.webp$/);
+  // It sits where the live Earth will: centred vertically in the stage.
+  const box = (await globe.boundingBox())!;
+  const stage = (await page.locator(".scene-viewport").boundingBox())!;
+  expect(
+    Math.abs(box.y + box.height / 2 - (stage.y + stage.height / 2)),
+  ).toBeLessThan(stage.height * 0.08);
+  await expect(page.locator(".scene-viewport")).toHaveAttribute("data-ready", "false");
+  release();
+  await expect(page.locator(".scene-viewport")).toHaveAttribute("data-ready", "true", {
+    timeout: 20000,
+  });
+  await expect(page.locator(".scene-viewport__globe")).toHaveCSS("opacity", "0", {
+    timeout: 5000,
+  });
+});
+
+test("the scene idles at a lower frame rate and wakes when the pointer moves", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name === "mobile", "Pointer wake on desktop");
+  await page.goto("/");
+  const canvas = page.locator(".scene-viewport canvas");
+  await expect(page.locator(".scene-viewport")).toHaveAttribute("data-ready", "true", {
+    timeout: 20000,
+  });
+  await expect(canvas).toHaveAttribute("data-pace", "idle", { timeout: 10000 });
+  await page.mouse.move(900, 400);
+  await page.mouse.move(1000, 450, { steps: 5 });
+  await expect(canvas).toHaveAttribute("data-pace", "full");
+  await expect(canvas).toHaveAttribute("data-pace", "idle", { timeout: 10000 });
 });

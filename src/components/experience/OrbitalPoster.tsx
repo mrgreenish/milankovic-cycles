@@ -47,6 +47,8 @@ export function OrbitalPoster({
   focus: OrbitalVisualFocus;
 }) {
   const gradientId = useId();
+  // The still diagram has three close-ups; every other view uses the overview.
+  focus = focus === "shape" || focus === "tilt" || focus === "direction" ? focus : "combined";
   const eccentricity = displayEccentricity(parameters.eccentricity, scale);
   const presentEccentricity = displayEccentricity(
     PRESENT_PARAMETERS.eccentricity,

@@ -8,7 +8,9 @@ export function TourParameterSlider({
 }: {
   parameter: ParameterKey;
 }) {
-  const { parameters, setParameter } = useExperience();
+  const { parameters, setParameter, playing, playCycle, stop } =
+    useExperience();
+  const isPlaying = playing?.kind === "cycle" && playing.key === parameter;
   return (
     <ParameterControl
       id={`tour-${parameter}`}
@@ -16,6 +18,8 @@ export function TourParameterSlider({
       parameters={parameters}
       onChange={(value) => setParameter(parameter, value)}
       context="tour"
+      playing={isPlaying}
+      onTogglePlay={() => (isPlaying ? stop() : playCycle(parameter))}
     />
   );
 }

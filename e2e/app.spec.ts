@@ -50,7 +50,7 @@ test("tour navigation updates hash and focuses the destination", async ({
   await page.getByRole("link", { name: "Start the tour" }).click();
   await expect(page).toHaveURL(/#big-idea$/);
   await expect(
-    page.getByRole("heading", { name: "How summer sunlight affects ice" }),
+    page.getByRole("heading", { name: "Summer decides whether ice grows" }),
   ).toBeFocused();
 });
 

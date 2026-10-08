@@ -11,7 +11,7 @@ All maps are local, equirectangular, north-up geographically, with pixels vertic
 
 NASA imagery is generally available for informational/educational use under [NASA's imagery guidelines](https://www.nasa.gov/nasa-brand-center/images-and-media/), subject to third-party credits and no implied endorsement. GEBCO data is available under [GEBCO's terms of use](https://www.gebco.net/data_and_products/gridded_bathymetry_data/gebco_2024/#terms). These assets contain no NASA logos or identifiable people. Credits above must accompany redistribution.
 
-`flow-noise.png`, the ocean mask, and all shader animation are authored by this project. Cloud flow, solar granulation, prominence placement, daily rotation speed, and atmospheric thickness are illustrative. Geography and the June surface appearance are fixed when orbital parameters change. Night lights show modern human activity, including when comparing ancient orbital settings.
+`flow-noise.png`, the ocean mask, the hand-drawn ice-sheet outline in the Earth shader and all shader animation are authored by this project. The ice outline is an illustration after the last glacial maximum; its size follows the LR04 ice record, its shape is not a reconstruction. Cloud flow, solar granulation, prominence placement, daily rotation speed, and atmospheric thickness are illustrative. Geography and the June surface appearance are fixed when orbital parameters change. Night lights show modern human activity, including when comparing ancient orbital settings.
 
 ## Rebuilding
 

@@ -7,14 +7,14 @@ export function SiteFooter() {
       <div>
         <p className="site-footer__title">Milanković Cycles</p>
         <p className="site-footer__copy">
-          Explore how Earth&apos;s orbit and tilt change summer sunlight.
+          A 3D tour of the orbital cycles behind the ice ages.
         </p>
       </div>
       <nav aria-label="Footer navigation">
-        <Link href="/learn">Learn the cycles</Link>
+        <Link href="/learn">Guides</Link>
         <LabLink>Open the lab</LabLink>
         <Link href="/sources">Sources and method</Link>
-        <Link href="/about">About the project</Link>
+        <Link href="/about">About</Link>
         <Link href="/educators">For educators</Link>
         <Link href="/faq">FAQ</Link>
       </nav>

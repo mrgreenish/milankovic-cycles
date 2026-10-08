@@ -9,13 +9,17 @@ import {
 } from "./ExperienceProvider";
 
 export function TourProgress() {
-  const { activeChapter, goToChapter } = useExperience();
+  const { activeChapter, goToChapter, inHero } = useExperience();
   const activeIndex = TOUR_CHAPTERS.findIndex(
     (chapter) => chapter.id === activeChapter,
   );
 
   return (
-    <nav className="tour-progress" aria-label="Tour progress">
+    <nav
+      className="tour-progress"
+      aria-label="Tour progress"
+      data-hidden={inHero ? "true" : "false"}
+    >
       <div className="tour-progress__mobile">
         <span>
           Step {activeIndex + 1} of {TOUR_CHAPTERS.length}
@@ -56,7 +60,7 @@ export function TourProgress() {
               }}
             >
               <span>{index + 1}</span>
-              {chapter.label}
+              <em>{chapter.label}</em>
             </a>
           </li>
         ))}

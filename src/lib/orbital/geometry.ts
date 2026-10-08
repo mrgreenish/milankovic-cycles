@@ -74,3 +74,55 @@ export function summerSolsticeAxisVector(
     -Math.sin(trueAnomaly) * horizontal,
   ];
 }
+
+/** True anomaly of the northern summer solstice, measured from perihelion. */
+export function summerSolsticeTrueAnomaly(perihelionLongitudeDeg: number) {
+  return degreesToRadians(270 - perihelionLongitudeDeg);
+}
+
+/** Solve Kepler's equation M = E − e·sin E for the eccentric anomaly E. */
+export function eccentricAnomaly(meanAnomaly: number, eccentricity: number) {
+  let estimate = meanAnomaly + eccentricity * Math.sin(meanAnomaly);
+  for (let step = 0; step < 6; step += 1) {
+    estimate -=
+      (estimate - eccentricity * Math.sin(estimate) - meanAnomaly) /
+      (1 - eccentricity * Math.cos(estimate));
+  }
+  return estimate;
+}
+
+export function trueAnomalyFromMean(meanAnomaly: number, eccentricity: number) {
+  const eccentric = eccentricAnomaly(meanAnomaly, eccentricity);
+  return (
+    2 *
+    Math.atan2(
+      Math.sqrt(1 + eccentricity) * Math.sin(eccentric / 2),
+      Math.sqrt(1 - eccentricity) * Math.cos(eccentric / 2),
+    )
+  );
+}
+
+export function meanAnomalyFromTrue(trueAnomaly: number, eccentricity: number) {
+  const eccentric =
+    2 *
+    Math.atan2(
+      Math.sqrt(1 - eccentricity) * Math.sin(trueAnomaly / 2),
+      Math.sqrt(1 + eccentricity) * Math.cos(trueAnomaly / 2),
+    );
+  return eccentric - eccentricity * Math.sin(eccentric);
+}
+
+/** Orbit radius at a true anomaly, in units of the semi-major axis. */
+export function orbitRadius(trueAnomaly: number, eccentricity: number) {
+  return (
+    (1 - eccentricity * eccentricity) /
+    (1 + eccentricity * Math.cos(trueAnomaly))
+  );
+}
+
+/** Height of the midday Sun on the northern summer solstice. */
+export function noonSunElevationDeg(latitudeDeg: number, obliquityDeg: number) {
+  return Math.min(90, 90 - latitudeDeg + obliquityDeg);
+}
+
+export const KM_PER_AU = 149.5978707;

@@ -23,60 +23,60 @@ export const LEARN_TOPICS: LearnTopic[] = [
     eyebrow: "Orbit shape · Stretch",
     title: "How orbit shape changes",
     description:
-      "Learn how Earth’s orbital eccentricity changes orbit shape, modulates precession, and contributes to the pacing of ice ages.",
+      "How the shape of Earth’s orbit changes over 100,000 years, why that barely changes yearly sunlight, and why it still matters for the ice ages.",
     answer:
-      "Eccentricity describes how much Earth’s orbit departs from a circle. The orbit slowly shifts between nearly circular and slightly more elliptical shapes, changing the contrast between Earth’s closest and farthest distances from the Sun.",
-    period: "Dominant pacing near 100,000 years",
+      "Eccentricity measures how far Earth’s orbit is from a circle. It drifts between almost circular and slightly oval, which changes the gap between Earth’s closest and farthest distances from the Sun.",
+    period: "Main rhythms near 100,000 and 405,000 years",
     facts: [
       {
         label: "What changes",
         title: "Orbit shape",
-        copy: "The ellipse becomes slightly rounder or more stretched.",
+        copy: "The ellipse gets a little rounder or a little more stretched.",
       },
       {
         label: "Direct effect",
-        title: "Distance contrast",
-        copy: "The difference between perihelion and aphelion grows with eccentricity.",
+        title: "The near–far gap",
+        copy: "Today Earth is 147.1 million km from the Sun at its closest and 152.1 million km at its farthest. At the most stretched, the gap is 17 million km.",
       },
       {
         label: "Climate role",
-        title: "Precession amplifier",
-        copy: "Eccentricity strengthens or weakens the seasonal effect of precession.",
+        title: "Wobble amplifier",
+        copy: "It sets how much the wobble can change seasonal sunlight.",
       },
     ],
     sections: [
       {
-        heading: "What eccentricity means",
+        heading: "What eccentricity is",
         paragraphs: [
-          "A perfect circle has an eccentricity of 0. Earth’s present orbit is only mildly elliptical, so popular diagrams usually exaggerate its shape. The Sun sits at one focus of the ellipse rather than at its center.",
-          "As eccentricity increases, the difference between perihelion—the closest point to the Sun—and aphelion—the farthest point—also increases. Sunlight is more intense at the closer distance because the same solar energy is spread across a smaller area.",
+          "A circle has an eccentricity of 0. Earth’s orbit today is 0.0167, close enough to a circle that a true-to-scale drawing looks round. Over the last 800,000 years it has stayed between about 0.004 and 0.05. The Sun sits at one focus of the ellipse, not at its centre.",
+          "As eccentricity grows, Earth’s closest point (perihelion) gets closer and its farthest point (aphelion) gets farther. Sunlight is stronger when Earth is closer, because the same energy spreads over a smaller area. With today’s shape the nearest sunlight is 7% stronger than the farthest. At the most stretched it is 26% stronger.",
         ],
       },
       {
-        heading: "Why the roughly 100,000-year cycle matters",
+        heading: "A small change with a large side effect",
         paragraphs: [
-          "Earth’s eccentricity contains several astronomical rhythms, including prominent pacing near 100,000 years and a longer, stable component near 405,000 years. The familiar 100,000-year label is therefore a useful shorthand, not a single perfect clock.",
-          "Eccentricity has only a small effect on total annual sunlight received by the whole planet. Its important seasonal role is to modulate precession: when the orbit is more eccentric, having a season near perihelion or aphelion makes a larger difference.",
+          "Over a whole year, a more stretched orbit changes the sunlight Earth receives by less than 0.2%. What it changes is the seasonal balance. When the orbit is almost a circle, the wobble hardly matters, because every point is the same distance away. When the orbit is stretched, the wobble can swing midsummer sunlight at 65°N by more than 100 W/m².",
+          "The ice record has its strongest rhythm at 100,000 years, which is odd, because the orbit’s direct push at that period is weak. Ice sheets, oceans and carbon dioxide must amplify it. Exactly how is still debated.",
         ],
       },
       {
-        heading: "Eccentricity is not an ice-age switch",
+        heading: "It is not an ice-age switch",
         paragraphs: [
-          "Ice ages do not begin whenever eccentricity reaches one particular value. Orbit shape, axial tilt, and precession combine to redistribute sunlight by latitude and season. Ice sheets, oceans, greenhouse gases, vegetation, dust, and the climate system’s long memory then amplify and reshape that orbital pacing.",
-          "The lab calculates summer sunlight for a given orbital setup. Predicting temperature or ice-sheet size requires a climate model as well.",
+          "No particular eccentricity starts an ice age. The three orbital cycles combine, and then ice, oceans and greenhouse gases amplify or damp the result.",
+          "The lab calculates sunlight for a given orbit and adds a rough estimate of ice and temperature. Predicting ice properly needs a climate model on top of that.",
         ],
       },
     ],
     questions: [
       {
-        question: "Is Earth’s orbit highly elliptical?",
+        question: "Is Earth’s orbit very elliptical?",
         answer:
-          "No. Earth’s orbit is close to circular, even when eccentricity is relatively high. Visual explanations often exaggerate the ellipse so the change can be seen.",
+          "No. Even at its most stretched it is close to a circle. Drawings exaggerate it so the change can be seen.",
       },
       {
-        question: "Does eccentricity change the length of the year?",
+        question: "Does it change the length of the year?",
         answer:
-          "The year remains one orbit around the Sun. Eccentricity changes Earth’s speed along that orbit and the distance contrast between perihelion and aphelion.",
+          "No. A year is still one trip around the Sun. Eccentricity changes the near–far gap and Earth’s speed along the orbit, which is higher when Earth is closer.",
       },
     ],
   },
@@ -86,60 +86,60 @@ export const LEARN_TOPICS: LearnTopic[] = [
     eyebrow: "Axis tilt · Lean",
     title: "How Earth’s tilt changes",
     description:
-      "Understand Earth’s 41,000-year obliquity cycle, how axial tilt changes the strength of seasons, and why high latitudes respond strongly.",
+      "Why Earth’s tilt swings between 22.1° and 24.5° every 41,000 years, and what that does to the strength of the seasons.",
     answer:
-      "Obliquity measures Earth’s axial tilt from a line perpendicular to its orbital plane. It varies between about 22.1° and 24.5°, mainly over a cycle of roughly 41,000 years.",
+      "Obliquity is the tilt of Earth’s axis, measured from the line that stands upright on the orbit’s plane. It swings between about 22.1° and 24.5° in a cycle of 41,000 years. Today it is 23.44° and falling, and the next low comes in about 10,000 years.",
     period: "About 41,000 years",
     facts: [
       {
         label: "What changes",
         title: "Axis tilt",
-        copy: "The axis leans 22.1°–24.5° away from the perpendicular to the orbital plane.",
+        copy: "The axis leans between 22.1° and 24.5° from upright.",
       },
       {
-        label: "Seasonal effect",
-        title: "Season strength",
-        copy: "Greater tilt intensifies summers and winters, especially toward the poles.",
+        label: "At 65°N",
+        title: "Midsummer daylight",
+        copy: "The Sun is up 20.1 hours at 22.1° of tilt and 22.4 hours at 24.5°.",
       },
       {
         label: "Climate role",
         title: "Summer melt",
-        copy: "High-latitude summer sunlight influences how much winter snow survives.",
+        copy: "Cooler high-latitude summers let more winter snow survive.",
       },
     ],
     sections: [
       {
-        heading: "How tilt creates seasons",
+        heading: "How tilt makes seasons",
         paragraphs: [
-          "Earth’s seasons are caused by axial tilt, not by the planet’s distance from the Sun. As Earth travels around its orbit, the hemisphere tilted toward the Sun receives longer days and more direct sunlight, while the other hemisphere receives shorter days and less direct sunlight.",
-          "Obliquity changes the size of that tilt. A larger angle increases the seasonal contrast; a smaller angle makes seasons milder. The effect grows with latitude, so polar and subpolar regions respond more strongly than the tropics.",
+          "Seasons come from tilt, not from distance. Earth is closest to the Sun in early January, when it is winter in the north. As Earth goes around, the hemisphere tipped toward the Sun gets longer days and a higher Sun. The other hemisphere gets shorter days and a lower Sun.",
+          "A bigger tilt widens that difference. The effect grows with latitude, so the poles feel it most and the tropics hardly at all.",
         ],
       },
       {
-        heading: "Why obliquity matters for ice sheets",
+        heading: "Why it matters for ice",
         paragraphs: [
-          "Large Northern Hemisphere ice sheets grew at high latitudes. When northern summers are cool enough, more winter snow can survive the melt season. Repeated over many years, that surviving snow can contribute to ice-sheet growth if the rest of the climate system also supports it.",
-          "Lower obliquity tends to reduce high-latitude summer sunlight, while higher obliquity tends to increase it. The same tilt change also redistributes sunlight between latitudes and seasons rather than simply warming or cooling the entire planet equally.",
+          "On a midsummer day at 65°N, the daily average sunlight is 457 W/m² at 22.1° of tilt and 496 W/m² at 24.5°. That is a difference of 39 W/m². With less tilt, northern summers are cooler and more winter snow survives. Repeated for thousands of years, that can build an ice sheet, if the rest of the climate allows it.",
+          "The same change also moves sunlight between latitudes. It does not simply warm or cool the whole planet.",
         ],
       },
       {
-        heading: "How climate feedbacks amplify the change",
+        heading: "A small angle with a long reach",
         paragraphs: [
-          "The full obliquity range is only about 2.4 degrees, yet it acts persistently over thousands of years. Climate feedbacks involving ice reflectivity, oceans, carbon dioxide, and snowfall can make the eventual response much larger than the initial change in sunlight.",
-          "Obliquity must still be read together with eccentricity and precession. The combined orbital state determines where and when sunlight changes most strongly.",
+          "The whole range is 2.4 degrees. It works the same way for thousands of years, and feedbacks from ice, oceans and carbon dioxide amplify it.",
+          "Tilt always has to be read together with the stretch and the wobble. Together they decide where and when sunlight changes most.",
         ],
       },
     ],
     questions: [
       {
-        question: "What is Earth’s current axial tilt?",
+        question: "What is Earth’s tilt today?",
         answer:
-          "The standard J2000 astronomical reference is about 23.44°. The angle changes slowly within the longer obliquity cycle.",
+          "23.44°, the standard J2000 reference value. It is slowly decreasing.",
       },
       {
         question: "Would Earth have seasons without tilt?",
         answer:
-          "Distance from the Sun would still vary slightly, but the familiar hemispheric seasons are primarily a consequence of axial tilt.",
+          "Only weak ones. Distance would still change the sunlight a little, but both hemispheres would warm and cool together.",
       },
     ],
   },
@@ -149,60 +149,59 @@ export const LEARN_TOPICS: LearnTopic[] = [
     eyebrow: "Axis direction · Wobble",
     title: "How precession shifts the seasons",
     description:
-      "Learn how axial and orbital precession shift the timing of seasons relative to perihelion, producing climatic cycles near 19,000 and 23,000 years.",
+      "How the turning of Earth’s axis and of its orbit moves the seasons around the orbit every 23,000 years or so.",
     answer:
-      "Precession changes the direction Earth’s axis points and, together with the slow rotation of the orbital ellipse, changes which season occurs when Earth is closest to or farthest from the Sun.",
-    period: "Climate components near 19,000 and 23,000 years",
+      "Precession changes where on the orbit each season falls. Earth’s axis slowly turns like the axis of a spinning top, and the orbit’s long axis turns too. Together they shift the seasons relative to Earth’s closest and farthest points.",
+    period: "Climate rhythms near 19,000 and 23,000 years",
     facts: [
       {
-        label: "What changes",
-        title: "Axis direction",
-        copy: "The tilted axis slowly traces a circle, like a spinning top.",
+        label: "First turn",
+        title: "The axis",
+        copy: "It traces a circle in space, like a top’s axis.",
       },
       {
-        label: "Orbital partner",
-        title: "The ellipse rotates",
-        copy: "Perihelion also shifts relative to the seasons.",
+        label: "Second turn",
+        title: "The ellipse",
+        copy: "Its near point creeps around relative to the stars.",
       },
       {
         label: "Climate role",
-        title: "Season timing",
-        copy: "A summer near perihelion is more intense than one near aphelion.",
+        title: "Summer timing",
+        copy: "A summer near the Sun is stronger than one far from it.",
       },
     ],
     sections: [
       {
-        heading: "Two motions combine",
+        heading: "Two turns that combine",
         paragraphs: [
-          "Axial precession is the slow change in the direction of Earth’s rotational axis. The axis keeps roughly the same tilt over a short interval but points toward different stars as it traces a broad circle over about 25,772 years.",
-          "At the same time, the orientation of Earth’s elliptical orbit also rotates. Climate responds to the combination: the changing alignment between the solstices and perihelion. That combined signal contains important components near 19,000 and 23,000 years.",
+          "The axis alone takes about 25,800 years to go once around. The ellipse turns as well, and the two together bring the seasons back to the same place on the orbit about every 21,000 years. The climate record shows peaks near 19,000 and 23,000 years.",
         ],
       },
       {
-        heading: "Why timing changes seasonal intensity",
+        heading: "Why timing changes the sunlight",
         paragraphs: [
-          "Earth receives more intense sunlight when it is closer to the Sun. If Northern Hemisphere summer occurs near perihelion, northern summers receive a stronger distance boost. Roughly half a precession cycle later, northern summer occurs nearer aphelion and that boost is weaker.",
-          "The hemispheres respond in opposite seasonal directions: when precession strengthens summer distance effects in one hemisphere, it weakens them in the other. The outcome also depends on obliquity and on how eccentric the orbit is at the time.",
+          "Earth gets more sunlight when it is closer to the Sun. If northern summer falls at the near end of the orbit, midsummer sunlight gets a boost. Half a cycle later it falls at the far end and the boost becomes a penalty.",
+          "At today’s orbit, that swap moves midsummer sunlight at 65°N from 478 to about 510 W/m². At the most stretched orbit it moves it by 115 W/m². The two hemispheres swap in opposite directions: when northern summer is near the Sun, southern summer is far from it.",
         ],
       },
       {
-        heading: "Why some sources say 26,000 years",
+        heading: "Why you hear 26,000 and 23,000",
         paragraphs: [
-          "The often-quoted 26,000-year figure refers approximately to axial precession by itself. Milanković climate discussions usually focus on climatic precession, which includes the rotating orbital ellipse and therefore has different dominant periods.",
-          "Both descriptions can be correct when they name the motion they mean. For climate, the useful question is not only where the axis points, but when each season occurs relative to Earth’s changing distance from the Sun.",
+          "About 26,000 years is the axis turning on its own. For climate, what counts is when each season falls relative to the near and far points, and that gives the shorter rhythms.",
+          "Both numbers are right once you say which turn you mean.",
         ],
       },
     ],
     questions: [
       {
-        question: "Is precession the same as obliquity?",
+        question: "Is precession the same as tilt?",
         answer:
-          "No. Obliquity changes the angle of Earth’s tilt. Precession changes the direction that the tilted axis points.",
+          "No. Tilt is the angle of the axis. Precession is the direction the tilted axis points.",
       },
       {
-        question: "Does precession change both hemispheres equally?",
+        question: "Does it affect both hemispheres the same way?",
         answer:
-          "It changes the timing for both, but their seasonal effects are opposite because northern and southern summer occur six months apart.",
+          "It affects them in opposite ways. Northern and southern summer fall six months apart, on opposite sides of the orbit.",
       },
     ],
   },
@@ -212,47 +211,47 @@ export const LEARN_TOPICS: LearnTopic[] = [
     eyebrow: "Summer sunlight",
     title: "Why summer sunlight at 65°N matters",
     description:
-      "Why scientists use Northern Hemisphere summer insolation near 65°N to study orbital pacing, snow survival, and ice-age cycles.",
+      "Why scientists use midsummer sunlight at 65°N to study the ice ages, and what the number does and does not tell you.",
     answer:
-      "Summer insolation at 65° North is a classic orbital indicator because large Northern Hemisphere ice sheets grew at high latitudes, where cool summers can allow some winter snow to survive instead of melting completely.",
-    period: "Measured at the summer solstice, at the top of the atmosphere",
+      "Big ice sheets grew at high northern latitudes, and whether they grew depended on how much winter snow survived the summer. Midsummer sunlight at 65°N is the standard yardstick for that.",
+    period: "Daily average at the top of the atmosphere, on the summer solstice",
     facts: [
       {
         label: "Where",
         title: "High northern latitudes",
-        copy: "The band crosses regions associated with former continental ice sheets.",
+        copy: "65°N crosses northern Canada, Scandinavia and Siberia, close to the old ice sheets.",
       },
       {
         label: "When",
-        title: "Northern summer",
-        copy: "Summer energy helps determine how much winter snow melts.",
+        title: "Midsummer",
+        copy: "Summer sets how much winter snow melts.",
       },
       {
         label: "What it measures",
-        title: "Top-of-atmosphere sunlight",
-        copy: "Insolation is incoming solar energy, not surface temperature.",
+        title: "Incoming sunlight",
+        copy: "Insolation is energy arriving at the top of the atmosphere. It is not a temperature.",
       },
     ],
     sections: [
       {
-        heading: "Why summer can matter more than winter",
+        heading: "Summer matters more than winter",
         paragraphs: [
-          "Ice-sheet growth requires snowfall, but it also requires some of that snow to survive the following summer. A very cold winter can add snow and still be followed by a bright summer that melts it. A cooler summer gives winter snow a better chance to persist.",
-          "This is why Milanković’s framework emphasized the summer energy budget at high northern latitudes. It connects orbital geometry to a physically meaningful part of the ice-sheet balance: seasonal melt pressure.",
+          "An ice sheet needs snow, and it needs that snow to last through the summer. A snowy winter followed by a bright summer leaves nothing behind. A cool summer lets snow pile up year after year.",
+          "That is why Milanković’s theory looks at the summer energy budget at high northern latitudes. It links the orbit to something that decides whether ice grows: how much snow melts.",
         ],
       },
       {
-        heading: "Why 65° North became the reference latitude",
+        heading: "Why 65°N",
         paragraphs: [
-          "Sixty-five degrees north passes through the high-latitude zone where major Northern Hemisphere ice sheets developed across North America and Eurasia. It provides a useful reference latitude for comparing orbital changes.",
-          "Researchers may examine different latitudes, seasons, or integrated summer-energy measures depending on the question. The 65°N summer-solstice value remains especially useful for explanation because it makes the orbital mechanism concrete and comparable.",
+          "The 65°N line runs through the zone where the large northern ice sheets grew. It gives one number that is easy to compare across times.",
+          "Researchers also use other latitudes, other seasons and sums over the whole summer. The solstice value at 65°N is simple to explain and follows the same rhythms.",
         ],
       },
       {
-        heading: "What the number cannot tell you",
+        heading: "What the number can’t tell you",
         paragraphs: [
-          "Top-of-atmosphere insolation does not directly predict local air temperature, snowfall, ocean circulation, greenhouse-gas concentration, or ice volume. Those depend on the atmosphere, surface, oceans, geography, and the climate state inherited from earlier centuries and millennia.",
-          "The lab lets you compare this sunlight value between orbital setups. A higher value can encourage summer melting, but the amount of ice lost depends on the wider climate system.",
+          "It is sunlight at the top of the atmosphere. It does not give air temperature, snowfall, ocean currents, greenhouse gases or ice volume. Those depend on the atmosphere, the oceans, the land, and the climate that came before.",
+          "A higher number can encourage melting. How much melts depends on all of that.",
         ],
       },
     ],
@@ -260,12 +259,12 @@ export const LEARN_TOPICS: LearnTopic[] = [
       {
         question: "What does insolation mean?",
         answer:
-          "Insolation means incoming solar radiation. It can be specified by latitude, season, time of day, and whether it is measured at the top of the atmosphere or at the surface.",
+          "Incoming solar radiation. It can be given for any latitude and day, at the top of the atmosphere or at the ground. Here it is the daily average at the top of the atmosphere.",
       },
       {
-        question: "Why not use global annual sunlight?",
+        question: "Why not use the global yearly average?",
         answer:
-          "Ice-sheet melt is strongly seasonal and regional. Global annual averages can hide large redistributions of sunlight between seasons and latitudes.",
+          "Melting is seasonal and local. The global yearly average hardly changes with the orbit. What changes is how sunlight is shared between seasons and latitudes.",
       },
     ],
   },
@@ -275,62 +274,59 @@ export const LEARN_TOPICS: LearnTopic[] = [
     eyebrow: "Orbital cycles and today’s climate",
     title: "Do orbital cycles explain modern warming?",
     description:
-      "No: Milanković cycles unfold over tens of thousands of years and do not explain today’s rapid warming, which is driven primarily by human greenhouse-gas emissions.",
+      "No. The orbit changes over tens of thousands of years. Today’s warming comes mainly from greenhouse gases released by human activity.",
     answer:
-      "No. Milanković cycles pace long-term changes in the seasonal and geographic distribution of sunlight, but they cannot explain the speed or pattern of modern global warming. Today’s rapid warming is driven primarily by human greenhouse-gas emissions.",
+      "No. Orbital cycles change sunlight over tens of thousands of years. They cannot explain the speed or the pattern of today’s warming, which comes mainly from greenhouse gases released by human activity.",
     period: "Orbital cycles: tens of thousands of years",
     facts: [
       {
         label: "Timescale",
         title: "Far too slow",
-        copy: "Orbital geometry changes gradually across many millennia.",
+        copy: "The orbit changes noticeably only over thousands of years.",
       },
       {
-        label: "Modern driver",
+        label: "Modern cause",
         title: "Greenhouse gases",
-        copy: "Human emissions strengthen Earth’s heat-trapping greenhouse effect.",
+        copy: "Burning fossil fuels raises carbon dioxide and other gases that trap heat.",
       },
       {
-        label: "Scientific use",
-        title: "Context, not explanation",
-        copy: "Orbital cycles explain ancient pacing, not the present rapid trend.",
+        label: "Use today",
+        title: "Context",
+        copy: "The cycles explain the timing of ancient ice ages, not the present trend.",
       },
     ],
     sections: [
       {
-        heading: "The timescales do not match",
+        heading: "The timescales don’t match",
         paragraphs: [
-          "Eccentricity, obliquity, and precession evolve over periods measured in tens to hundreds of thousands of years. Their climate influence appears as slow changes in where and when sunlight arrives, especially across seasons and latitudes.",
-          "Modern warming has developed far too quickly to be caused by a small change in those orbital cycles. A mechanism that changes gradually across millennia cannot account for the observed rapid rise in global temperature over the industrial era.",
+          "Eccentricity, tilt and precession change over tens to hundreds of thousands of years. Warming since the 1800s is far too fast to come from them.",
         ],
       },
       {
-        heading:
-          "Orbital sunlight and greenhouse warming are different mechanisms",
+        heading: "Two different mechanisms",
         paragraphs: [
-          "Milanković cycles redistribute incoming solar energy. They do not produce a rapid, sustained increase in heat-trapping gases throughout the atmosphere. Human activities—especially burning fossil fuels—raise concentrations of carbon dioxide and other greenhouse gases, reducing the rate at which Earth loses heat to space.",
-          "Scientists distinguish these mechanisms using their timing, patterns of warming, and measured effects on Earth’s energy balance.",
+          "Orbital cycles move sunlight between seasons and latitudes. They do not make a quick, lasting rise in heat-trapping gases. Burning fossil fuels does, and it slows how fast Earth sheds heat to space.",
+          "Scientists tell the two apart by timing, by where and when the warming happens, and by direct measurements of Earth’s energy balance.",
         ],
       },
       {
-        heading: "Why ancient climate still matters",
+        heading: "Why the old climate still matters",
         paragraphs: [
-          "Ice-age records reveal that the climate system can amplify a relatively small change in sunlight through ice, ocean, and carbon-cycle feedbacks. That history helps scientists understand climate sensitivity and the long memory of oceans and ice sheets.",
-          "Orbital changes help set the timing of glacial cycles. The main driver of modern warming is the human-driven rise in greenhouse gases.",
+          "Ice-age records show how ice, oceans and carbon dioxide can amplify a small change in sunlight. That helps scientists work out how sensitive the climate is.",
+          "The orbit helped set the timing of the ice ages. The main driver of today’s warming is human-made greenhouse gas.",
         ],
       },
     ],
     questions: [
       {
-        question: "Are Milanković cycles still operating today?",
+        question: "Are the cycles still running?",
         answer:
-          "Yes. The orbital motions continue, but their present slow changes do not explain the rapid modern warming trend.",
+          "Yes. The orbit keeps changing, but its slow changes today do not explain the rapid warming.",
       },
       {
-        question:
-          "Can natural climate change and human-caused climate change both be real?",
+        question: "Can natural and human causes both exist?",
         answer:
-          "Yes. Climate has natural drivers on many timescales, and modern warming can be attributed primarily to human greenhouse-gas emissions using multiple independent lines of evidence.",
+          "Yes. Climate has natural drivers on many timescales. Several independent lines of evidence attribute today’s warming mainly to human greenhouse-gas emissions.",
       },
     ],
   },

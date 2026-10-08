@@ -3,16 +3,13 @@ import { useRef, useState, type CSSProperties } from "react";
 import { track } from "@vercel/analytics";
 import {
   ORBITAL_CONTROLS,
+  describeParameter,
   formatParameter,
-  formatSunlightDelta,
   parameterValueText,
   sunlightAnnouncement,
   type ParameterKey,
 } from "@/lib/orbital/controls";
-import {
-  calculateSummerInsolation,
-  PRESENT_PARAMETERS,
-} from "@/lib/orbital/insolation";
+import { PRESENT_PARAMETERS } from "@/lib/orbital/insolation";
 import type { OrbitalParameters } from "@/lib/orbital/types";
 
 export function ParameterControl({
@@ -22,6 +19,8 @@ export function ParameterControl({
   onChange,
   onFocus,
   context,
+  playing = false,
+  onTogglePlay,
 }: {
   id: string;
   parameter: ParameterKey;
@@ -29,11 +28,12 @@ export function ParameterControl({
   onChange: (value: number) => void;
   onFocus?: () => void;
   context: "tour" | "lab";
+  playing?: boolean;
+  onTogglePlay?: () => void;
 }) {
   const config = ORBITAL_CONTROLS[parameter];
   const value = parameters[parameter];
   const today = PRESENT_PARAMETERS[parameter];
-  const reading = calculateSummerInsolation(parameters);
   const [announcement, setAnnouncement] = useState("");
   const lastCommit = useRef(value);
   const style = {
@@ -57,7 +57,9 @@ export function ParameterControl({
       <div className="parameter-control__header">
         <label htmlFor={id}>
           {config.label}
-          <small aria-hidden="true">{config.term}</small>
+          <small aria-hidden="true">
+            {config.term} · every {config.period.replace("~", "")}
+          </small>
         </label>
         <output htmlFor={id} aria-live="off">
           {formatParameter(parameter, value)}
@@ -84,11 +86,28 @@ export function ParameterControl({
         <span className="parameter-control__today">Today</span>
         <span>{config.maxLabel}</span>
       </div>
+      <p className="parameter-control__live">
+        {describeParameter(parameter, parameters)}
+      </p>
       <div
         className="quick-experiments"
         role="group"
         aria-label={`${config.label} experiments`}
       >
+        {onTogglePlay ? (
+          <button
+            type="button"
+            className="play-button"
+            aria-pressed={playing}
+            onClick={() => {
+              onFocus?.();
+              onTogglePlay();
+            }}
+          >
+            <span aria-hidden="true">{playing ? "Ⅱ" : "▷"}</span>
+            {playing ? "Stop" : "Play the cycle"}
+          </button>
+        ) : null}
         {config.experiments.map((item) => (
           <button
             type="button"
@@ -97,24 +116,8 @@ export function ParameterControl({
             onClick={() => experiment(item.value, item.label)}
           >
             {item.label}
-            <span aria-hidden="true">↗</span>
           </button>
         ))}
-      </div>
-      <div className="control-result">
-        <span>
-          Summer at 65°N{" "}
-          <strong>
-            {Math.round(reading.dailyMeanTopOfAtmosphereWm2)} W/m²
-          </strong>
-        </span>
-        <span>{formatSunlightDelta(reading.deltaFromPresentWm2)}</span>
-      </div>
-      <div className="control-reference">
-        <span>
-          Today: {formatParameter(parameter, today)}{" "}
-          <span className="reference-epoch">· J2000</span>
-        </span>
         <button
           type="button"
           className="text-button"
@@ -126,7 +129,7 @@ export function ParameterControl({
             );
           }}
         >
-          Reset {config.label.toLowerCase()}
+          Back to today
         </button>
       </div>
       <span className="sr-only" aria-live="polite" role="status">

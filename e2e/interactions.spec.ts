@@ -14,15 +14,11 @@ async function clearOfPinnedUI(page: Page, selector: string, tour: boolean) {
         const rect = element.getBoundingClientRect();
         const narrow = innerWidth <= 980;
         const selectors = isTour
-          ? [
-              ".site-header",
-              ".tour-progress",
-              ...(narrow ? [".tour-scene-column"] : []),
-            ]
+          ? [".site-header", ...(narrow ? [".story-stage"] : [])]
           : [
               ".site-header",
               ".lab-result",
-              ...(narrow ? [".lab-scene-column"] : []),
+              ...(narrow ? [".lab-stage"] : []),
             ];
         const bottom = Math.max(
           0,
@@ -61,7 +57,7 @@ for (const viewport of [
       "recap",
       "big-idea",
     ]) {
-      if (viewport.width <= 760)
+      if (viewport.width <= 980)
         await page.getByLabel("Jump to chapter").selectOption(chapter);
       else
         await page
@@ -105,7 +101,7 @@ test("quick experiments update the scene, sunlight, and shared values together",
       await page
         .getByRole("button", { name: experiment.label, exact: true })
         .click();
-      await expect(page.locator(".scene-guide")).toHaveAttribute(
+      await expect(page.locator(".stage")).toHaveAttribute(
         "data-focus",
         ORBITAL_CONTROLS[parameter].focus,
       );
@@ -123,7 +119,7 @@ test("quick experiments update the scene, sunlight, and shared values together",
       ).toHaveAttribute("aria-pressed", "true");
     }
   }
-  await page.getByRole("button", { name: "Actual scale", exact: true }).click();
+  await page.getByRole("button", { name: "True shape", exact: true }).click();
   await expect(page).toHaveURL(/scale=actual/);
   await expect(page.locator(".lab-result__reading strong")).toHaveText(
     String(
@@ -163,7 +159,7 @@ test("presets survive reload and browser navigation restores the current Lab sta
     "22.1",
   );
   await expect(
-    page.getByRole("button", { name: "Actual scale", exact: true }),
+    page.getByRole("button", { name: "True shape", exact: true }),
   ).toHaveAttribute("aria-pressed", "true");
 });
 
@@ -182,7 +178,7 @@ test("explicit chapter navigation has history entries and carries settings to th
   await expect(page).toHaveURL(/#orbit-shape$/);
   expect(await page.evaluate(() => Boolean(history.state.__NA))).toBe(true);
   await page
-    .getByRole("button", { name: "More elliptical", exact: true })
+    .getByRole("button", { name: "Most stretched", exact: true })
     .click();
   for (const selector of [".site-nav--desktop", ".site-menu", ".site-footer"]) {
     await expect(page.locator(`${selector} a[href^='/lab']`)).toHaveAttribute(
@@ -260,7 +256,7 @@ test("copying a setup offers a usable link when clipboard access is unavailable"
   );
   await page.goto("/lab");
   await page
-    .getByRole("button", { name: "More elliptical", exact: true })
+    .getByRole("button", { name: "Most stretched", exact: true })
     .click();
   await page
     .getByRole("button", { name: "Copy link to this setup", exact: true })
@@ -302,9 +298,9 @@ test("keyboard edits announce the result and disclosures open with Enter", async
   await page.goto("/lab");
   const tilt = page.getByRole("slider", { name: "Axis tilt", exact: true });
   await tilt.press("End");
-  await expect(tilt).toHaveAttribute("aria-valuetext", "24.50°");
+  await expect(tilt).toHaveAttribute("aria-valuetext", "24.60°");
   const result = Math.round(
-    calculateSummerInsolation({ ...PRESENT_PARAMETERS, obliquityDeg: 24.5 })
+    calculateSummerInsolation({ ...PRESENT_PARAMETERS, obliquityDeg: 24.6 })
       .dailyMeanTopOfAtmosphereWm2,
   );
   await expect(
@@ -317,7 +313,9 @@ test("keyboard edits announce the result and disclosures open with Enter", async
   await summary.press("Enter");
   await expect(page.locator(".lab-method")).toHaveAttribute("open", "");
   await expect(
-    page.getByText("The result is daily average sunlight", { exact: false }),
+    page.getByText("The result is the daily average of sunlight", {
+      exact: false,
+    }),
   ).toBeVisible();
   await summary.press("Enter");
   await expect(page.locator(".lab-method")).not.toHaveAttribute("open");
@@ -344,4 +342,163 @@ test("the Sources table exposes headers and scrolls with the keyboard", async ({
     .toBeGreaterThan(0);
   const bounds = await region.boundingBox();
   expect(bounds!.y).toBeGreaterThanOrEqual(60);
+});
+
+test("the clock moves the lab to a date and keeps it in the URL", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/lab");
+  await page
+    .getByRole("button", { name: "Peak of the last ice age", exact: true })
+    .click();
+  await expect(page).toHaveURL(/\/lab\?t=-21/);
+  await expect(page.locator(".lab-result__reading strong")).toHaveText("470");
+  await expect(
+    page.getByRole("button", { name: /Last glacial maximum/ }),
+  ).toHaveAttribute("aria-pressed", "true");
+  const clock = page.getByRole("slider", { name: /^Time/ });
+  await clock.press("ArrowRight");
+  await expect(clock).toHaveValue("-20");
+  await expect(page).toHaveURL(/t=-20/);
+  // Moving a slider hands control back from the date to the sliders.
+  await page.getByRole("slider", { name: "Axis tilt", exact: true }).press("End");
+  await expect(page).toHaveURL(/o=24\.6/);
+  await expect(page).not.toHaveURL(/t=/);
+});
+
+test("the tour clock plays and stops with the chapter", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/#together");
+  const play = page.getByRole("button", { name: "Play the clock" });
+  await play.click();
+  await expect(
+    page.getByRole("button", { name: "Pause", exact: true }),
+  ).toBeVisible();
+  await expect
+    .poll(() =>
+      page.getByRole("slider", { name: /^Time/ }).inputValue(),
+    )
+    .not.toBe("0");
+  await page.getByRole("button", { name: "Pause", exact: true }).click();
+  await expect(play).toBeVisible();
+});
+
+test("dragging across the stage changes the active slider", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name === "mobile", "Pointer drag on desktop");
+  await page.goto("/lab");
+  const slider = page.getByRole("slider", { name: "Axis tilt", exact: true });
+  await slider.focus();
+  const before = Number(await slider.inputValue());
+  const drag = page.locator(".stage__drag");
+  const box = (await drag.boundingBox())!;
+  await page.mouse.move(box.x + box.width * 0.3, box.y + box.height * 0.5);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width * 0.7, box.y + box.height * 0.5, {
+    steps: 8,
+  });
+  await page.mouse.up();
+  expect(Number(await slider.inputValue())).toBeGreaterThan(before + 0.2);
+});
+
+test("temperature and ice follow the orbit, and a date shows the measured record", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/lab");
+  const temperature = page.locator(".lab-result__temperature strong");
+  const tilt = page.getByRole("slider", { name: "Axis tilt", exact: true });
+  await expect(temperature).toHaveText("0.0 °C");
+  // Less tilt, weaker summers: colder, with ice that would grow.
+  await tilt.press("Home");
+  await expect(temperature).toHaveText(/^−\d\.\d °C$/);
+  await expect(page.locator(".lab-climate__estimate")).toContainText(
+    "If this orbit lasted about 15,000 years: ice sheets would grow",
+  );
+  // More tilt, stronger summers: a little warmer, a little ice lost.
+  await tilt.press("End");
+  await expect(temperature).toHaveText(/^\+0\.\d °C$/);
+  await expect(page.locator(".lab-climate__estimate")).toContainText("some of today’s ice would melt");
+  // A past date reports the sea-floor record instead.
+  await page.getByRole("button", { name: "Peak of the last ice age", exact: true }).click();
+  await expect(temperature).toHaveText("−5.7 °C");
+  await expect(page.locator(".lab-climate__estimate")).toContainText("Measured in sea-floor sediment");
+});
+
+test("the climate globe shows ice and temperature beside the orbit", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name === "mobile", "Desktop-sized stage");
+  await page.goto("/lab?t=-21");
+  await expect(page.locator(".scene-viewport")).toHaveAttribute("data-ready", "true", {
+    timeout: 20000,
+  });
+  const globe = page.locator(".climate-globe");
+  await expect(globe).toBeVisible();
+  await expect(globe).toContainText("−5.7 °C");
+  await expect(globe).toContainText("ice at 94% of its peak");
+});
+
+test("dragging the clock stays smooth, settles quickly and spins within a limit", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name === "mobile", "Pointer drag on desktop");
+  await page.addInitScript(() => {
+    const samples: { t: number; time: number; spin: number }[] = [];
+    (window as unknown as { __clock: typeof samples }).__clock = samples;
+    window.__ORBITAL_SCENE_TEST__ = {
+      quality: "high",
+      probe: (frame) => {
+        const f = frame as { time: number; spin: number };
+        samples.push({ t: performance.now(), time: f.time, spin: f.spin });
+      },
+    };
+  });
+  await page.goto("/lab");
+  await expect(page.locator(".scene-viewport")).toHaveAttribute("data-ready", "true", {
+    timeout: 20000,
+  });
+  const plot = page.locator(".timeline__plot");
+  await plot.scrollIntoViewIfNeeded();
+  const box = (await plot.boundingBox())!;
+  await page.evaluate(() => ((window as unknown as { __clock: unknown[] }).__clock.length = 0));
+  await page.mouse.move(box.x + box.width * 0.9, box.y + 40);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width * 0.3, box.y + 40, { steps: 30 });
+  const released = await page.evaluate(() => performance.now());
+  await page.mouse.up();
+  await page.waitForTimeout(2600);
+  const recorded = await page.evaluate(
+    () => (window as unknown as { __clock: { t: number; time: number; spin: number }[] }).__clock.slice(),
+  );
+  // The clock snaps to the first dragged date when it takes over; judge from there.
+  const samples = recorded.slice(Math.max(0, recorded.findIndex((s) => s.time !== recorded[0].time)));
+  // The clock only ever moves backward through time here, and apart from the
+  // one skip that follows a long scrub, no frame jumps far.
+  let skips = 0;
+  let turn = 0;
+  for (let i = 1; i < samples.length; i++) {
+    const step = samples[i - 1].time - samples[i].time;
+    expect(step).toBeGreaterThanOrEqual(-1e-6);
+    if (step > 6) skips++;
+    const spun = Math.abs(
+      Math.atan2(
+        Math.sin(samples[i].spin - samples[i - 1].spin),
+        Math.cos(samples[i].spin - samples[i - 1].spin),
+      ),
+    );
+    turn = Math.max(turn, spun);
+  }
+  expect(skips).toBeLessThanOrEqual(1);
+  // It reaches the dragged date (about −530 kyr) within two seconds of release.
+  // A scene step covers at most 0.05 s, in which Earth may turn 13.5° at its
+  // 270° a second limit.
+  const landed = samples.find((s) => s.t > released && s.time < -520);
+  expect(landed, "the clock reached the dragged date").toBeTruthy();
+  expect(landed!.t - released).toBeLessThan(2200);
+  expect(samples.at(-1)!.time).toBeLessThan(-520);
+  expect(turn).toBeLessThan((14.2 * Math.PI) / 180);
 });

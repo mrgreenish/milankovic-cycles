@@ -151,19 +151,24 @@ function storeFor(gl: WebGLRenderer) {
 
 type Bundle = { textures: SpaceTextures; release: () => void };
 
+/**
+ * Loads the Earth maps for the current tier. The set never changes with the
+ * view: the first frame uses 2K maps, and once it is on screen and the page is
+ * quiet, the sharper 4K day map is fetched and swapped in once.
+ */
 export function useSpaceTextures(
   quality: GraphicsQuality,
-  closeUp: boolean,
   onFailure?: () => void,
 ) {
   const gl = useThree((state) => state.gl);
   const store = useMemo(() => storeFor(gl), [gl]);
   const [bundle, setBundle] = useState<Bundle | null>(null);
   const [error, setError] = useState(false);
+  const [full, setFull] = useState(false);
   const { day, detail } = textureResolution(
     quality,
-    closeUp,
     gl.capabilities.maxTextureSize,
+    full,
   );
 
   useEffect(() => {
@@ -197,6 +202,20 @@ export function useSpaceTextures(
 
   // Old maps remain valid until the new bundle is committed to the materials.
   useEffect(() => () => bundle?.release(), [bundle]);
+  // Fetch the 4K map when the browser is idle, not while the visitor scrolls.
+  const shown = Boolean(bundle);
+  useEffect(() => {
+    if (!shown || full) return;
+    const start = () => setFull(true);
+    // Safari has no requestIdleCallback.
+    const idle = window as Partial<Window>;
+    if (idle.requestIdleCallback && idle.cancelIdleCallback) {
+      const id = idle.requestIdleCallback(start, { timeout: 5000 });
+      return () => idle.cancelIdleCallback?.(id);
+    }
+    const id = window.setTimeout(start, 2500);
+    return () => window.clearTimeout(id);
+  }, [shown, full]);
   useEffect(() => {
     if (error && !bundle) onFailure?.();
   }, [error, bundle, onFailure]);

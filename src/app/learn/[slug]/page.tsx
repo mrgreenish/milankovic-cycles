@@ -106,8 +106,8 @@ export default async function TopicPage({ params }: TopicPageProps) {
               <p className="eyebrow">Try it yourself</p>
               <h2>Change the orbit</h2>
               <p>
-                Change eccentricity, tilt, and precession, then compare summer
-                sunlight at 65°N.
+                Move all three motions and watch midsummer sunlight at 65°N
+                change.
               </p>
             </div>
             <Link className="button button--primary" href="/lab">
@@ -117,7 +117,7 @@ export default async function TopicPage({ params }: TopicPageProps) {
 
           <section className="topic-faq" aria-labelledby="topic-faq-title">
             <p className="eyebrow">Questions</p>
-            <h2 id="topic-faq-title">Common questions</h2>
+            <h2 id="topic-faq-title">Quick answers</h2>
             {topic.questions.map((item) => (
               <details key={item.question}>
                 <summary>
@@ -140,7 +140,7 @@ export default async function TopicPage({ params }: TopicPageProps) {
 
         <section className="related-topics" aria-labelledby="related-title">
           <p className="eyebrow">Read next</p>
-          <h2 id="related-title">Related guides</h2>
+          <h2 id="related-title">More guides</h2>
           <div>
             {relatedTopics.map((item) => (
               <Link href={`/learn/${item.slug}`} key={item.slug}>

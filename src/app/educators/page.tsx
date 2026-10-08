@@ -4,7 +4,7 @@ import { SiteFooter } from "@/components/site/SiteFooter";
 import { SiteHeader } from "@/components/site/SiteHeader";
 
 const description =
-  "Classroom experiments, background reading, and citation information for teaching Milanković cycles.";
+  "Classroom experiments, background reading and citation details for teaching Milanković cycles.";
 
 export const metadata: Metadata = {
   title: "For educators and publishers",
@@ -26,13 +26,13 @@ export default function EducatorsPage() {
           <p className="eyebrow">For educators</p>
           <h1>Teach the cycles by changing them</h1>
           <p className="page-lede">
-            Ask learners to predict a change, move a slider, and explain the
-            result. The tour and lab are free to use in lessons about seasons,
-            sunlight, and ice ages.
+            Ask learners to predict, move a slider, then explain what
+            happened. The tour and the lab are free to use in lessons on
+            seasons, sunlight and ice ages.
           </p>
           <div className="button-row">
             <Link className="button button--primary" href="/">
-              Start the visual tour
+              Start the tour
             </Link>
             <Link className="button button--secondary" href="/sources">
               Review the sources
@@ -42,21 +42,24 @@ export default function EducatorsPage() {
 
         <section className="editorial-section editorial-grid">
           <div>
-            <p className="eyebrow">A classroom experiment</p>
-            <h2>Predict, change, compare</h2>
+            <p className="eyebrow">A first experiment</p>
+            <h2>Predict, then test</h2>
           </div>
           <div>
             <p>
-              Start with today’s settings. Ask whether increasing Earth’s tilt
-              will give 65°N more or less sunlight in summer. Try both tilt
-              buttons, record the results, and discuss how longer days and a
-              higher Sun affect the answer.
+              Start with today’s settings. Ask whether a bigger tilt gives 65°N
+              more or less sunlight in summer, then try both tilt buttons and
+              write down the numbers. Discuss why: longer days and a higher Sun.
             </p>
             <p>
-              Next, change when summer falls along the orbit. Keep tilt fixed so
-              learners can isolate the effect of distance. Copy a link to share
-              each setup. Explain that the result measures sunlight, while
-              climate also depends on ice, oceans, and greenhouse gases.
+              Next, keep the tilt fixed and change where summer falls on the
+              orbit, so learners isolate the effect of distance. Copy a link for
+              each setup to share it. Remind them that the number is sunlight,
+              and that ice also depends on oceans and greenhouse gases.
+            </p>
+            <p>
+              Then press play on the clock in the lab. Ask learners to compare
+              the sunlight curve with the ice line and describe the delay.
             </p>
           </div>
         </section>
@@ -64,70 +67,68 @@ export default function EducatorsPage() {
         <section className="outreach-grid" aria-labelledby="use-title">
           <div className="section-heading">
             <p className="eyebrow">In the classroom</p>
-            <h2 id="use-title">Ways to use the project</h2>
+            <h2 id="use-title">Ways to use it</h2>
           </div>
           <div className="outreach-grid__items">
             <article>
               <span>01</span>
-              <h3>Classroom introduction</h3>
+              <h3>Introduce the topic</h3>
               <p>
-                Use the guided tour before asking students to compare the three
-                orbital motions.
+                Run the tour before students compare the three motions.
               </p>
               <Link href="/">Open the tour →</Link>
             </article>
             <article>
               <span>02</span>
-              <h3>Interactive investigation</h3>
+              <h3>Investigate</h3>
               <p>
-                Let learners change real orbital inputs and discuss what the
-                65°N result can—and cannot—show.
+                Let learners change real orbital values, or travel in time,
+                and discuss what the 65°N number does and does not show.
               </p>
               <Link href="/lab">Open the lab →</Link>
             </article>
             <article>
               <span>03</span>
-              <h3>Background reading</h3>
+              <h3>Read further</h3>
               <p>
-                Assign one focused guide on eccentricity, obliquity, precession,
-                insolation, or modern warming.
+                Assign one guide: orbit shape, tilt, precession, the 65°N
+                yardstick or modern warming.
               </p>
               <Link href="/learn">Browse the guides →</Link>
             </article>
             <article>
               <span>04</span>
-              <h3>Science communication</h3>
+              <h3>Check the method</h3>
               <p>
-                Link directly to a visual explanation backed by equations,
-                limitations, and primary references.
+                Every figure comes with its equations, data sources and limits.
               </p>
-              <Link href="/sources">Review the method →</Link>
+              <Link href="/sources">Read the method →</Link>
             </article>
           </div>
         </section>
 
         <section className="citation-panel">
-          <p className="eyebrow">Suggested citation</p>
-          <h2>Link to the most useful page</h2>
+          <p className="eyebrow">Citation</p>
+          <h2>How to cite</h2>
           <p>
             Van Harreveld, Filip.{" "}
             <em>Milanković Cycles: Why Ice Ages Come and Go.</em>{" "}
             <a href="https://milankovitchcycles.com">milankovitchcycles.com</a>.
           </p>
           <p className="citation-panel__note">
-            Deep links to individual Learn guides are encouraged when they
-            better match your lesson, article, newsletter, or resource list.
+            Links to a single guide are welcome when it fits your lesson,
+            article, newsletter or reading list better.
           </p>
         </section>
 
         <section className="contact-card">
           <div>
-            <p className="eyebrow">Get in touch</p>
-            <h2>Questions, interviews, or classroom feedback?</h2>
+            <p className="eyebrow">Contact</p>
+            <h2>Questions or feedback?</h2>
           </div>
           <p>
-            For questions about using the project, corrections, or interviews,
-            contact Filip through{" "}
+            For questions about using the project, corrections or interviews,
+            write to Filip through{" "}
             <a href="https://filipvanharreveld.com">filipvanharreveld.com</a>.
           </p>
         </section>

@@ -5,7 +5,7 @@ import { SiteHeader } from "@/components/site/SiteHeader";
 import { LEARN_TOPICS } from "@/lib/learn/topics";
 
 const description =
-  "How orbit shape, tilt, and precession affect summer sunlight, and why they do not explain modern warming.";
+  "How orbit shape, tilt and precession change summer sunlight, why that paced the ice ages, and why it does not explain modern warming.";
 
 export const metadata: Metadata = {
   title: "Learn the Milanković Cycles",
@@ -24,18 +24,19 @@ export default function LearnPage() {
       <SiteHeader />
       <main id="main-content" className="editorial-page learn-hub">
         <header className="page-hero">
-          <p className="eyebrow">Go a little further</p>
+          <p className="eyebrow">Guides</p>
           <h1>How the cycles work</h1>
           <p className="page-lede">
-            Explore one motion at a time, find out why northern summers matter
-            for ice, or read how orbital cycles differ from modern warming.
+            One guide for each motion, one on why northern summers decide
+            whether ice grows, and one on how the cycles differ from today’s
+            warming.
           </p>
         </header>
 
         <section className="topic-grid" aria-labelledby="topic-grid-title">
           <div className="section-heading">
             <p className="eyebrow">Five guides</p>
-            <h2 id="topic-grid-title">Choose a question</h2>
+            <h2 id="topic-grid-title">What would you like to know?</h2>
           </div>
           <div className="topic-grid__items">
             {LEARN_TOPICS.map((topic, index) => (
@@ -60,7 +61,7 @@ export default function LearnPage() {
             By <Link href="/about">Filip van Harreveld</Link>, great-grandson of
             Milutin Milanković.
           </p>
-          <Link href="/educators">Teaching ideas and citation →</Link>
+          <Link href="/educators">Teaching ideas and how to cite →</Link>
         </aside>
       </main>
       <SiteFooter />
