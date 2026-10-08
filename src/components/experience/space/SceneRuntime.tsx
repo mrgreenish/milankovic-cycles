@@ -12,6 +12,7 @@ import {
 import { useThree, type RootState } from "@react-three/fiber";
 import type { WebGLRenderer } from "three";
 import type { SceneLive } from "../sceneLive";
+import { createFramePacer } from "./framePacing";
 import {
   IDLE_FPS,
   QUALITY,
@@ -135,6 +136,7 @@ function runRenderer(
   let frame = 0;
   let lastTick = 0;
   let lastRender = 0;
+  const pacer = createFramePacer();
   let elapsed = clock.elapsedTime;
   let frameCount = 0;
   let sampleStart = 0;
@@ -213,10 +215,10 @@ function runRenderer(
       now < activity.current || (live ? now - live.current.stamp < 700 : false);
     const cap = QUALITY[activeQuality].fps;
     const resting = callbacks.current.motionPaused ? 2 : IDLE_FPS;
-    const interval = 1000 / (busy ? cap : Math.min(cap, resting));
+    const fps = busy ? cap : Math.min(cap, resting);
     // A resized canvas is blank until it is drawn again.
     const resized = canvas.width !== width || canvas.height !== height;
-    if (!lastRender || resized || now - lastRender >= interval - 1) {
+    if (pacer.shouldRender(now, fps, resized)) {
       const step = animationDelta(
         lastRender ? (now - lastRender) / 1000 : 1 / 60,
       );
@@ -225,11 +227,16 @@ function runRenderer(
       // the loading placeholder.
       if (!callbacks.current.motionPaused && callbacks.current.ready)
         ambientTime.current += step;
-      canvas.dataset.motion = callbacks.current.motionPaused
+      const motion = callbacks.current.motionPaused
         ? "paused"
         : "running";
-      canvas.dataset.ambientTime = ambientTime.current.toFixed(3);
-      canvas.dataset.pace = busy ? "full" : "idle";
+      const pace = busy ? "full" : "idle";
+      // Avoid a stream of DOM mutations for browser page observers. Exact
+      // per-frame time is only needed by the optional automation hook.
+      if (test?.time !== undefined || canvas.dataset.motion !== motion)
+        canvas.dataset.ambientTime = ambientTime.current.toFixed(3);
+      if (canvas.dataset.motion !== motion) canvas.dataset.motion = motion;
+      if (canvas.dataset.pace !== pace) canvas.dataset.pace = pace;
       lastRender = now;
       width = canvas.width;
       height = canvas.height;
@@ -272,6 +279,7 @@ function runRenderer(
         history = next;
       }
       canvas.dataset.frames = String(frameCount);
+      canvas.dataset.ambientTime = ambientTime.current.toFixed(3);
       canvas.dataset.fps = (
         renderCount / Math.max(0.001, (now - sampleStart) / 1000)
       ).toFixed(1);
@@ -294,6 +302,7 @@ function runRenderer(
   function syncVisibility() {
     cancelAnimationFrame(frame);
     lastTick = lastRender = 0;
+    pacer.reset();
     tickTotal = tickCount = renderTotal = renderCount = 0;
     sampleStart = performance.now();
     warmupUntil = sampleStart + 3000;

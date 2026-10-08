@@ -256,18 +256,34 @@ export function Stage({
   children?: ReactNode;
 }) {
   const stageRef = useRef<HTMLDivElement>(null);
+  const pointerBounds = useRef<DOMRect | null>(null);
   const [box, setBox] = useState({ width: 0, height: 0 });
   useEffect(() => {
     const element = stageRef.current;
     if (!element) return;
-    const observer = new ResizeObserver(([entry]) =>
+    const observer = new ResizeObserver(([entry]) => {
+      pointerBounds.current = null;
       setBox({
         width: Math.round(entry.contentRect.width),
         height: Math.round(entry.contentRect.height),
-      }),
-    );
+      });
+    });
     observer.observe(element);
-    return () => observer.disconnect();
+    const invalidateBounds = () => {
+      pointerBounds.current = null;
+    };
+    // A sticky stage can move on scroll without changing size. Capture also
+    // catches scrolls in containing elements, and the next pointer event measures once.
+    window.addEventListener("scroll", invalidateBounds, {
+      passive: true,
+      capture: true,
+    });
+    window.addEventListener("resize", invalidateBounds);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("scroll", invalidateBounds, true);
+      window.removeEventListener("resize", invalidateBounds);
+    };
   }, []);
   const inset = useMemo(
     () => (globe ? insetFor(variant, box.width, box.height) : null),
@@ -309,7 +325,9 @@ export function Stage({
   const handleReady = useCallback(() => setReady(true), []);
 
   const move = (event: PointerEvent<HTMLDivElement>) => {
-    const box = event.currentTarget.getBoundingClientRect();
+    const box = (pointerBounds.current ??=
+      event.currentTarget.getBoundingClientRect());
+    if (!box.width || !box.height) return;
     writeLive(live, {
       x: ((event.clientX - box.left) / box.width) * 2 - 1,
       y: ((event.clientY - box.top) / box.height) * 2 - 1,
@@ -371,6 +389,9 @@ export function Stage({
         className="stage__drag"
         data-active={drag ? "true" : "false"}
         data-dragging={dragging ? "true" : "false"}
+        onPointerEnter={(event) => {
+          pointerBounds.current = event.currentTarget.getBoundingClientRect();
+        }}
         onPointerDown={(event) => {
           if (!drag || event.button !== 0) return;
           event.currentTarget.setPointerCapture(event.pointerId);
@@ -381,6 +402,7 @@ export function Stage({
         onPointerUp={endDrag}
         onPointerCancel={endDrag}
         onPointerLeave={() => {
+          pointerBounds.current = null;
           writeLive(live, { x: 0, y: 0 });
           touchLive(live);
         }}

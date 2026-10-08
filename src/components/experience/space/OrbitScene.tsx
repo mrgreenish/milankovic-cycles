@@ -1,9 +1,9 @@
 "use client";
 
-import { useRef, type ReactNode } from "react";
+import { useMemo, useRef, type ReactNode } from "react";
 import { useFrame } from "@react-three/fiber";
 import { Html } from "@react-three/drei";
-import { Group, Mesh, Vector3, type Camera } from "three";
+import { Group, Mesh, Vector3, type Camera, type Object3D } from "three";
 import {
   aphelionDistanceAu,
   degreesToRadians,
@@ -16,6 +16,7 @@ import type {
   OrbitalVisualFocus,
 } from "@/lib/orbital/types";
 import { Earth } from "./Earth";
+import { createLabelProjection } from "./labelProjection";
 import { bodyOrientation } from "./orientation";
 import { ParamLine } from "./ParamLine";
 import {
@@ -62,17 +63,33 @@ function Label({
   const frame = useSceneFrame();
   const anchor = useRef<Group>(null);
   const element = useRef<HTMLSpanElement>(null);
+  const visible = useRef(false);
+  const project = useMemo(() => {
+    const calculate = createLabelProjection();
+    return (object: Object3D, camera: Camera, size: { width: number; height: number }) =>
+      calculate(object, camera, size, visible.current);
+  }, []);
   useFrame(({ camera }) => {
-    if (anchor.current) place(frame, anchor.current.position, camera);
     const opacity = blend(frame, weight) * (fade ? fade(frame) : 1);
+    visible.current = opacity >= 0.03;
+    if (visible.current && anchor.current)
+      place(frame, anchor.current.position, camera);
     if (element.current) {
-      element.current.style.opacity = opacity.toFixed(3);
-      element.current.style.visibility = opacity < 0.03 ? "hidden" : "visible";
+      const style = element.current.style;
+      const nextOpacity = visible.current ? opacity.toFixed(3) : "0";
+      const visibility = visible.current ? "visible" : "hidden";
+      if (style.opacity !== nextOpacity) style.opacity = nextOpacity;
+      if (style.visibility !== visibility) style.visibility = visibility;
     }
-  });
+  }, -1);
   return (
     <group ref={anchor}>
-      <Html center zIndexRange={[2, 0]} style={{ pointerEvents: "none" }}>
+      <Html
+        center
+        calculatePosition={project}
+        zIndexRange={[2, 0]}
+        style={{ pointerEvents: "none" }}
+      >
         <span ref={element} className={`space-label ${className}`}>
           {children}
         </span>

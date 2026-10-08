@@ -167,15 +167,27 @@ export function CameraRig({
     camera.up.copy(up);
     camera.lookAt(look);
     camera.fov = FOV;
-    camera.setViewOffset(
-      size.width,
-      size.height,
-      -frame.shift * size.width,
-      -frame.shiftY * size.height,
-      size.width,
-      size.height,
-    );
-    camera.updateProjectionMatrix();
+    const offsetX = -frame.shift * size.width;
+    const offsetY = -frame.shiftY * size.height;
+    const view = camera.view;
+    if (
+      !view?.enabled ||
+      view.fullWidth !== size.width ||
+      view.fullHeight !== size.height ||
+      view.offsetX !== offsetX ||
+      view.offsetY !== offsetY
+    ) {
+      // setViewOffset already updates the projection matrix. Pointer movement
+      // changes the camera pose, not its projection.
+      camera.setViewOffset(
+        size.width,
+        size.height,
+        offsetX,
+        offsetY,
+        size.width,
+        size.height,
+      );
+    }
   }, -2);
 
   return null;
