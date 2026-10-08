@@ -16,7 +16,7 @@ export function LabLink({
     <Link
       className={className}
       href={
-        experience ? labPath(experience.parameters, experience.scale) : "/lab"
+        experience ? labPath(experience.parameters, experience.scale, experience.timeKyr) : "/lab"
       }
     >
       {children}

@@ -1,7 +1,7 @@
 {
-  "name": "Milanković Cycles, Explained Visually",
+  "name": "Milanković Cycles",
   "short_name": "Milanković Cycles",
-  "description": "A guided visual tour and validated orbital-insolation lab for understanding Milanković cycles.",
+  "description": "A 3D tour of the orbital cycles behind the ice ages, with a lab to change them yourself.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#070A12",

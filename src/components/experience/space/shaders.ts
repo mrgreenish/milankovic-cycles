@@ -41,6 +41,28 @@ export const earthFragment = /* glsl */ `
   uniform sampler2D uSurface;
   uniform sampler2D uNight;
   uniform sampler2D uClouds;
+  uniform float uIce;
+  uniform float uRing;
+  uniform float uArctic;
+  uniform float uTiltDeg;
+
+  // Southern edge of the ice sheets at full glaciation, by longitude.
+  // An illustration shaped after the last glacial maximum, not a reconstruction.
+  float iceLimit(float lon) {
+    // Squares, not pow(): pow() is undefined for a negative base.
+    float na = (lon + 96.0) / 38.0;
+    float eu = (lon - 22.0) / 32.0;
+    float si = (lon - 78.0) / 20.0;
+    float america = exp(-na * na);
+    float europe = exp(-eu * eu);
+    float siberia = exp(-si * si);
+    float limit = 80.0;
+    limit = min(limit, mix(80.0, 39.0, america));
+    limit = min(limit, mix(80.0, 51.0, europe));
+    limit = min(limit, mix(80.0, 66.0, siberia));
+    return limit;
+  }
+
   void main() {
     vec3 normal = normalize(vNormal);
     vec3 sun = normalize(-vWorld);
@@ -48,6 +70,18 @@ export const earthFragment = /* glsl */ `
     float sunHeight = dot(normal, sun);
     vec3 surface = texture2D(uSurface, vUv).rgb;
     float ocean = surface.b;
+    float lat = degrees(asin(clamp(vLocal.y, -1.0, 1.0)));
+    float lon = vUv.x * 360.0 - 180.0;
+    float iceMask = 0.0;
+    if (uIce > 0.002) {
+      float jitter = (texture2D(uNoise, vUv * vec2(9.0, 4.5)).r - 0.5) * 7.0 +
+        (texture2D(uNoise, vUv * vec2(26.0, 13.0)).g - 0.5) * 2.4;
+      float limit = 90.0 - (90.0 - iceLimit(lon)) * uIce + jitter * uIce;
+      float edge = smoothstep(limit - 0.7, limit + 0.7, lat);
+      float land = 1.0 - ocean;
+      iceMask = edge * (land * 0.96 + (1.0 - land) * smoothstep(62.0, 76.0, lat) * 0.8);
+      ocean *= 1.0 - iceMask;
+    }
     vec2 perturbation = (surface.rg * 2.0 - 1.0) * min(uDetail, 1.0);
     vec3 tangent = normalize(vTangent);
     vec3 bitangent = normalize(cross(normal, tangent));
@@ -55,8 +89,21 @@ export const earthFragment = /* glsl */ `
     float daylight = smoothstep(-0.08, 0.16, sunHeight);
     float diffuse = max(dot(terrainNormal, sun), 0.0);
     vec3 albedo = texture2D(uDay, vUv).rgb;
+    // A warmer world (ice below zero): the Arctic pack pulls back toward the pole
+    // and Greenland loses its southern ice first. Only snow-white pixels change,
+    // and only far north, so mountain snow elsewhere stays.
+    float melt = clamp(-uIce / 0.12, 0.0, 1.0);
+    if (melt > 0.002) {
+      float whiteness = min(albedo.r, min(albedo.g, albedo.b));
+      float chroma = max(albedo.r, max(albedo.g, albedo.b)) - whiteness;
+      float snow = smoothstep(0.5, 0.78, whiteness) * (1.0 - smoothstep(0.08, 0.22, chroma));
+      float edge = mix(58.0 + 26.0 * melt, 62.0 + 26.0 * melt, ocean);
+      float gone = snow * smoothstep(54.0, 58.0, lat) * (1.0 - smoothstep(edge - 1.0, edge + 1.0, lat));
+      albedo = mix(albedo, mix(vec3(0.19, 0.17, 0.13), vec3(0.02, 0.06, 0.12), ocean), gone);
+    }
     // Preserve actual coastlines while giving deep ocean its blue optical depth.
     albedo = mix(albedo, mix(vec3(0.006, 0.022, 0.052), albedo, 0.45), ocean * 0.65);
+    albedo = mix(albedo, vec3(0.86, 0.93, 1.0) * (0.94 + 0.06 * texture2D(uNoise, vUv * vec2(40.0, 20.0)).b), iceMask * 0.95);
     float shadow = 0.0;
     if (uDetail > 0.5) {
       vec2 offset = vec2(dot(sun, tangent), dot(sun, bitangent)) * (0.002 / max(0.25, sunHeight));
@@ -68,11 +115,30 @@ export const earthFragment = /* glsl */ `
     float fresnel = 0.025 + 0.45 * pow(1.0 - max(dot(view, normal), 0.0), 5.0);
     float specular = pow(max(dot(normal, halfVector), 0.0), 90.0);
     color += vec3(1.0, 0.91, 0.72) * specular * ocean * (0.35 + fresnel) * daylight * (1.0 - shadow);
+    // Snow keeps a faint starlit glow on the night side so the ice stays readable.
+    color += vec3(0.05, 0.075, 0.12) * iceMask * (1.0 - daylight);
     float night = texture2D(uNight, vUv).r;
     color += vec3(1.0, 0.58, 0.23) * pow(night, 1.3) * (1.0 - smoothstep(-0.18, 0.04, sunHeight)) * 1.8;
     float rim = pow(1.0 - max(dot(normal, view), 0.0), 3.5);
     vec3 atmosphere = mix(vec3(0.52, 0.16, 0.035), vec3(0.12, 0.4, 0.95), smoothstep(-0.08, 0.35, sunHeight));
     color = mix(color, atmosphere, rim * smoothstep(-0.2, 0.22, sunHeight) * 0.52);
+    // The 65°N guide: gold where the Sun is up, ice blue where it is not.
+    if (uRing > 0.003) {
+      float d = abs(lat - 65.0);
+      float w = max(fwidth(lat), 0.0005) * 1.3;
+      float line = 1.0 - smoothstep(w * 0.4, w * 1.6, d);
+      float halo = exp(-d / (w * 5.0)) * 0.2;
+      float lit = smoothstep(-0.12, 0.2, sunHeight);
+      vec3 ringColor = mix(vec3(0.42, 0.74, 1.0), vec3(3.0, 1.9, 0.55), lit);
+      color = mix(color, ringColor, clamp((line + halo) * uRing, 0.0, 1.0));
+    }
+    if (uArctic > 0.003) {
+      float d = abs(lat - (90.0 - uTiltDeg));
+      float w = max(fwidth(lat), 0.0005) * 1.1;
+      float dashes = step(0.5, fract(lon / 9.0));
+      float line = (1.0 - smoothstep(w * 0.3, w * 1.2, d)) * dashes;
+      color = mix(color, vec3(0.9, 0.96, 1.0) * 1.6, line * uArctic * 0.8);
+    }
     gl_FragColor = vec4(color, 1.0);
     #include <tonemapping_fragment>
     #include <colorspace_fragment>
@@ -82,6 +148,7 @@ export const earthFragment = /* glsl */ `
 export const cloudsFragment = /* glsl */ `
   ${common}
   uniform sampler2D uClouds;
+  uniform float uClear;
   void main() {
     vec3 normal = normalize(vNormal);
     vec3 sun = normalize(-vWorld);
@@ -93,7 +160,7 @@ export const cloudsFragment = /* glsl */ `
     if (uDetail > 1.5) {
       cirrus = texture2D(uClouds, uv + vec2(-uTime * 0.00018, 0.002)).r * 0.08;
     }
-    float alpha = smoothstep(0.08, 0.88, density + cirrus) * 0.94;
+    float alpha = smoothstep(0.08, 0.88, density + cirrus) * 0.94 * (1.0 - 0.72 * uClear);
     float daylight = smoothstep(-0.13, 0.24, sunHeight);
     vec3 twilight = mix(vec3(0.017, 0.028, 0.055), vec3(0.68, 0.26, 0.09), smoothstep(-0.15, 0.0, sunHeight));
     vec3 color = mix(twilight, vec3(1.25, 1.3, 1.37) * (0.25 + max(sunHeight, 0.0)), daylight);

@@ -1,0 +1,1666 @@
+/* The tour and the lab. One stage holds the 3D scene; text and controls sit over it. */
+
+:root {
+  --today-color: #b7c3d6;
+  --gold: #ffd97a;
+  --stage-mobile-height: clamp(280px, 44svh, 400px);
+  --lab-stage-height: clamp(190px, 28svh, 250px);
+  --column-width: min(31rem, 38vw);
+  --page-gutter: max(2rem, calc((100vw - 1380px) / 2));
+  --free-left: calc(var(--page-gutter) + var(--column-width) + 2rem);
+  --glass: rgba(10, 16, 28, 0.66);
+  --glass-line: rgba(216, 181, 106, 0.22);
+}
+
+/* ---------- Story layout ---------- */
+
+.story {
+  position: relative;
+  /* The stage starts at the very top of the page, behind the header. */
+  margin-top: calc(var(--header-height) * -1);
+}
+.story-track {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+.story-stage {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  overflow: hidden;
+  pointer-events: auto;
+}
+.story-content {
+  position: relative;
+  z-index: 1;
+  pointer-events: none;
+}
+.story-column {
+  width: var(--column-width);
+  margin-left: var(--page-gutter);
+  pointer-events: auto;
+}
+.story-hero {
+  display: flex;
+  align-items: center;
+  min-height: 100svh;
+  padding: calc(var(--header-height) + 3rem) 0 4rem;
+}
+.story-chapter {
+  display: flex;
+  align-items: center;
+  min-height: 100svh;
+  padding-block: 7svh;
+  scroll-margin-top: var(--reading-offset, 80px);
+}
+.story-chapter .story-column {
+  padding-block: 0.5rem;
+}
+.story h2[tabindex="-1"]:focus {
+  outline: none;
+}
+.site-header {
+  background: linear-gradient(180deg, rgba(7, 10, 18, 0.82), rgba(7, 10, 18, 0.5));
+}
+
+/* ---------- Stage ---------- */
+
+.stage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse 75% 70% at 72% 45%, rgba(46, 78, 132, 0.2), transparent 70%),
+    radial-gradient(ellipse 60% 50% at 8% 100%, rgba(240, 138, 75, 0.06), transparent 60%),
+    #070a12;
+}
+.stage::after {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  content: "";
+  /* Darkens the strip behind the text so the scene never competes with it. */
+  background: linear-gradient(
+    90deg,
+    rgba(7, 10, 18, 0.9) 0,
+    rgba(7, 10, 18, 0.72) calc(var(--page-gutter) + var(--column-width) * 0.8),
+    rgba(7, 10, 18, 0) calc(var(--free-left) + 6rem)
+  );
+}
+.stage--lab::after {
+  display: none;
+}
+.scene-viewport {
+  position: absolute;
+  inset: 0;
+}
+.scene-viewport__poster,
+.scene-viewport__canvas {
+  position: absolute;
+  inset: 0;
+  transition: opacity 400ms ease;
+}
+.scene-viewport__canvas {
+  z-index: 0;
+  opacity: 0;
+}
+.scene-viewport__canvas canvas {
+  display: block;
+}
+.scene-viewport[data-ready="true"] .scene-viewport__canvas {
+  opacity: 1;
+}
+.scene-viewport[data-ready="true"] .scene-viewport__poster {
+  opacity: 0;
+}
+
+/* The loading globe: a frame of the real scene, placed where the live Earth will be. */
+.scene-viewport__globe {
+  position: absolute;
+  inset: 0;
+  container-type: size;
+  pointer-events: none;
+  /* It stays solid until the canvas has faded in over it, then goes. */
+  transition: opacity 260ms ease 450ms;
+}
+.scene-viewport[data-ready="true"] .scene-viewport__globe {
+  opacity: 0;
+}
+.globe-poster {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: min(
+    calc(var(--globe-ratio) * 100cqh),
+    calc(var(--globe-ratio) * 125cqw)
+  );
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+}
+@media (min-width: 981px) {
+  .stage--tour .globe-poster {
+    /* Centre of the space between the text and the chapter rail. */
+    left: calc((var(--free-left) + 100cqw - 4.5rem) / 2);
+  }
+}
+.globe-poster img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  animation: globe-rise 1100ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+.globe-poster::before {
+  position: absolute;
+  inset: -8%;
+  border-radius: 50%;
+  background: radial-gradient(
+    closest-side,
+    rgba(96, 156, 255, 0.22),
+    rgba(96, 156, 255, 0.08) 62%,
+    transparent 74%
+  );
+  content: "";
+  animation: globe-breathe 3.8s ease-in-out infinite;
+}
+.scene-viewport[data-ready="true"] .globe-poster::before {
+  animation: none;
+}
+@keyframes globe-rise {
+  from {
+    opacity: 0;
+    transform: scale(0.965);
+  }
+}
+@keyframes globe-breathe {
+  50% {
+    opacity: 0.45;
+    transform: scale(1.04);
+  }
+}
+.stage--tour .scene-viewport__poster {
+  padding-left: var(--free-left);
+  padding-top: 4rem;
+}
+.orbital-poster {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.orbital-poster text {
+  fill: var(--text);
+  font-family: var(--font-switzer), sans-serif;
+  font-size: 15px;
+}
+.orbital-poster .poster-label--ice {
+  fill: var(--ice);
+}
+.orbital-poster .poster-label--summer {
+  fill: var(--brass);
+  font-weight: 700;
+}
+.stage__drag {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  touch-action: pan-y;
+}
+.stage__drag[data-active="true"] {
+  cursor: grab;
+}
+.stage__drag[data-dragging="true"] {
+  cursor: grabbing;
+}
+
+/* Sunlight readout that follows the visitor through the whole tour. */
+.scene-guide {
+  position: absolute;
+  top: calc(var(--header-height) + 1.4rem);
+  right: 4.5rem;
+  z-index: 3;
+  width: 13.5rem;
+  padding: 0.85rem 1rem 0.8rem;
+  pointer-events: none;
+  background: var(--glass);
+  border: 1px solid var(--glass-line);
+  border-radius: 18px;
+  backdrop-filter: blur(16px);
+  transition:
+    opacity 350ms ease,
+    transform 350ms ease;
+}
+.scene-guide[data-hidden="true"] {
+  opacity: 0;
+  transform: translateY(-8px);
+}
+.scene-guide__label {
+  margin: 0 0 0.2rem;
+  color: var(--muted);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.scene-guide__value {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 0.5rem;
+  margin: 0 0 0.7rem;
+}
+.scene-guide__value strong {
+  font-family: var(--font-fraunces), serif;
+  font-size: 2.7rem;
+  font-weight: 500;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.scene-guide__value span {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+.scene-guide__value em {
+  flex-basis: 100%;
+  margin-top: 0.15rem;
+  color: var(--ice);
+  font-size: 0.85rem;
+  font-style: normal;
+}
+.scene-guide__track {
+  position: relative;
+  height: 5px;
+  border-radius: 9px;
+  background: linear-gradient(90deg, var(--ice), var(--brass), var(--sun));
+}
+.scene-guide__current-marker,
+.scene-guide__today-marker {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  transition: left 280ms ease;
+}
+.scene-guide__current-marker {
+  left: var(--hud-current);
+  width: 13px;
+  height: 13px;
+  background: var(--text);
+  border: 3px solid var(--bg);
+  border-radius: 50%;
+  box-shadow: 0 0 0 1.5px var(--text);
+}
+.scene-guide__today-marker {
+  left: var(--hud-today);
+  width: 2px;
+  height: 14px;
+  background: var(--today-color);
+}
+.scene-guide__labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 0.45rem;
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+.stage--lab .scene-guide {
+  display: none;
+}
+@media (min-width: 981px) {
+  /* The clock shows its own reading in the chart's header. */
+  .stage[data-focus="timeline"] .scene-guide {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+
+.stage__toolbar {
+  position: absolute;
+  bottom: 1.4rem;
+  left: var(--free-left);
+  right: 4.5rem;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.9rem;
+  pointer-events: none;
+}
+.stage__toolbar > * {
+  pointer-events: auto;
+}
+.stage--lab .stage__toolbar {
+  left: 1rem;
+  right: 1rem;
+}
+.stage__hint {
+  margin-right: auto;
+  padding: 0.35rem 0.8rem;
+  color: var(--muted);
+  background: var(--glass);
+  border: 1px solid var(--glass-line);
+  border-radius: 999px;
+  font-size: 0.8rem;
+  pointer-events: none;
+}
+.motion-button {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 0.9rem;
+  color: var(--muted);
+  background: var(--glass);
+  border: 1px solid var(--glass-line);
+  border-radius: 999px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+}
+.motion-button:hover {
+  color: var(--text);
+}
+.stage__toolbar .segmented-control {
+  background: var(--glass);
+  backdrop-filter: blur(10px);
+}
+
+/* Labels attached to things in the scene. */
+.space-label {
+  display: block;
+  padding: 3px 9px;
+  color: var(--brass);
+  background: rgba(7, 10, 18, 0.8);
+  border: 1px solid rgba(216, 181, 106, 0.4);
+  border-radius: 7px;
+  white-space: nowrap;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 12px;
+  line-height: 1.4;
+  pointer-events: none;
+  font-variant-numeric: tabular-nums;
+  transition: opacity 200ms ease;
+}
+.space-label small {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+}
+.space-label--ice {
+  color: var(--ice);
+  border-color: rgba(133, 199, 242, 0.4);
+}
+.space-label--today {
+  color: var(--today-color);
+  border: 1px dashed rgba(183, 195, 214, 0.55);
+}
+.space-label--summer {
+  color: var(--bg);
+  background: var(--gold);
+  border-color: var(--gold);
+  font-weight: 700;
+}
+.space-label--ring {
+  color: var(--gold);
+}
+
+/* ---------- Chapter rail ---------- */
+
+.tour-progress {
+  position: absolute;
+  top: 50%;
+  right: 1.1rem;
+  z-index: 5;
+  transform: translateY(-50%);
+  transition: opacity 300ms ease;
+}
+.tour-progress[data-hidden="true"] {
+  opacity: 0;
+  pointer-events: none;
+}
+.tour-progress__mobile {
+  display: none;
+}
+.tour-progress__desktop {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.tour-progress__desktop a {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 36px;
+  color: var(--muted);
+  text-decoration: none;
+}
+.tour-progress__desktop a > span {
+  display: grid;
+  place-items: center;
+  width: 1.55rem;
+  height: 1.55rem;
+  background: rgba(7, 10, 18, 0.7);
+  border: 1px solid var(--glass-line);
+  border-radius: 50%;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.75rem;
+  transition:
+    background-color 200ms ease,
+    color 200ms ease;
+}
+.tour-progress__desktop a > em {
+  position: absolute;
+  right: 100%;
+  padding: 0.25rem 0.7rem;
+  color: var(--text);
+  background: var(--glass);
+  border: 1px solid var(--glass-line);
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-style: normal;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(6px);
+  transition:
+    opacity 180ms ease,
+    transform 180ms ease;
+}
+.tour-progress__desktop a:hover > em,
+.tour-progress__desktop a:focus-visible > em {
+  opacity: 1;
+  transform: none;
+}
+.tour-progress__desktop a:hover {
+  color: var(--text);
+}
+.tour-progress__desktop a[aria-current="step"] > span {
+  color: var(--bg);
+  background: var(--brass);
+  border-color: var(--brass);
+}
+
+/* ---------- Title ---------- */
+
+.story-hero h1 {
+  margin-bottom: 1.4rem;
+  font-size: clamp(3.4rem, 5.2vw, 5.4rem);
+  line-height: 1.02;
+  letter-spacing: -0.045em;
+}
+.hero__summary {
+  margin-bottom: 1.8rem;
+  color: #c3ccda;
+  font-size: 1.1rem;
+  line-height: 1.65;
+}
+.hero__signature {
+  margin: 1.6rem 0 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+.hero__signature a {
+  text-decoration: none;
+}
+.hero__signature a:hover {
+  color: var(--brass);
+}
+.hero__signature span {
+  display: block;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+.cycle-previews {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 2.2rem;
+  background: rgba(10, 16, 28, 0.78);
+  border: 1px solid var(--glass-line);
+  border-radius: 16px;
+}
+.cycle-previews a {
+  display: grid;
+  align-content: start;
+  gap: 0.2rem;
+  min-width: 0;
+  padding: 0.9rem 0.95rem;
+  text-decoration: none;
+  border-right: 1px solid var(--glass-line);
+  transition: background-color 180ms ease;
+}
+.cycle-previews a:first-child {
+  border-radius: 16px 0 0 16px;
+}
+.cycle-previews a:last-child {
+  border: 0;
+  border-radius: 0 16px 16px 0;
+}
+.cycle-previews a:hover,
+.cycle-previews a:focus-visible {
+  background: rgba(216, 181, 106, 0.1);
+}
+.cycle-previews strong {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-fraunces), serif;
+  font-size: 1.25rem;
+  font-weight: 560;
+}
+.cycle-previews strong span {
+  color: var(--brass);
+  font-size: 0.9rem;
+}
+.cycle-previews a > span {
+  color: var(--text);
+  font-size: 0.8rem;
+  line-height: 1.35;
+}
+.cycle-previews small {
+  margin-top: 0.3rem;
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+/* ---------- Chapter text ---------- */
+
+.chapter-heading {
+  margin-bottom: 1.4rem;
+}
+.chapter-heading__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.8rem;
+}
+.chapter-heading__meta .eyebrow,
+.chapter-heading > .eyebrow {
+  margin: 0 0 0.8rem;
+}
+.chapter-heading__meta .eyebrow {
+  margin: 0;
+}
+.period-pill {
+  flex: none;
+  color: var(--muted);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.75rem;
+}
+.chapter-heading h2 {
+  margin-bottom: 1rem;
+  font-size: clamp(2.5rem, 3.6vw, 3.5rem);
+  line-height: 1.06;
+}
+.chapter-lede,
+.page-lede {
+  color: #c3ccda;
+  font-size: 1.05rem;
+  line-height: 1.65;
+}
+.chapter-explanation {
+  margin: 1.4rem 0;
+  color: #c3ccda;
+}
+.chapter-explanation h3 {
+  margin-bottom: 0.5rem;
+  color: var(--brass);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+.chapter-explanation p {
+  margin-bottom: 0.7rem;
+  font-size: 1rem;
+}
+.story-note {
+  margin: 1.4rem 0;
+  padding: 0.2rem 0 0.2rem 1rem;
+  color: #c3ccda;
+  border-left: 2px solid var(--brass);
+  font-size: 0.95rem;
+}
+.cause-chain {
+  display: grid;
+  margin: 1.6rem 0;
+  padding: 0;
+  list-style: none;
+}
+.cause-chain li {
+  display: grid;
+  grid-template-columns: 1.8rem 1fr;
+  gap: 0.8rem;
+  padding: 0.9rem 0;
+  border-top: 1px solid var(--glass-line);
+}
+.cause-chain > li > span {
+  display: grid;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  color: var(--brass);
+  border: 1px solid var(--glass-line);
+  border-radius: 50%;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.75rem;
+}
+.cause-chain h3 {
+  margin-bottom: 0.3rem;
+  font-family: var(--font-switzer), sans-serif;
+  font-size: 1rem;
+  letter-spacing: 0;
+  line-height: 1.3;
+}
+.cause-chain p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+.idea-toggle {
+  margin: 0 0 1.2rem;
+}
+.idea-toggle__live {
+  min-height: 5.2em;
+  margin: 0.9rem 0 0;
+  color: #c3ccda;
+  font-size: 0.95rem;
+}
+
+/* ---------- Controls ---------- */
+
+.parameter-control {
+  padding: 1.15rem 1.25rem 0.9rem;
+  /* Sits over the dark text strip, so a denser fill stands in for blur. A blur
+     here would have to be redrawn on every frame of the scene behind it. */
+  background: rgba(10, 16, 28, 0.8);
+  border: 1px solid var(--glass-line);
+  border-radius: 18px;
+}
+.parameter-control:focus-within {
+  border-color: var(--brass);
+}
+.parameter-control__header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.parameter-control__header label {
+  font-size: 1rem;
+  font-weight: 650;
+  line-height: 1.35;
+}
+.parameter-control__header label small {
+  display: block;
+  margin-top: 0.15rem;
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 400;
+}
+.parameter-control__header output {
+  color: var(--brass);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 1.25rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+input[type="range"] {
+  display: block;
+  appearance: none;
+  width: 100%;
+  height: 44px;
+  margin: 0.4rem 0 0;
+  background: transparent;
+  cursor: pointer;
+  accent-color: var(--brass);
+}
+input[type="range"]::-webkit-slider-runnable-track {
+  height: 5px;
+  background: linear-gradient(
+    to right,
+    var(--brass) var(--control-position),
+    rgba(169, 180, 197, 0.3) var(--control-position)
+  );
+  border-radius: 5px;
+}
+input[type="range"]::-moz-range-track {
+  height: 5px;
+  background: rgba(169, 180, 197, 0.3);
+  border-radius: 5px;
+}
+input[type="range"]::-moz-range-progress {
+  height: 5px;
+  background: var(--brass);
+}
+input[type="range"]::-webkit-slider-thumb {
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  margin-top: -8.5px;
+  background: var(--text);
+  border: 4px solid var(--brass);
+  border-radius: 50%;
+  box-shadow: 0 0 0 4px rgba(216, 181, 106, 0.12);
+}
+input[type="range"]::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  background: var(--text);
+  border: 3px solid var(--brass);
+  border-radius: 50%;
+}
+.parameter-control__labels {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 2.3rem;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+.parameter-control__today {
+  position: absolute;
+  top: 0.75rem;
+  left: var(--today-position);
+  color: var(--today-color);
+  font-size: 0.75rem;
+  transform: translateX(-50%);
+}
+.parameter-control__today::before {
+  display: block;
+  width: 1px;
+  height: 6px;
+  margin: 0 auto 2px;
+  background: var(--today-color);
+  content: "";
+}
+.parameter-control__live {
+  min-height: 4.6em;
+  margin: 0.4rem 0 0.7rem;
+  font-size: 0.97rem;
+  line-height: 1.55;
+}
+.quick-experiments {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 0.3rem;
+}
+.quick-experiments button:not(.text-button) {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  padding: 0.5rem 0.85rem;
+  color: var(--text);
+  background: rgba(7, 10, 18, 0.5);
+  border: 1px solid rgba(169, 180, 197, 0.28);
+  border-radius: 999px;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.quick-experiments button:not(.text-button):hover,
+.quick-experiments button[aria-pressed="true"] {
+  background: rgba(216, 181, 106, 0.14);
+  border-color: var(--brass);
+}
+.quick-experiments .play-button {
+  color: var(--bg);
+  background: var(--brass);
+  border-color: var(--brass);
+  font-weight: 700;
+}
+.quick-experiments .play-button:hover,
+.quick-experiments .play-button[aria-pressed="true"] {
+  color: var(--bg);
+  background: #e5c886;
+}
+.quick-experiments .text-button {
+  min-height: 44px;
+  margin-left: auto;
+  font-size: 0.85rem;
+}
+
+/* ---------- Clock ---------- */
+
+.timeline {
+  display: grid;
+  gap: 0.8rem;
+  padding: 1rem 1.2rem 0.8rem;
+  background: rgba(10, 16, 28, 0.8);
+  border: 1px solid var(--glass-line);
+  border-radius: 18px;
+}
+.timeline[data-variant="dock"] {
+  background: var(--glass);
+  backdrop-filter: blur(16px);
+  position: absolute;
+  right: 4.5rem;
+  bottom: 4.3rem;
+  left: var(--free-left);
+  z-index: 4;
+}
+.timeline[data-variant="inline"] {
+  margin: 0 0 1.4rem;
+}
+.timeline__bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.7rem 1rem;
+}
+.play-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-height: 44px;
+  padding: 0.5rem 1rem;
+  color: var(--bg);
+  background: var(--brass);
+  border: 1px solid var(--brass);
+  border-radius: 999px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.play-button:hover {
+  background: #e5c886;
+}
+.timeline__now {
+  display: grid;
+  margin: 0;
+  line-height: 1.3;
+}
+.timeline__now strong {
+  font-family: var(--font-fraunces), serif;
+  font-size: 1.35rem;
+  font-weight: 560;
+}
+.timeline__now span {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+.timeline__moments {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-left: auto;
+}
+.timeline__moments button {
+  min-height: 36px;
+  padding: 0.3rem 0.8rem;
+  color: var(--text);
+  background: rgba(7, 10, 18, 0.5);
+  border: 1px solid rgba(169, 180, 197, 0.28);
+  border-radius: 999px;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+.timeline__moments button:hover,
+.timeline__moments button[aria-pressed="true"] {
+  background: rgba(216, 181, 106, 0.14);
+  border-color: var(--brass);
+}
+.timeline__chart {
+  display: grid;
+  grid-template-columns: 9.4rem minmax(0, 1fr);
+  column-gap: 0.8rem;
+}
+.timeline__labels p {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin: 0;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 0.75rem;
+  line-height: 1.2;
+}
+.timeline__labels p[data-row="eccentricity"],
+.timeline__labels p[data-row="tilt"],
+.timeline__labels p[data-row="summer"] {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+.timeline__labels b {
+  color: var(--text);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+.timeline__plot {
+  position: relative;
+  cursor: ew-resize;
+  touch-action: pan-y;
+}
+.timeline__plot:focus-within {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+.timeline__row {
+  display: block;
+  width: 100%;
+  border-bottom: 1px solid rgba(169, 180, 197, 0.1);
+}
+.timeline__row path {
+  fill: none;
+  stroke-linejoin: round;
+  stroke-width: 1.4;
+}
+.timeline__row[data-row="eccentricity"] path,
+.timeline__row[data-row="tilt"] path {
+  stroke: var(--brass);
+}
+.timeline__row[data-row="summer"] path {
+  stroke: var(--sun);
+}
+.timeline__row[data-row="sunlight"] path {
+  stroke: var(--gold);
+  stroke-width: 2.2;
+}
+.timeline__row[data-row="ice"] path {
+  stroke: var(--ice);
+  stroke-width: 2.2;
+}
+.timeline__today {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--today);
+  border-left: 1px dashed var(--today-color);
+  pointer-events: none;
+}
+.timeline__future {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: var(--today);
+  padding: 0.3rem 0.1rem;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.04);
+  font-size: 0.75rem;
+  white-space: nowrap;
+  writing-mode: vertical-rl;
+  text-align: right;
+  pointer-events: none;
+}
+.timeline__playhead {
+  position: absolute;
+  top: -5px;
+  bottom: -5px;
+  left: var(--playhead);
+  width: 2px;
+  margin-left: -1px;
+  background: var(--gold);
+  box-shadow: 0 0 12px rgba(255, 217, 122, 0.7);
+  pointer-events: none;
+}
+.timeline__playhead::before {
+  position: absolute;
+  top: -3px;
+  left: 50%;
+  width: 10px;
+  height: 10px;
+  background: var(--gold);
+  border-radius: 50%;
+  content: "";
+  transform: translateX(-50%);
+}
+.timeline__axis {
+  position: relative;
+  grid-column: 2;
+  height: 1.3rem;
+  margin-top: 0.2rem;
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+.timeline__axis span {
+  position: absolute;
+  transform: translateX(-50%);
+}
+.timeline__axis span:first-child {
+  transform: none;
+}
+.timeline__axis span:last-child {
+  transform: translateX(-100%);
+}
+
+/* ---------- Lab ---------- */
+
+.lab-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  grid-template-areas: "header header" "scene panel";
+  align-items: start;
+  gap: 0 clamp(1.5rem, 4vw, 4rem);
+  width: min(100% - 4rem, 1380px);
+  margin: 0 auto;
+  padding-bottom: 4rem;
+}
+.lab-header {
+  display: flex;
+  grid-area: header;
+  align-items: end;
+  justify-content: space-between;
+  gap: 2rem;
+  padding: 2rem 0 1.5rem;
+}
+.lab-header h1 {
+  margin: 0;
+  font-size: clamp(2.8rem, 4vw, 4rem);
+}
+.lab-header .eyebrow {
+  margin-bottom: 0.55rem;
+}
+.lab-header > p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+.lab-stage {
+  position: sticky;
+  top: calc(var(--header-height) + 0.8rem);
+  grid-area: scene;
+  height: calc(100svh - var(--header-height) - 1.6rem);
+  min-height: 420px;
+  overflow: hidden;
+  border: 1px solid var(--glass-line);
+  border-radius: 24px;
+}
+.lab-panel {
+  grid-area: panel;
+  min-width: 0;
+}
+.lab-result {
+  position: sticky;
+  top: var(--header-height);
+  z-index: 25;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: start;
+  gap: 0.8rem 1.4rem;
+  min-height: 86px;
+  padding: 0.75rem 1.1rem 0.7rem;
+  background: rgba(14, 24, 40, 0.92);
+  border: 1px solid rgba(133, 199, 242, 0.26);
+  border-radius: 14px;
+  backdrop-filter: blur(14px);
+}
+.lab-reading {
+  min-width: 0;
+}
+.lab-reading + .lab-reading {
+  padding-left: 1.4rem;
+  border-left: 1px solid rgba(133, 199, 242, 0.18);
+}
+.lab-reading h2 {
+  margin: 0;
+  color: var(--muted);
+  font-family: var(--font-switzer), sans-serif;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  line-height: 1.3;
+}
+.lab-reading h2 span {
+  font-weight: 400;
+}
+.lab-result__reading,
+.lab-result__temperature {
+  display: flex;
+  align-items: baseline;
+  gap: 0.3rem;
+  margin: 0.1rem 0 0;
+  white-space: nowrap;
+}
+.lab-result__reading strong,
+.lab-result__temperature strong {
+  font-family: var(--font-fraunces), serif;
+  font-size: 2.6rem;
+  font-weight: 500;
+  line-height: 1.05;
+  font-variant-numeric: tabular-nums;
+}
+.lab-result__temperature strong {
+  color: var(--ice);
+  transition: color 300ms ease;
+}
+.lab-reading--temperature[data-trend="even"] .lab-result__temperature strong {
+  color: var(--text);
+}
+.lab-reading--temperature[data-trend="warm"] .lab-result__temperature strong {
+  color: var(--sun);
+}
+.lab-result__reading > span {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+.lab-reading__note {
+  margin: 0.2rem 0 0;
+  color: var(--ice);
+  font-size: 0.82rem;
+}
+.lab-reading--temperature .lab-reading__note {
+  color: var(--muted);
+}
+.lab-reading__note small {
+  color: var(--muted);
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+.lab-section {
+  padding: 1.5rem 0;
+}
+.lab-section__heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.8rem;
+}
+.lab-section h2 {
+  margin: 0;
+  font-size: 1.7rem;
+  line-height: 1.2;
+}
+.lab-section__heading > a {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+.lab-controls {
+  padding-top: 0.75rem;
+}
+.lab-controls .parameter-control + .parameter-control {
+  margin-top: 1rem;
+}
+.lab-interpretation {
+  margin: 0 0 0.5rem;
+  font-size: 0.97rem;
+}
+.lab-caveat {
+  padding-bottom: 1.5rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+  border-bottom: 1px solid var(--line);
+}
+.lab-climate {
+  padding: 1.6rem 0 0.4rem;
+}
+.lab-climate h2 {
+  margin: 0 0 0.7rem;
+  font-size: 1.7rem;
+  line-height: 1.2;
+}
+.lab-climate__estimate {
+  min-height: 3.1em;
+  margin: 0 0 0.4rem;
+  font-size: 1.02rem;
+  line-height: 1.55;
+}
+.temp-gauge {
+  position: relative;
+  height: 6px;
+  margin: 1.1rem 0 2.5rem;
+  background: linear-gradient(
+    90deg,
+    var(--ice) 0,
+    #cfd9e6 40%,
+    #ece3cf 80%,
+    var(--sun) 100%
+  );
+  border-radius: 9px;
+}
+.temp-gauge__marker,
+.temp-gauge__today {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  transition: left 280ms ease;
+}
+.temp-gauge__marker {
+  left: var(--temp-position);
+  z-index: 1;
+  width: 15px;
+  height: 15px;
+  background: var(--text);
+  border: 3px solid var(--bg);
+  border-radius: 50%;
+  box-shadow: 0 0 0 1.5px var(--text);
+}
+.temp-gauge__today {
+  left: var(--temp-today);
+  width: 2px;
+  height: 15px;
+  background: var(--today-color);
+}
+.temp-gauge__labels span {
+  position: absolute;
+  top: 16px;
+  color: var(--muted);
+  font-size: 0.75rem;
+  white-space: nowrap;
+  transform: translateX(-50%);
+}
+.temp-gauge__labels span:first-child {
+  left: 5%;
+  transform: translateX(-12%);
+}
+.temp-gauge__labels span:last-child {
+  left: var(--temp-today);
+}
+.lab-time {
+  padding: 0 0 0.5rem;
+}
+.lab-time .timeline {
+  margin-top: 0.4rem;
+}
+.preset-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+  margin-top: 1rem;
+}
+.preset-grid button {
+  display: grid;
+  align-content: start;
+  gap: 0.3rem;
+  min-height: 108px;
+  padding: 1rem;
+  color: var(--text);
+  text-align: left;
+  background: rgba(16, 24, 39, 0.6);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  cursor: pointer;
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease;
+}
+.preset-grid button:hover,
+.preset-grid button[aria-pressed="true"] {
+  background: rgba(216, 181, 106, 0.08);
+  border-color: var(--brass);
+}
+.preset-grid button > span,
+.preset-grid small {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+.preset-grid strong {
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+.preset-description {
+  min-height: 3em;
+  margin: 1rem 0 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+.lab-result__details {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin: 1rem 0;
+}
+.lab-result__details dt {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+.lab-result__details dd {
+  margin: 0.2rem 0 0;
+  color: var(--text);
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+}
+.lab-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 1.5rem;
+  padding-top: 1rem;
+}
+.lab-loading {
+  display: grid;
+  min-height: 50svh;
+  place-items: center;
+  color: var(--muted);
+}
+.tour-content :is(input, button, summary, a),
+.lab-panel :is(input, button, summary, a),
+.faq-list details {
+  scroll-margin-top: var(--reading-offset, 80px);
+  scroll-margin-bottom: 32px;
+}
+
+/* The small second view of Earth from above the pole. */
+.climate-globe {
+  position: absolute;
+  z-index: 3;
+  pointer-events: none;
+  animation: climate-in 600ms ease both;
+}
+.climate-globe__ring {
+  display: block;
+  width: 100%;
+  border: 1px solid rgba(216, 181, 106, 0.3);
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 1px rgba(7, 10, 18, 0.4),
+    0 0 44px rgba(110, 160, 255, 0.1);
+}
+.climate-globe__caption {
+  display: grid;
+  gap: 0.15rem;
+  margin: 0.55rem 0 0;
+  text-align: right;
+}
+.climate-globe__caption strong {
+  color: var(--temp-color);
+  font-family: var(--font-fraunces), serif;
+  font-size: 1.8rem;
+  font-weight: 500;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  transition: color 300ms ease;
+}
+.climate-globe__caption span {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+@keyframes climate-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+
+/* ---------- Tablet and phone: the stage pins above the text ---------- */
+
+@media (max-width: 980px) {
+  :root {
+    --column-width: min(100% - 2rem, 640px);
+    --page-gutter: max(1rem, calc((100vw - 640px) / 2));
+  }
+  .story {
+    margin-top: 0;
+  }
+  .story-track {
+    z-index: 3;
+  }
+  .story-stage {
+    top: var(--header-height);
+    height: var(--stage-mobile-height);
+    background: var(--bg);
+    border-bottom: 1px solid var(--glass-line);
+  }
+  .stage::after {
+    display: none;
+  }
+  .story-column {
+    width: min(100% - 2rem, 640px);
+    margin-inline: auto;
+  }
+  .story-hero {
+    min-height: auto;
+    padding: calc(var(--stage-mobile-height) + 1.6rem) 0 3rem;
+  }
+  .story-hero h1 {
+    font-size: clamp(2.9rem, 11vw, 4.4rem);
+  }
+  .story-chapter {
+    min-height: auto;
+    padding-block: 2.2rem 3rem;
+  }
+  .story-chapter:first-of-type {
+    padding-top: 2.2rem;
+  }
+  .story-chapter .story-column {
+    padding-block: 0;
+  }
+  .stage--tour .scene-viewport__poster {
+    padding: 0;
+  }
+  .scene-guide {
+    top: 3.4rem;
+    right: auto;
+    left: 0.6rem;
+    width: auto;
+    padding: 0.4rem 0.7rem;
+    border-radius: 12px;
+  }
+  .scene-guide__label,
+  .scene-guide__labels {
+    display: none;
+  }
+  .scene-guide__value {
+    margin: 0;
+    gap: 0 0.35rem;
+  }
+  .scene-guide__value strong {
+    font-size: 1.5rem;
+  }
+  .scene-guide__value span {
+    font-size: 0.75rem;
+  }
+  .scene-guide__value em {
+    flex-basis: auto;
+    margin: 0;
+    font-size: 0.75rem;
+  }
+  .scene-guide__track {
+    margin-top: 0.35rem;
+  }
+  .stage__toolbar {
+    right: 0.6rem;
+    bottom: 0.5rem;
+    left: 0.6rem;
+    gap: 0.4rem;
+  }
+  .stage__hint {
+    padding: 0.25rem 0.6rem;
+    font-size: 0.75rem;
+  }
+  .motion-button {
+    min-height: 36px;
+    padding: 0 0.7rem;
+    font-size: 0.75rem;
+  }
+  .tour-progress {
+    top: 0.6rem;
+    right: 0.6rem;
+    left: 0.6rem;
+    transform: none;
+  }
+  .tour-progress__desktop {
+    display: none;
+  }
+  .tour-progress__mobile {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    gap: 0 0.75rem;
+    min-height: 40px;
+    padding: 0 0.3rem 0 0.9rem;
+    background: var(--glass);
+    border: 1px solid var(--glass-line);
+    border-radius: 999px;
+    backdrop-filter: blur(10px);
+    font-size: 0.8rem;
+    overflow: hidden;
+  }
+  .tour-progress__mobile > span {
+    color: var(--muted);
+  }
+  .tour-progress__mobile select {
+    justify-self: end;
+    max-width: 190px;
+    min-height: 40px;
+    padding: 0.3rem 0.6rem;
+    color: var(--text);
+    background: transparent;
+    border: 0;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .tour-progress__mobile select option {
+    color: #111;
+  }
+  .tour-progress__track {
+    grid-column: 1 / -1;
+    height: 2px;
+    margin: 0 -0.3rem 0 -0.9rem;
+    background: rgba(169, 180, 197, 0.15);
+  }
+  .tour-progress__track > span {
+    display: block;
+    height: 100%;
+    background: var(--brass);
+  }
+  .space-label small {
+    display: none;
+  }
+  .lab-layout {
+    display: block;
+    width: min(100% - 2rem, 760px);
+  }
+  .lab-header {
+    flex-direction: column;
+    align-items: start;
+    gap: 0.5rem;
+    padding: 1.25rem 0;
+  }
+  .lab-header h1 {
+    font-size: 2.6rem;
+  }
+  .lab-header .eyebrow {
+    display: none;
+  }
+  .lab-stage {
+    top: var(--header-height);
+    z-index: 30;
+    height: var(--lab-stage-height);
+    min-height: 0;
+    background: var(--bg);
+    border-radius: 0 0 16px 16px;
+  }
+  .lab-result {
+    top: calc(var(--header-height) + var(--lab-stage-height));
+    min-height: 76px;
+    gap: 0.4rem 0.8rem;
+    padding: 0.55rem 0.8rem 0.5rem;
+    border-radius: 0 0 12px 12px;
+  }
+  .lab-reading + .lab-reading {
+    padding-left: 0.8rem;
+  }
+  .lab-reading h2 {
+    font-size: 0.72rem;
+  }
+  .lab-reading h2 span {
+    display: none;
+  }
+  .lab-result__reading strong,
+  .lab-result__temperature strong {
+    font-size: 2rem;
+  }
+  .lab-reading__note,
+  .lab-reading__note small {
+    font-size: 0.72rem;
+  }
+  .parameter-control__live {
+    min-height: 0;
+  }
+  .idea-toggle__live {
+    min-height: 0;
+  }
+  .timeline[data-variant="inline"] .timeline__chart {
+    grid-template-columns: 1fr;
+  }
+  .timeline[data-variant="inline"] .timeline__labels {
+    display: none;
+  }
+  .timeline[data-variant="inline"] .timeline__axis {
+    grid-column: 1;
+  }
+  .timeline__moments {
+    margin-left: 0;
+  }
+}
+@media (max-width: 760px) {
+  .chapter-heading h2 {
+    font-size: clamp(1.9rem, 8.5vw, 2.5rem);
+  }
+  .cycle-previews a > span {
+    font-size: 0.75rem;
+  }
+  .parameter-control {
+    padding: 1rem 1rem 0.7rem;
+  }
+  .lab-result__details {
+    grid-template-columns: 1fr;
+  }
+  .stage--lab .climate-globe__caption {
+    display: none;
+  }
+  .lab-actions {
+    display: grid;
+  }
+  .lab-actions .button {
+    width: 100%;
+  }
+  .recap-cta .button {
+    width: 100%;
+  }
+}
+@media (max-width: 360px) {
+  .story-hero .button {
+    padding-inline: 0.8rem;
+    font-size: 0.8rem;
+  }
+  .cycle-previews strong {
+    font-size: 1.05rem;
+  }
+}
+@media (max-height: 699px) and (min-width: 981px) {
+  .scene-guide {
+    padding: 0.7rem 1rem;
+  }
+  .scene-guide__value strong {
+    font-size: 2.2rem;
+  }
+  .timeline[data-variant="dock"] .timeline__labels p {
+    font-size: 0.7rem;
+  }
+}
+
+/* Short landscape screens have no room for a pinned stage. */
+@media (max-width: 980px) and (max-height: 540px) {
+  .story-stage {
+    position: relative;
+    top: auto;
+    height: min(78svh, 280px);
+  }
+  .story-hero {
+    padding-top: calc(min(78svh, 280px) + 1.2rem);
+  }
+  .lab-stage {
+    position: relative;
+    top: auto;
+    height: min(78svh, 280px);
+  }
+  .lab-result {
+    top: var(--header-height);
+  }
+}

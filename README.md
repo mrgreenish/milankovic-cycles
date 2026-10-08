@@ -1,73 +1,44 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Milanković Cycles
 
-## Getting Started
+A 3D tour of the orbital cycles behind the ice ages, with a lab for changing them yourself. Live at [milankovitchcycles.com](https://milankovitchcycles.com).
 
-First, run the development server:
+The tour introduces three slow changes in Earth's orbit — its shape (eccentricity), the lean of its axis (obliquity) and the direction the axis points (precession) — then runs them together over 800,000 years next to the measured ice record. The lab calculates midsummer sunlight at 65°N for any combination, or for any date in the La2004 orbit solution.
+
+## Run it
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev        # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Node 20.9 or newer.
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+| Command | What it does |
+| --- | --- |
+| `npm run check` | Lint, typecheck, unit tests and a production build |
+| `npm test` | Unit tests (Vitest) |
+| `npm run test:e2e` | Browser tests (Playwright; needs a running dev server or builds one) |
+| `npm run series:build -- <past> <future> <ice>` | Rebuild the orbit and ice series (see below) |
+| `npm run poster:build [url]` | Re-render the loading globe (`public/images/globe-poster-*.webp`) from a running server. Rerun it whenever the title camera or Earth look changes |
+| `npm run textures:build -- <dir>` | Rebuild the Earth textures (see `public/textures/space/README.md`) |
+| `npm run graphics:profile` | Frame-rate and asset report against a production server |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## How it is built
 
-## Learn More
+- **Next.js (App Router), React, TypeScript.** The tour is `src/app/page.tsx`; the lab is `src/components/lab/LabExperience.tsx`.
+- **One 3D stage.** `src/components/experience/Stage.tsx` hosts a React Three Fiber scene (`SceneClient.tsx`, `space/`). Orbit parameters are eased in a shared frame (`space/SceneState.tsx`), so moving a slider or playing the clock does not re-render the scene. The look stays at full quality; only frame rate adapts (30 fps when nothing moves, 60 when it does), and the tier steps down only after six seconds of real slowness. While the scene loads, a pre-rendered frame of the title globe holds its place. A still SVG diagram replaces the scene for reduced motion or if WebGL fails.
+- **Orbit maths** lives in `src/lib/orbital/`: daily insolation (`insolation.ts`), orbit geometry (`geometry.ts`), the shared reducer (`state.ts`) and the time series (`timeline.ts`). The tour and the lab share the same reducer and URL format (`/lab?e=…&o=…&p=…` or `/lab?t=-21`).
+- **Data.** `series.generated.ts` holds the La2004 nominal solution at 1,000-year steps from 800,000 years ago to 100,000 years ahead. `iceRecord.generated.ts` holds the LR04 benthic δ¹⁸O stack. Both are generated, not edited:
 
-To learn more about Next.js, take a look at the following resources:
+  ```bash
+  # past:   https://ssp.imcce.fr/insola/earth/online/earth/La2004/INSOLN.LA2004.BTL.ASC
+  # future: https://ssp.imcce.fr/insola/earth/online/earth/La2004/INSOLP.LA2004.BTL.ASC
+  # ice:    https://lorraine-lisiecki.com/LR04stack.txt
+  npm run series:build -- INSOLN.LA2004.BTL.ASC INSOLP.LA2004.BTL.ASC LR04stack.txt
+  ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+  Only the first ~110 KB of the past file and ~27 KB of the future file are needed.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Sources
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-
-## SEO Implementation
-
-This project includes comprehensive SEO optimization for better search engine visibility and social sharing:
-
-### Implemented SEO Features
-
-- **Metadata Configuration**: Enhanced title, description, and keywords in `layout.js`
-- **Open Graph Protocol**: Custom tags for better sharing on Facebook, LinkedIn, etc.
-- **Twitter Cards**: Optimized sharing experience on Twitter
-- **Sitemap**: Automatic sitemap generation via `sitemap.js`
-- **Robots.txt**: Search engine crawling instructions via `robots.js`
-- **Web App Manifest**: PWA capabilities via `manifest.json`
-- **Structured Data**: Semantically rich content for search engines
-
-### How to Maintain SEO
-
-1. **Update Metadata**: Keep the metadata in `src/app/layout.js` current with your content
-2. **Add New Routes**: When adding new pages, update the sitemap in `src/app/sitemap.js`
-3. **Images Optimization**: Maintain proper image sizes for OG and Twitter cards
-4. **Monitor Performance**: Use tools like Lighthouse to check SEO performance
-
-### Apple Icon Generation
-
-To generate the apple-icon.png for iOS devices:
-
-1. Install Sharp:
-   ```bash
-   npm install sharp --save-dev
-   ```
-
-2. Run the generation script:
-   ```bash
-   node scripts/generate-apple-icon.js
-   ```
-
-This will create the properly sized apple-icon.png in your public directory.
+Laskar et al. (2004), La2004 orbital solution. Lisiecki and Raymo (2005), LR04 stack. Hays, Imbrie and Shackleton (1976). Earth imagery from NASA Earth Observatory. The full list, with equations and limits, is on the site's [Sources page](https://milankovitchcycles.com/sources).

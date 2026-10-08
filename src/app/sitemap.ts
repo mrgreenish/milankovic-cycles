@@ -3,7 +3,7 @@ import { LEARN_TOPICS } from "@/lib/learn/topics";
 import { SITE_URL } from "@/lib/site";
 
 // Bump when page content meaningfully changes so crawlers can prioritize.
-const lastModified = new Date("2026-07-10");
+const lastModified = new Date("2026-10-08");
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const corePages: MetadataRoute.Sitemap = [

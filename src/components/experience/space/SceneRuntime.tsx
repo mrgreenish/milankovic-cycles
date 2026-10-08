@@ -10,18 +10,28 @@ import {
   type RefObject,
 } from "react";
 import { useThree, type RootState } from "@react-three/fiber";
+import type { WebGLRenderer } from "three";
+import type { SceneLive } from "../sceneLive";
 import {
+  IDLE_FPS,
+  QUALITY,
   animationDelta,
   assessQuality,
   initialQuality,
-  QUALITY,
+  refreshInterval,
+  type DeviceHints,
   type GraphicsQuality,
 } from "./quality";
 
 // Optional automation hook, never surfaced in the UI or persisted in shared URLs.
 declare global {
   interface Window {
-    __ORBITAL_SCENE_TEST__?: { time?: number; quality?: GraphicsQuality };
+    __ORBITAL_SCENE_TEST__?: {
+      time?: number;
+      quality?: GraphicsQuality;
+      /** Called with the scene's eased frame on every update; for tests and profiling. */
+      probe?: (frame: unknown) => void;
+    };
   }
 }
 
@@ -33,6 +43,37 @@ export const useGraphicsQuality = () => useContext(QualityContext);
 export const animationTime = (elapsed: number) =>
   window.__ORBITAL_SCENE_TEST__?.time ?? elapsed;
 
+/**
+ * Until this time (a `performance.now()` stamp) the scene renders at its full
+ * frame rate. Past it, with nothing moving, it drops to the idle rate.
+ */
+type Activity = { current: number };
+const ActivityContext = createContext<Activity>({ current: 0 });
+export const useSceneActivity = () => useContext(ActivityContext);
+export function wakeScene(activity: Activity, ms: number) {
+  const until = performance.now() + ms;
+  if (until > activity.current) activity.current = until;
+}
+
+function deviceHints(gl: WebGLRenderer): DeviceHints {
+  const nav = navigator as Navigator & { deviceMemory?: number };
+  let software = false;
+  try {
+    const context = gl.getContext();
+    const info = context.getExtension("WEBGL_debug_renderer_info");
+    const name = info ? String(context.getParameter(info.UNMASKED_RENDERER_WEBGL)) : "";
+    software = /swiftshader|llvmpipe|software|basic render/i.test(name);
+  } catch {
+    // Some browsers hide the renderer name; treat that as a normal GPU.
+  }
+  return {
+    coarsePointer: window.matchMedia("(pointer: coarse)").matches,
+    memoryGb: nav.deviceMemory,
+    cores: nav.hardwareConcurrency,
+    software,
+  };
+}
+
 export function SceneRuntime({
   children,
   ready,
@@ -41,6 +82,7 @@ export function SceneRuntime({
   quality,
   motionPaused = false,
   onQualityChange,
+  live,
 }: {
   children: ReactNode;
   ready: boolean;
@@ -49,22 +91,26 @@ export function SceneRuntime({
   quality: GraphicsQuality;
   motionPaused?: boolean;
   onQualityChange: (quality: GraphicsQuality) => void;
+  live?: SceneLive;
 }) {
   const get = useThree((state) => state.get);
   const ambientTime = useMemo(() => ({ current: 0 }), []);
+  const activity = useMemo<Activity>(() => ({ current: 0 }), []);
   const callbacks = useRef({ ready, onReady, onFailure, motionPaused });
   useEffect(() => {
     callbacks.current = { ready, onReady, onFailure, motionPaused };
   }, [ready, onReady, onFailure, motionPaused]);
 
   useEffect(
-    () => runRenderer(get(), callbacks, onQualityChange, ambientTime),
-    [get, onQualityChange, ambientTime],
+    () => runRenderer(get(), callbacks, onQualityChange, ambientTime, activity, live),
+    [get, onQualityChange, ambientTime, activity, live],
   );
   return (
     <QualityContext.Provider value={quality}>
       <AmbientTimeContext.Provider value={ambientTime}>
-        {children}
+        <ActivityContext.Provider value={activity}>
+          {children}
+        </ActivityContext.Provider>
       </AmbientTimeContext.Provider>
     </QualityContext.Provider>
   );
@@ -81,6 +127,8 @@ function runRenderer(
   }>,
   setQuality: (quality: GraphicsQuality) => void,
   ambientTime: { current: number },
+  activity: Activity,
+  live: SceneLive | undefined,
 ) {
   const canvas = gl.domElement;
   let inView = false;
@@ -95,9 +143,18 @@ function runRenderer(
   let renderTotal = 0;
   let renderCount = 0;
   let announced = false;
-  let history = initialQuality();
+  let history = initialQuality(deviceHints(gl));
   let warmupUntil = performance.now() + 4000;
   let failed = false;
+  // The display's own rhythm, learned from the first frames while the scene is
+  // still light. Slowness is judged against it, so a screen that is capped at
+  // 30 Hz (power saving, remote desktop) is not mistaken for a struggling GPU.
+  const gaps: number[] = [];
+  let skipped = 0;
+  let calibrated = false;
+  let refreshMs = 1000 / 60;
+  let width = 0;
+  let height = 0;
 
   function applyQuality(next: GraphicsQuality) {
     setQuality(next);
@@ -132,24 +189,50 @@ function runRenderer(
     const test = window.__ORBITAL_SCENE_TEST__;
     const activeQuality = test?.quality ?? history.quality;
     if (canvas.dataset.quality !== activeQuality) applyQuality(activeQuality);
-    const interval = 1000 / QUALITY[activeQuality].fps;
-    // Measure RAF cadence even at the 30 fps render cap, so low can recover.
-    if (lastTick && now > warmupUntil) {
-      tickTotal += now - lastTick;
-      tickCount++;
+    if (lastTick) {
+      const gap = now - lastTick;
+      if (!calibrated) {
+        if (++skipped > 8) gaps.push(gap);
+        if (gaps.length >= 90) {
+          refreshMs = refreshInterval(gaps);
+          calibrated = true;
+          canvas.dataset.refreshMs = refreshMs.toFixed(1);
+        }
+      }
+      // Measure RAF cadence even when rendering is capped, so a tier can recover.
+      if (now > warmupUntil) {
+        tickTotal += gap;
+        tickCount++;
+      }
     }
     lastTick = now;
-    if (!lastRender || now - lastRender >= interval - 1) {
+
+    // Full rate while something moves or the visitor is interacting; otherwise
+    // the slow ambient motion (a turning Earth, drifting clouds) needs only 30.
+    const busy =
+      now < activity.current || (live ? now - live.current.stamp < 700 : false);
+    const cap = QUALITY[activeQuality].fps;
+    const resting = callbacks.current.motionPaused ? 2 : IDLE_FPS;
+    const interval = 1000 / (busy ? cap : Math.min(cap, resting));
+    // A resized canvas is blank until it is drawn again.
+    const resized = canvas.width !== width || canvas.height !== height;
+    if (!lastRender || resized || now - lastRender >= interval - 1) {
       const step = animationDelta(
         lastRender ? (now - lastRender) / 1000 : 1 / 60,
       );
       elapsed += step;
-      if (!callbacks.current.motionPaused) ambientTime.current += step;
+      // The scene holds still until it can be seen, so its first frame matches
+      // the loading placeholder.
+      if (!callbacks.current.motionPaused && callbacks.current.ready)
+        ambientTime.current += step;
       canvas.dataset.motion = callbacks.current.motionPaused
         ? "paused"
         : "running";
       canvas.dataset.ambientTime = ambientTime.current.toFixed(3);
+      canvas.dataset.pace = busy ? "full" : "idle";
       lastRender = now;
+      width = canvas.width;
+      height = canvas.height;
       const start = performance.now();
       try {
         advance(elapsed, true);
@@ -170,6 +253,7 @@ function runRenderer(
     if (now - sampleStart >= 2000) {
       if (
         announced &&
+        calibrated &&
         !test?.quality &&
         now > warmupUntil &&
         tickCount &&
@@ -179,6 +263,7 @@ function runRenderer(
           history,
           tickTotal / tickCount,
           renderTotal / renderCount,
+          refreshMs,
         );
         if (next.quality !== history.quality) {
           applyQuality(next.quality);

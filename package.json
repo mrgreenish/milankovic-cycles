@@ -15,6 +15,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
+    "series:build": "node scripts/build-orbital-series.mjs",
+    "poster:build": "node scripts/build-globe-poster.mjs",
     "textures:build": "node scripts/build-space-textures.mjs",
     "graphics:profile": "node scripts/profile-space.mjs",
     "check": "npm run lint && npm run typecheck && npm test && npm run build"

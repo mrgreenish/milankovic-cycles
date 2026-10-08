@@ -7,12 +7,12 @@ import { SiteFooter } from "@/components/site/SiteFooter";
 export const metadata: Metadata = {
   title: "Why I built this",
   description:
-    "Filip van Harreveld on his great-grandfather Milutin Milanković and building a way to explore his work.",
+    "Filip van Harreveld on his great-grandfather Milutin Milanković, and why he built a 3D way to explore his work.",
   alternates: { canonical: "/about" },
   openGraph: {
     title: "Why I built this · Milanković Cycles",
     description:
-      "Filip van Harreveld on his great-grandfather Milutin Milanković and the idea behind this project.",
+      "Filip van Harreveld on his great-grandfather Milutin Milanković, and why he built a 3D way to explore his work.",
     url: "/about",
   },
 };
@@ -35,29 +35,29 @@ export default function AboutPage() {
             <p>Milutin Milanković · 1879–1958</p>
           </div>
           <div>
-            <p className="eyebrow">A family connection</p>
+            <p className="eyebrow">My great-grandfather’s work</p>
             <h1>Why I built this</h1>
             <p className="page-lede">
-              Milutin Milanković was my great-grandfather. I built this site to
-              share an idea he spent much of his life working on: how changes in
-              Earth&apos;s orbit affect its climate.
+              Milutin Milanković was my great-grandfather. I built this site so
+              people can see what he spent decades calculating: how small
+              changes in Earth’s orbit shift the sunlight reaching the far
+              north, and how that paced the ice ages.
             </p>
             <p>
-              He spent decades calculating how sunlight changes across seasons
-              and latitudes as Earth&apos;s orbit and axis slowly shift. His
-              work helped establish the astronomical pacing of glacial and
-              interglacial cycles.
+              He did the work by hand, with pen and paper, working out the
+              sunlight at every latitude through the seasons. He published the
+              full theory in 1941. It stayed disputed for decades. In 1976,
+              seabed sediment showed the same rhythms he had calculated. He had
+              died in 1958.
             </p>
             <p>
-              I work with design and software. Here, you can change the orbit
-              and tilt yourself, and see how the amount of summer sunlight
-              changes. That is how I wanted to explain his work.
+              I work in design and software. This is how I wanted to explain
+              his work: you stretch the orbit, lean the axis and wobble it
+              yourself, and watch what happens to summer sunlight at 65°N.
             </p>
             <p className="signature-block">
               <strong>Filip van Harreveld</strong>
-              <span>
-                Creative developer &amp; great-grandson of Milutin Milanković
-              </span>
+              <span>Creative developer · Great-grandson of Milutin Milanković</span>
             </p>
           </div>
         </section>
@@ -65,19 +65,20 @@ export default function AboutPage() {
         <section className="editorial-section editorial-grid">
           <div>
             <p className="eyebrow">About the project</p>
-            <h2>Built for curious beginners</h2>
+            <h2>How it works</h2>
           </div>
           <div>
             <p>
-              The tour introduces the three orbital motions. The lab lets you
-              combine them and compare dates from the La2004 astronomical
-              solution. It calculates summer sunlight; it does not predict
-              temperature or ice-sheet size.
+              The tour introduces the three motions one at a time and then runs
+              them together over 800,000 years. The lab lets you set them
+              yourself, or jump to dates from the La2004 orbit solution. It
+              calculates sunlight at 65°N and adds a rough estimate of ice and
+              global temperature. The estimate is not a forecast.
             </p>
             <p>
-              The scene exaggerates orbit shape when requested because real
-              eccentricity is almost impossible to see at screen scale. Every
-              calculation still uses the true value.
+              The scene draws the orbit’s shape five times too stretched by
+              default, because the real orbit looks like a circle at screen
+              size. Every calculation uses the true values.
             </p>
             <div className="button-row">
               <Link className="button button--primary" href="/">
@@ -92,12 +93,12 @@ export default function AboutPage() {
 
         <section className="contact-card">
           <div>
-            <p className="eyebrow">Questions or corrections?</p>
-            <h2>Help make it better</h2>
+            <p className="eyebrow">Corrections</p>
+            <h2>Found a mistake?</h2>
           </div>
           <p>
-            If you notice an inaccuracy, have a useful source, or want to get in
-            touch, you can reach me through{" "}
+            If you spot an error, know a better source, or want to talk about
+            the project, write to me through{" "}
             <a href="https://filipvanharreveld.com">filipvanharreveld.com</a>.
           </p>
         </section>

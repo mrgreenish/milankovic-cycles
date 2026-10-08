@@ -7,15 +7,15 @@ export function useStickyLayout(kind: "tour" | "lab") {
   useEffect(() => {
     const selectors =
       kind === "tour"
-        ? [".site-header", ".tour-progress", ".tour-scene-column"]
-        : [".site-header", ".lab-scene-column", ".lab-result"];
+        ? [".site-header", ".story-stage"]
+        : [".site-header", ".lab-stage", ".lab-result"];
     const elements = selectors
       .map((selector) => document.querySelector<HTMLElement>(selector))
       .filter((element): element is HTMLElement => element !== null);
     const measure = () => {
       const mobile = window.matchMedia("(max-width: 980px)").matches;
       const heights = elements.map((element) => {
-        if (!mobile && element.matches(".tour-scene-column, .lab-scene-column"))
+        if (!mobile && element.matches(".story-stage, .lab-stage"))
           return 0;
         return getComputedStyle(element).position === "sticky"
           ? element.getBoundingClientRect().height

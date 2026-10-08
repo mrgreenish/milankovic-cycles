@@ -38,7 +38,10 @@ export type OrbitalMilestone = {
 export type OrbitScale = "actual" | "5x";
 
 export type OrbitalVisualFocus =
+  | "hero"
+  | "idea"
   | "shape"
   | "tilt"
   | "direction"
+  | "timeline"
   | "combined";
