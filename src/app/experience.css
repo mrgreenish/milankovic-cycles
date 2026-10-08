@@ -704,10 +704,13 @@
   font-weight: 400;
 }
 .parameter-control__header output {
+  /* Room for the widest reading (359.9°), so the label beside it never rewraps. */
+  min-width: 6ch;
   color: var(--brass);
   font-family: var(--font-mono), ui-monospace, monospace;
   font-size: 1.25rem;
   font-variant-numeric: tabular-nums;
+  text-align: right;
   white-space: nowrap;
 }
 input[type="range"] {
@@ -812,6 +815,9 @@ input[type="range"]::-moz-range-thumb {
   border-color: var(--brass);
 }
 .quick-experiments .play-button {
+  /* "Play the cycle" and "Stop" take the same room, so the row never rewraps. */
+  justify-content: center;
+  min-width: 8.75rem;
   color: var(--bg);
   background: var(--brass);
   border-color: var(--brass);
@@ -872,6 +878,11 @@ input[type="range"]::-moz-range-thumb {
 }
 .play-button:hover {
   background: #e5c886;
+}
+.timeline__bar .play-button {
+  /* "Play the clock" and "Pause" take the same room. */
+  justify-content: center;
+  min-width: 9.6rem;
 }
 .timeline__now {
   display: grid;
@@ -1177,6 +1188,10 @@ input[type="range"]::-moz-range-thumb {
   color: var(--muted);
   font-size: 0.8rem;
 }
+.lab-section__heading > :is(a, button) {
+  flex: none;
+  white-space: nowrap;
+}
 .lab-controls {
   padding-top: 0.75rem;
 }
@@ -1256,7 +1271,8 @@ input[type="range"]::-moz-range-thumb {
   transform: translateX(-12%);
 }
 .temp-gauge__labels span:last-child {
-  left: var(--temp-today);
+  /* Centred under today's mark, but never past the gauge's right edge. */
+  left: min(var(--temp-today), calc(100% - 4.7rem));
 }
 .lab-time {
   padding: 0 0 0.5rem;
@@ -1432,10 +1448,13 @@ input[type="range"]::-moz-range-thumb {
     padding: 0;
   }
   .scene-guide {
-    top: 3.4rem;
+    /* Clear of the chapter bar above it. */
+    top: 3.6rem;
     right: auto;
     left: 0.6rem;
-    width: auto;
+    /* Wide enough for "16 W/m² more than today", so the card keeps its size
+       as the reading changes instead of resizing with every step. */
+    width: 12rem;
     padding: 0.4rem 0.7rem;
     border-radius: 12px;
   }
@@ -1454,9 +1473,9 @@ input[type="range"]::-moz-range-thumb {
     font-size: 0.75rem;
   }
   .scene-guide__value em {
-    flex-basis: auto;
-    margin: 0;
+    margin-top: 0.1rem;
     font-size: 0.75rem;
+    white-space: nowrap;
   }
   .scene-guide__track {
     margin-top: 0.35rem;
@@ -1471,10 +1490,19 @@ input[type="range"]::-moz-range-thumb {
     padding: 0.25rem 0.6rem;
     font-size: 0.75rem;
   }
+  /* The orbit switch and the motion button need the whole row; the chapter
+     text above already says to drag. */
+  .stage__hint:has(~ .segmented-control) {
+    display: none;
+  }
   .motion-button {
     min-height: 36px;
     padding: 0 0.7rem;
     font-size: 0.75rem;
+  }
+  .stage__toolbar .segmented-control button,
+  .motion-button {
+    white-space: nowrap;
   }
   .tour-progress {
     top: 0.6rem;
@@ -1511,6 +1539,8 @@ input[type="range"]::-moz-range-thumb {
     background: transparent;
     border: 0;
     font: inherit;
+    /* iOS zooms the page when a control under 16px takes focus. */
+    font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
   }
@@ -1579,12 +1609,6 @@ input[type="range"]::-moz-range-thumb {
   .lab-reading__note small {
     font-size: 0.72rem;
   }
-  .parameter-control__live {
-    min-height: 0;
-  }
-  .idea-toggle__live {
-    min-height: 0;
-  }
   .timeline[data-variant="inline"] .timeline__chart {
     grid-template-columns: 1fr;
   }
@@ -1622,6 +1646,89 @@ input[type="range"]::-moz-range-thumb {
   }
   .recap-cta .button {
     width: 100%;
+  }
+}
+/* ---------- Phones: text that changes keeps its room ----------
+
+   The sentences under a control and the readouts around it change length as a
+   value moves. Each one holds the lines its longest wording needs at that
+   width, so nothing below it jumps. The counts come from sweeping every
+   control and preset at each width; the narrower queries come last and win. */
+
+@media (max-width: 980px) {
+  .parameter-control__live {
+    min-height: 3.1em;
+  }
+  .idea-toggle__live {
+    min-height: 3.2em;
+  }
+}
+@media (max-width: 759px) {
+  .lab-climate__estimate {
+    min-height: 4.65em;
+  }
+  .preset-description {
+    min-height: 3.2em;
+  }
+}
+@media (max-width: 560px) {
+  .idea-toggle__live {
+    min-height: 4.8em;
+  }
+}
+@media (max-width: 520px) {
+  /* Always on its own row, so the bar is the same height for "Your own orbit"
+     as for "125,000 years ago". */
+  .timeline__now {
+    flex-basis: 100%;
+  }
+}
+@media (max-width: 480px) {
+  /* The J2000 reference is spelled out in "How to read the numbers". */
+  .lab-reading__note small {
+    display: none;
+  }
+}
+@media (max-width: 440px) {
+  .parameter-control__live {
+    min-height: 4.65em;
+  }
+  .lab-climate__estimate {
+    min-height: 6.2em;
+  }
+}
+@media (max-width: 420px) {
+  .lab-interpretation {
+    min-height: 3.2em;
+  }
+}
+@media (max-width: 400px) {
+  .idea-toggle__live {
+    min-height: 6.4em;
+  }
+  .preset-description {
+    min-height: 4.8em;
+  }
+}
+@media (max-width: 365px) {
+  .lab-climate__estimate {
+    min-height: 7.75em;
+  }
+  .share-status {
+    min-height: 3.2em;
+  }
+}
+@media (max-width: 350px) {
+  .lab-reading__note {
+    min-height: 3.2em;
+  }
+  .timeline__now strong {
+    font-size: 1.2rem;
+  }
+}
+@media (max-width: 339px) {
+  .parameter-control__live {
+    min-height: 6.2em;
   }
 }
 @media (max-width: 360px) {
