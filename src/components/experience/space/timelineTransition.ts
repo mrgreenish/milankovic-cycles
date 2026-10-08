@@ -19,7 +19,8 @@ type Source = Pose & Pick<SceneFrame, "ready" | "time"> & {
 export function createTimelineTransition() {
   return {
     active: false,
-    previousTime: null as number | null,
+    // Undefined is the first frame; null is an already displayed manual orbit.
+    previousTime: undefined as number | null | undefined,
     pose: { e: 0, tilt: 0, peri: 0, spin: 0 },
     velocity: { e: 0, tilt: 0, peri: 0, spin: 0 },
     rejoin: null as { elapsed: number; start: Pose; peri: number; spin: number } | null,
@@ -38,7 +39,8 @@ export function stepTimelineTransition(
   const dt = Math.min(0.05, Math.max(0, seconds));
   const { timeKyr: clock, clockPlaying, focus, scale } = source.targets;
   const scrubbing = clock !== null && focus === "timeline" && !clockPlaying;
-  const jumped = scrubbing && source.ready && state.previousTime !== null && (
+  const jumped = scrubbing && source.ready && state.previousTime !== undefined && (
+    state.previousTime === null ||
     Math.abs(clock - state.previousTime) > LONG_SCRUB_KYR ||
     Math.abs(clock - source.time) > LONG_SCRUB_KYR
   );

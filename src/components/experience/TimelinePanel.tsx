@@ -37,6 +37,9 @@ export function TimelinePanel({ placement }: { placement: "dock" | "inline" }) {
       timeKyr={displayedTime({ parameters, timeKyr })}
       onTime={setTime}
       onScrub={(kyr) => {
+        // Pause before the throttled page update so the first dragged frame
+        // uses the scrub transition instead of following every playback cycle.
+        if (kyr !== null) stop();
         writeLive(live, { scrub: kyr });
         touchLive(live);
       }}

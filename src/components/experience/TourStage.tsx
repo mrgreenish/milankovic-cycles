@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { climateAt } from "@/lib/orbital/climate";
 import { ORBITAL_CONTROLS } from "@/lib/orbital/controls";
+import { displayedTime } from "@/lib/orbital/state";
 import type { OrbitalParameters, OrbitalVisualFocus } from "@/lib/orbital/types";
 import { CHAPTER_FOCUS, useExperience } from "./ExperienceProvider";
 import { Stage, type StageDrag } from "./Stage";
@@ -84,7 +85,7 @@ export function TourStage() {
       parameters={parameters}
       scale={ex.scale}
       ice={ice}
-      timeKyr={clock ? ex.timeKyr : null}
+      timeKyr={clock ? displayedTime(ex) : null}
       clockPlaying={ex.playing?.kind === "time"}
       iceFollowsClock={clock}
       globe={globe}
