@@ -6,6 +6,7 @@ import {
 import { ORBITAL_CONTROLS, PARAMETER_KEYS } from "../src/lib/orbital/controls";
 import { ORBITAL_MILESTONES } from "../src/lib/orbital/milestones";
 import { labPath } from "../src/lib/orbital/query";
+import type { SceneFrame } from "../src/components/experience/space/SceneState";
 
 async function clearOfPinnedUI(page: Page, selector: string, tour: boolean) {
   await expect
@@ -440,6 +441,56 @@ test("the climate globe shows ice and temperature beside the orbit", async ({
   await expect(globe).toBeVisible();
   await expect(globe).toContainText("−5.7 °C");
   await expect(globe).toContainText("ice at 94% of its peak");
+});
+
+test("the homepage clock takes the short route from the first scrub", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name === "mobile", "Pointer drag on desktop");
+  await page.addInitScript(() => {
+    const motion = { peri: [] as number[], target: null as number | null, time: 0, ready: false };
+    (window as unknown as { __homeScrub: typeof motion }).__homeScrub = motion;
+    window.__ORBITAL_SCENE_TEST__ = {
+      quality: "medium",
+      mainProbe: (value) => {
+        const frame = value as SceneFrame;
+        motion.peri.push(frame.peri);
+        motion.target = frame.targets.timeKyr;
+        motion.time = frame.time;
+        motion.ready = frame.weight.timeline > 0.999 && frame.timeBlend > 0.999;
+      },
+    };
+  });
+  await page.goto("/#together");
+  await expect(page.locator(".scene-viewport")).toHaveAttribute("data-ready", "true", { timeout: 20000 });
+  const readMotion = () => page.evaluate(() =>
+    (window as unknown as {
+      __homeScrub: { peri: number[]; target: number | null; time: number; ready: boolean };
+    }).__homeScrub,
+  );
+  await expect.poll(async () => (await readMotion()).ready).toBe(true);
+  expect((await readMotion()).target).toBe(0);
+  await page.evaluate(() => {
+    (window as unknown as { __homeScrub: { peri: number[] } }).__homeScrub.peri.length = 0;
+  });
+  const plot = page.locator(".timeline__plot");
+  const box = (await plot.boundingBox())!;
+  await page.mouse.click(box.x + box.width * 0.15, box.y + 40);
+  await expect.poll(async () => Math.abs((await readMotion()).time + 665)).toBeLessThan(1);
+  const { peri } = await readMotion();
+  let turn = 0;
+  for (let i = 1; i < peri.length; i++) {
+    const step = Math.abs(Math.atan2(Math.sin(peri[i] - peri[i - 1]), Math.cos(peri[i] - peri[i - 1])));
+    // A frame covers at most 50 ms at the scrub limit of 120 degrees/s.
+    expect(step).toBeLessThanOrEqual((6.01 * Math.PI) / 180);
+    turn += step;
+  }
+  expect(peri.length).toBeGreaterThan(10);
+  expect(turn).toBeLessThanOrEqual(Math.PI);
+
+  await page.getByRole("button", { name: "Play the clock", exact: true }).click();
+  await page.mouse.move(box.x + box.width * 0.85, box.y + 40);
+  await page.mouse.down();
+  await expect(page.getByRole("button", { name: "Play the clock", exact: true })).toBeVisible();
+  await page.mouse.up();
 });
 
 test("dragging the clock stays smooth, settles quickly and spins within a limit", async ({

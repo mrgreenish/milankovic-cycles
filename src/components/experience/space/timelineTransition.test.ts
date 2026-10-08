@@ -69,6 +69,26 @@ describe("large timeline scrubs in the main diagram", () => {
     expect(state.pose.peri - start).toBeCloseTo(-0.04, 5);
   });
 
+  it("eases the first scrub after the homepage's manual cycle controls", () => {
+    const state = createTimelineTransition();
+    const source = sourceAt(0);
+    source.targets.timeKyr = null;
+    source.peri = 0.4;
+    expect(stepTimelineTransition(state, source, 1 / 60)).toBeNull();
+    const previous = { ...state.pose };
+
+    // The source clock initializes directly to the first chosen date, so there
+    // is no time lag to detect. The main diagram must retain its previous pose.
+    const destination = sourceAt(-665.4);
+    const pose = stepTimelineTransition(state, destination, 1 / 60)!;
+    expect(pose).not.toBeNull();
+    expect(Math.abs(wrap(pose.peri - previous.peri)) * 60)
+      .toBeLessThanOrEqual(SCRUB_TURN_RAD_PER_S * 1.001);
+    for (let i = 0; i < 480; i++) stepTimelineTransition(state, destination, 1 / 60);
+    expect(state.active).toBe(false);
+    expect(wrap(state.pose.peri - destination.peri)).toBeCloseTo(0, 5);
+  });
+
   it("stays continuous when a wide drag reverses repeatedly", () => {
     const state = createTimelineTransition();
     const source = sourceAt(-665.4);
