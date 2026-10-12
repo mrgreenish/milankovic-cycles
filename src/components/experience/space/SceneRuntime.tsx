@@ -85,6 +85,7 @@ export function SceneRuntime({
   quality,
   motionPaused = false,
   onQualityChange,
+  activity,
   live,
 }: {
   children: ReactNode;
@@ -94,11 +95,12 @@ export function SceneRuntime({
   quality: GraphicsQuality;
   motionPaused?: boolean;
   onQualityChange: (quality: GraphicsQuality) => void;
+  /** Shared with the page so input can wake a stable Canvas immediately. */
+  activity: Activity;
   live?: SceneLive;
 }) {
   const get = useThree((state) => state.get);
   const ambientTime = useMemo(() => ({ current: 0 }), []);
-  const activity = useMemo<Activity>(() => ({ current: 0 }), []);
   const callbacks = useRef({ ready, onReady, onFailure, motionPaused });
   useEffect(() => {
     callbacks.current = { ready, onReady, onFailure, motionPaused };
