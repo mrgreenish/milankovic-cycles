@@ -141,7 +141,8 @@ export function Sun({ noise }: { noise: Texture }) {
           </>
         ) : null}
       </group>
-      <mesh name="solar-corona" frustumCulled={false}>
+      {/* The plane's bounding sphere encloses the billboard at every angle. */}
+      <mesh name="solar-corona">
         <planeGeometry args={[3, 3]} />
         <shaderMaterial
           ref={glowMaterial}
