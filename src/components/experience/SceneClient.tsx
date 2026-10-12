@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import type { Group } from "three";
 import { displayEccentricity } from "@/lib/orbital/geometry";
@@ -25,7 +25,6 @@ import {
 import {
   SceneRuntime,
   useGraphicsQuality,
-  useSceneActivity,
   wakeScene,
 } from "./space/SceneRuntime";
 import { StarField } from "./space/StarField";
@@ -77,6 +76,55 @@ function writeTarget(
 }
 
 function SceneContents({
+  targets,
+  pageTime,
+  inset,
+  live,
+  onAssetsReady,
+  onFailure,
+}: {
+  targets: RefObject<SceneTargets>;
+  pageTime: RefObject<number | null>;
+  inset: InsetRect | null;
+  live?: SceneLive;
+  onAssetsReady: (ready: boolean) => void;
+  onFailure?: () => void;
+}) {
+  const quality = useGraphicsQuality();
+  const textures = useSpaceTextures(quality, onFailure);
+  useEffect(() => {
+    if (textures) onAssetsReady(true);
+  }, [textures, onAssetsReady]);
+
+  useFrame(() => {
+    // A dragged clock reaches the scene at once; otherwise it follows the page.
+    writeTarget(
+      targets,
+      live?.current.hero ?? 0,
+      live?.current.scrub ?? pageTime.current,
+    );
+  }, -4);
+
+  return (
+    <SceneStateProvider targets={targets}>
+      <StarField />
+      <EarthGeometryProvider>
+        <MainSceneState>
+          <CameraRig live={live} />
+          {textures ? (
+            <World>
+              <OrbitScene textures={textures} />
+            </World>
+          ) : null}
+        </MainSceneState>
+        {textures && inset ? <InsetEarth textures={textures} /> : null}
+      </EarthGeometryProvider>
+      <ClimateInset rect={inset} />
+    </SceneStateProvider>
+  );
+}
+
+export default function SceneClient({
   parameters,
   scale,
   focus,
@@ -89,35 +137,17 @@ function SceneContents({
   stageShiftY = 0,
   rate = 7,
   live,
-  onAssetsReady,
+  motionPaused = false,
+  onReady,
   onFailure,
-}: Pick<
-  SceneClientProps,
-  | "parameters"
-  | "scale"
-  | "focus"
-  | "ice"
-  | "timeKyr"
-  | "clockPlaying"
-  | "iceFollowsClock"
-  | "inset"
-  | "stageShift"
-  | "stageShiftY"
-  | "rate"
-  | "live"
-> & { onAssetsReady: (ready: boolean) => void; onFailure?: () => void }) {
-  const quality = useGraphicsQuality();
-  const activity = useSceneActivity();
-  const textures = useSpaceTextures(quality, onFailure);
-  useEffect(() => {
-    if (textures) onAssetsReady(true);
-  }, [textures, onAssetsReady]);
-
+}: SceneClientProps) {
+  const [assetsReady, setAssetsReady] = useState(false);
+  const [quality, setQuality] = useState<GraphicsQuality>("medium");
+  const activity = useMemo(() => ({ current: 0 }), []);
   const targets = useRef<SceneTargets>({ ...defaultTargets });
   const pageTime = useRef<number | null>(timeKyr);
   useEffect(() => {
     pageTime.current = timeKyr;
-    // The scene reads these on its next frame; no React render per frame.
     Object.assign(targets.current, {
       focus,
       eccentricity: displayEccentricity(parameters.eccentricity, scale),
@@ -137,49 +167,14 @@ function SceneContents({
       stageShiftY,
       rate,
     } satisfies Partial<SceneTargets>);
-    // Anything the page changes (a view, a slider, a playing clock) moves the
-    // scene, so it renders at its full rate for a moment.
+    // Wake immediately, including while paused, without reconfiguring Canvas.
     wakeScene(activity, 1800);
   });
 
-  useFrame(() => {
-    // A dragged clock reaches the scene at once; otherwise it follows the page.
-    writeTarget(
-      targets,
-      live?.current.hero ?? 0,
-      live?.current.scrub ?? pageTime.current,
-    );
-  }, -4);
-
-  return (
-    <SceneStateProvider targets={targets}>
-      <StarField />
-      <EarthGeometryProvider>
-        <MainSceneState>
-          <CameraRig live={live} />
-          {textures ? (
-            <World>
-              <OrbitScene parameters={parameters} textures={textures} />
-            </World>
-          ) : null}
-        </MainSceneState>
-        {textures && inset ? <InsetEarth textures={textures} /> : null}
-      </EarthGeometryProvider>
-      <ClimateInset rect={inset} />
-    </SceneStateProvider>
-  );
-}
-
-export default function SceneClient({
-  motionPaused = false,
-  onReady,
-  onFailure,
-  ...scene
-}: SceneClientProps) {
-  const [assetsReady, setAssetsReady] = useState(false);
-  const [quality, setQuality] = useState<GraphicsQuality>("medium");
-
-  return (
+  // Changing an orbit only writes the shared targets. Reconfiguring Canvas on
+  // every clock tick also notifies all of Drei's Html roots through the R3F
+  // size store. Keep that work for actual layout, quality and lifecycle changes.
+  return useMemo(() => (
     <Canvas
       aria-hidden="true"
       frameloop="never"
@@ -198,14 +193,18 @@ export default function SceneClient({
         onFailure={onFailure}
         quality={quality}
         onQualityChange={setQuality}
-        live={scene.live}
+        activity={activity}
+        live={live}
       >
         <SceneContents
-          {...scene}
+          targets={targets}
+          pageTime={pageTime}
+          inset={inset}
+          live={live}
           onAssetsReady={setAssetsReady}
           onFailure={onFailure}
         />
       </SceneRuntime>
     </Canvas>
-  );
+  ), [quality, assetsReady, motionPaused, onReady, onFailure, activity, inset, live]);
 }

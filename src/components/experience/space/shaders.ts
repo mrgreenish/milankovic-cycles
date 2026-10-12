@@ -103,7 +103,11 @@ export const earthFragment = /* glsl */ `
     }
     // Preserve actual coastlines while giving deep ocean its blue optical depth.
     albedo = mix(albedo, mix(vec3(0.006, 0.022, 0.052), albedo, 0.45), ocean * 0.65);
-    albedo = mix(albedo, vec3(0.86, 0.93, 1.0) * (0.94 + 0.06 * texture2D(uNoise, vUv * vec2(40.0, 20.0)).b), iceMask * 0.95);
+    // With no added ice the mix is zero. Keep this branch uniform across the
+    // globe so texture derivatives (and the ice edge) stay unchanged.
+    if (uIce > 0.002) {
+      albedo = mix(albedo, vec3(0.86, 0.93, 1.0) * (0.94 + 0.06 * texture2D(uNoise, vUv * vec2(40.0, 20.0)).b), iceMask * 0.95);
+    }
     float shadow = 0.0;
     if (uDetail > 0.5) {
       vec2 offset = vec2(dot(sun, tangent), dot(sun, bitangent)) * (0.002 / max(0.25, sunHeight));

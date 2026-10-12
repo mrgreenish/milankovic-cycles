@@ -287,9 +287,10 @@ export function Stage({
       window.removeEventListener("resize", invalidateBounds);
     };
   }, []);
+  const hasGlobe = globe !== null;
   const inset = useMemo(
-    () => (globe ? insetFor(variant, box.width, box.height) : null),
-    [globe, variant, box.width, box.height],
+    () => (hasGlobe ? insetFor(variant, box.width, box.height) : null),
+    [hasGlobe, variant, box.width, box.height],
   );
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);

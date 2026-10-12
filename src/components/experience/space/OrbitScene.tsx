@@ -11,10 +11,7 @@ import {
   perihelionDistanceAu,
 } from "@/lib/orbital/geometry";
 import { PRESENT_PARAMETERS } from "@/lib/orbital/insolation";
-import type {
-  OrbitalParameters,
-  OrbitalVisualFocus,
-} from "@/lib/orbital/types";
+import type { OrbitalVisualFocus } from "@/lib/orbital/types";
 import { Earth } from "./Earth";
 import { createLabelProjection } from "./labelProjection";
 import { bodyOrientation } from "./orientation";
@@ -327,24 +324,24 @@ const SEASONS = [
   { label: "Winter", longitude: 270 },
 ] as const;
 
-export function OrbitScene({
-  parameters,
-  textures,
-}: {
-  parameters: OrbitalParameters;
-  textures: SpaceTextures;
-}) {
+export function OrbitScene({ textures }: { textures: SpaceTextures }) {
   const a = SEMI_MAJOR_AXIS;
   const todayAnomaly =
     (3 * Math.PI) / 2 - degreesToRadians(PRESENT_PARAMETERS.earthPerihelionLongitudeDeg);
-  const trueE = parameters.eccentricity;
   const live = useRef<HTMLSpanElement>(null);
+  const closest = useRef<HTMLElement>(null);
+  const farthest = useRef<HTMLElement>(null);
+  const tilt = useRef<HTMLSpanElement>(null);
   const frame = useSceneFrame();
   useFrame(() => {
-    if (!live.current) return;
-    const distance = orbitRadius(frame.anomaly, frame.targets.trueEccentricity);
-    const text = `${distance.toFixed(3)} AU`;
-    if (live.current.textContent !== text) live.current.textContent = text;
+    // Readouts use the requested orbit, just like the controls, while geometry
+    // follows the eased frame. Updating text here avoids rebuilding every guide
+    // and Html root for each clock tick or slider input.
+    const trueE = frame.targets.trueEccentricity;
+    writeReadout(live.current, `${orbitRadius(frame.anomaly, trueE).toFixed(3)} AU`);
+    writeReadout(closest.current, `${perihelionDistanceAu(trueE).toFixed(3)} AU`);
+    writeReadout(farthest.current, `${aphelionDistanceAu(trueE).toFixed(3)} AU`);
+    writeReadout(tilt.current, `${frame.targets.obliquityDeg.toFixed(2)}°`);
   });
 
   return (
@@ -423,7 +420,7 @@ export function OrbitScene({
         place={(f, out) => out.set(a * (1 - f.e), 0, 0.75)}
       >
         Closest
-        <small>{perihelionDistanceAu(trueE).toFixed(3)} AU</small>
+        <small ref={closest} />
       </Label>
       <Label
         weight={{ shape: 1 }}
@@ -432,7 +429,7 @@ export function OrbitScene({
         place={(f, out) => out.set(-a * (1 + f.e), 0, 0.75)}
       >
         Farthest
-        <small>{aphelionDistanceAu(trueE).toFixed(3)} AU</small>
+        <small ref={farthest} />
       </Label>
 
       {/* Where northern summer falls */}
@@ -515,7 +512,7 @@ export function OrbitScene({
             .add(f.earthLocal);
         }}
       >
-        <TiltReadout value={parameters.obliquityDeg} />
+        <span ref={tilt} />
       </Label>
       <Label
         weight={{ tilt: 1, idea: 1 }}
@@ -537,6 +534,6 @@ export function OrbitScene({
   );
 }
 
-function TiltReadout({ value }: { value: number }) {
-  return <>{value.toFixed(2)}°</>;
+function writeReadout(element: HTMLElement | null, text: string) {
+  if (element && element.textContent !== text) element.textContent = text;
 }

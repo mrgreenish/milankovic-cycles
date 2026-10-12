@@ -34,8 +34,26 @@ test("all scene focuses render and share the unchanged orbital controls", async 
     await expect(page.locator(".stage")).toHaveAttribute("data-focus", focus);
     await page.locator(`#${id}`).press("End");
     await expect(viewport).toHaveAttribute("data-ready", "true");
+    if (focus === "shape") {
+      await expect(page.locator(".space-label").filter({ hasText: /^Closest/ }).locator("small"))
+        .toHaveText("0.942 AU");
+      await expect(page.locator(".space-label").filter({ hasText: /^Farthest/ }).locator("small"))
+        .toHaveText("1.058 AU");
+    } else if (focus === "tilt") {
+      await expect(page.locator(".space-label").filter({ hasText: /^24\.60°$/ }))
+        .toHaveCount(1);
+    }
     await page.locator(`#${id}`).press("Home");
     await expect(viewport).toHaveAttribute("data-ready", "true");
+    if (focus === "shape") {
+      await expect(page.locator(".space-label").filter({ hasText: /^Closest/ }).locator("small"))
+        .toHaveText("1.000 AU");
+      await expect(page.locator(".space-label").filter({ hasText: /^Farthest/ }).locator("small"))
+        .toHaveText("1.000 AU");
+    } else if (focus === "tilt") {
+      await expect(page.locator(".space-label").filter({ hasText: /^22\.00°$/ }))
+        .toHaveCount(1);
+    }
   }
   await page.getByRole("button", { name: "True shape", exact: true }).click();
   await expect(page).toHaveURL(/scale=actual/);
