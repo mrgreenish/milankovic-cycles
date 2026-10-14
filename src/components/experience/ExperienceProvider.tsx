@@ -27,12 +27,12 @@ import { useStickyLayout } from "./useStickyLayout";
 import { usePlayer, type Playing } from "./usePlayer";
 
 export const TOUR_CHAPTERS = [
-  { id: "big-idea", label: "Ice and sun" },
-  { id: "orbit-shape", label: "Stretch" },
-  { id: "axis-tilt", label: "Lean" },
-  { id: "axis-direction", label: "Wobble" },
-  { id: "together", label: "Run the clock" },
-  { id: "recap", label: "Short version" },
+  { id: "big-idea" },
+  { id: "orbit-shape" },
+  { id: "axis-tilt" },
+  { id: "axis-direction" },
+  { id: "together" },
+  { id: "recap" },
 ] as const;
 export type TourChapterId = (typeof TOUR_CHAPTERS)[number]["id"];
 

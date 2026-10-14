@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useUi } from "@/i18n/LocaleProvider";
 import { climateAt } from "@/lib/orbital/climate";
 import { ORBITAL_CONTROLS } from "@/lib/orbital/controls";
 import { displayedTime } from "@/lib/orbital/state";
@@ -55,6 +56,7 @@ function usePreviewParameters(
 
 export function TourStage() {
   const ex = useExperience();
+  const ui = useUi();
   const focus: OrbitalVisualFocus =
     ex.preview ?? (ex.inHero ? "hero" : CHAPTER_FOCUS[ex.activeChapter]);
   const parameters = usePreviewParameters(ex.parameters, ex.preview);
@@ -62,8 +64,10 @@ export function TourStage() {
 
   const drag = useMemo<StageDrag>(
     () =>
-      ex.preview ? null : stageDragFor(focus, { nudgeParameter, nudgeTime }),
-    [focus, ex.preview, nudgeParameter, nudgeTime],
+      ex.preview
+        ? null
+        : stageDragFor(focus, ui, { nudgeParameter, nudgeTime }),
+    [focus, ui, ex.preview, nudgeParameter, nudgeTime],
   );
 
   const rate = ex.playing?.kind === "time" ? 24 : ex.playing ? 14 : 7;

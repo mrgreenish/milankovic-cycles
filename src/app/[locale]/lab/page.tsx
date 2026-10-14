@@ -3,21 +3,23 @@ import { Suspense } from "react";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import { LabExperience } from "@/components/lab/LabExperience";
+import { getContent } from "@/i18n/content";
+import {
+  pageMetadata,
+  resolveLocale,
+  type LocaleParams,
+} from "@/i18n/page";
+import { getUi } from "@/i18n/ui";
 
-export const metadata: Metadata = {
-  title: "Orbital lab",
-  description:
-    "Change Earth’s orbit, tilt and wobble, or travel back 800,000 years, and compare midsummer sunlight at 65°N.",
-  alternates: { canonical: "/lab" },
-  openGraph: {
-    title: "Orbital lab · Milanković Cycles",
-    description:
-      "Change Earth’s orbit, tilt and wobble, or travel back 800,000 years, and compare midsummer sunlight at 65°N.",
-    url: "/lab",
-  },
-};
+export async function generateMetadata(props: LocaleParams): Promise<Metadata> {
+  const locale = await resolveLocale(props);
+  const { meta } = getContent(locale).lab;
+  return pageMetadata({ locale, path: "/lab", ...meta });
+}
 
-export default function LabPage() {
+export default async function LabPage(props: LocaleParams) {
+  const locale = await resolveLocale(props);
+  const ui = getUi(locale);
   return (
     <>
       <SiteHeader />
@@ -25,7 +27,7 @@ export default function LabPage() {
         <Suspense
           fallback={
             <div className="lab-loading" role="status">
-              Loading the lab…
+              {ui.lab.loading}
             </div>
           }
         >

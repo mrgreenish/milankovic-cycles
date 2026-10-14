@@ -1,3 +1,5 @@
+import { fill, group } from "@/i18n/format";
+import { en, type Ui } from "@/i18n/ui/en";
 import { degreesToRadians, normalizeDegrees } from "./geometry";
 import { calculateSummerInsolation } from "./insolation";
 import { ICE_RECORD_D18O, ICE_RECORD_END_KA } from "./iceRecord.generated";
@@ -102,14 +104,11 @@ export function timelineSeries(): TimelineSeries {
   return series;
 }
 
-const yearFormat = new Intl.NumberFormat("en-US");
-
-export function formatYears(kyr: number) {
+export function formatYears(kyr: number, ui: Pick<Ui, "timeline"> = en) {
   const years = Math.round(kyr) * 1000;
-  if (years === 0) return "Today";
-  return years < 0
-    ? `${yearFormat.format(-years)} years ago`
-    : `${yearFormat.format(years)} years from now`;
+  if (years === 0) return ui.timeline.today;
+  const n = group(Math.abs(years), ui.timeline.groupSeparator);
+  return fill(years < 0 ? ui.timeline.ago : ui.timeline.ahead, { n });
 }
 
 export const TIMELINE_MOMENTS = [

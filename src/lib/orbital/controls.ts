@@ -1,3 +1,5 @@
+import { fill, num } from "@/i18n/format";
+import { en, type Ui } from "@/i18n/ui/en";
 import {
   KM_PER_AU,
   aphelionDistanceAu,
@@ -83,58 +85,90 @@ export function clampParameter(key: ParameterKey, value: number) {
   return Math.min(max, Math.max(min, value));
 }
 
-export function formatParameter(key: ParameterKey, value: number) {
+export function formatParameter(
+  key: ParameterKey,
+  value: number,
+  ui: Pick<Ui, "decimal"> = en,
+) {
   return key === "eccentricity"
-    ? value.toFixed(4)
-    : `${value.toFixed(key === "obliquityDeg" ? 2 : 1)}°`;
+    ? num(ui, value, 4)
+    : `${num(ui, value, key === "obliquityDeg" ? 2 : 1)}°`;
 }
 export function parameterValueText(
   key: ParameterKey,
   parameters: OrbitalParameters,
+  ui: Pick<Ui, "decimal" | "seasons"> = en,
 ) {
-  const value = formatParameter(key, parameters[key]);
+  const value = formatParameter(key, parameters[key], ui);
   return key === "earthPerihelionLongitudeDeg"
-    ? `${value}, ${seasonOfClosestApproach(parameters)}`
+    ? `${value}, ${seasonOfClosestApproach(parameters, ui)}`
     : value;
 }
 
-const millionKm = (au: number) => (au * KM_PER_AU).toFixed(1);
+const millionKm = (au: number, ui: Pick<Ui, "decimal">) =>
+  num(ui, au * KM_PER_AU, 1);
 
 /** One plain sentence describing what the current value of a control does. */
 export function describeParameter(
   key: ParameterKey,
   parameters: OrbitalParameters,
+  ui: Pick<Ui, "decimal" | "describe"> = en,
 ) {
   const reading = calculateSummerInsolation(parameters);
   const { eccentricity } = parameters;
+  const text = ui.describe;
   if (key === "eccentricity") {
-    if (eccentricity < 0.0005)
-      return "A circle. Earth stays 149.6 million km from the Sun all year, so every season gets the same boost.";
+    if (eccentricity < 0.0005) return text.circle;
     const contrast = (perihelionToAphelionFluxRatio(eccentricity) - 1) * 100;
-    return `Earth swings between ${millionKm(perihelionDistanceAu(eccentricity))} and ${millionKm(aphelionDistanceAu(eccentricity))} million km from the Sun. Sunlight is ${contrast.toFixed(0)}% stronger at the near end.`;
+    return fill(text.shape, {
+      near: millionKm(perihelionDistanceAu(eccentricity), ui),
+      far: millionKm(aphelionDistanceAu(eccentricity), ui),
+      percent: contrast.toFixed(0),
+    });
   }
   if (key === "obliquityDeg") {
-    return `At midsummer the Sun stays up for ${reading.daylightHours.toFixed(1)} hours at 65°N and climbs ${noonSunElevationDeg(SUMMER_LATITUDE_DEG, parameters.obliquityDeg).toFixed(1)}° above the horizon.`;
+    return fill(text.tilt, {
+      hours: num(ui, reading.daylightHours, 1),
+      elevation: num(
+        ui,
+        noonSunElevationDeg(SUMMER_LATITUDE_DEG, parameters.obliquityDeg),
+        1,
+      ),
+    });
   }
-  if (eccentricity < 0.0005)
-    return "The orbit is a circle, so it makes no difference where summer falls.";
+  if (eccentricity < 0.0005) return text.directionCircle;
   const share =
     (reading.earthSunDistanceAu - perihelionDistanceAu(eccentricity)) /
     (aphelionDistanceAu(eccentricity) - perihelionDistanceAu(eccentricity));
   const place =
     share < 0.25
-      ? "near the closest point of the orbit"
+      ? text.placeNear
       : share > 0.75
-        ? "near the farthest point of the orbit"
-        : "between the closest and farthest points";
-  return `Northern summer falls ${place}, ${millionKm(reading.earthSunDistanceAu)} million km from the Sun.`;
+        ? text.placeFar
+        : text.placeBetween;
+  return fill(text.direction, {
+    place,
+    distance: millionKm(reading.earthSunDistanceAu, ui),
+  });
 }
 
-export function formatSunlightDelta(delta: number) {
-  if (Math.abs(delta) < 0.5) return "Same as today";
-  return `${Math.abs(delta).toFixed(0)} W/m² ${delta > 0 ? "more" : "less"} than today`;
+export function formatSunlightDelta(delta: number, ui: Pick<Ui, "sunlight"> = en) {
+  if (Math.abs(delta) < 0.5) return ui.sunlight.same;
+  return fill(delta > 0 ? ui.sunlight.more : ui.sunlight.less, {
+    n: Math.abs(delta).toFixed(0),
+  });
 }
-export function sunlightAnnouncement(parameters: OrbitalParameters) {
+export function sunlightAnnouncement(
+  parameters: OrbitalParameters,
+  ui: Pick<Ui, "sunlight" | "melt"> = en,
+) {
   const reading = calculateSummerInsolation(parameters);
-  return `${Math.round(reading.dailyMeanTopOfAtmosphereWm2)} watts per square metre. ${formatSunlightDelta(reading.deltaFromPresentWm2)}. ${getMeltPressureCopy(getOrbitalMeltPressure(reading.deltaFromPresentWm2))}`;
+  return fill(ui.sunlight.announce, {
+    value: Math.round(reading.dailyMeanTopOfAtmosphereWm2),
+    delta: formatSunlightDelta(reading.deltaFromPresentWm2, ui),
+    melt: getMeltPressureCopy(
+      getOrbitalMeltPressure(reading.deltaFromPresentWm2),
+      ui,
+    ),
+  });
 }

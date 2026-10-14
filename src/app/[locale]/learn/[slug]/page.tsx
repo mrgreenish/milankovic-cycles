@@ -3,59 +3,68 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import { SiteHeader } from "@/components/site/SiteHeader";
-import { LEARN_TOPICS, TOPIC_BY_SLUG } from "@/lib/learn/topics";
+import { LOCALES, localePath } from "@/i18n/config";
+import { getContent, getTopic, getTopics } from "@/i18n/content";
+import { pageMetadata, resolveLocale } from "@/i18n/page";
+import { Slots } from "@/i18n/rich";
+import { TOPIC_SLUGS } from "@/lib/learn/topics";
 import { SITE_URL } from "@/lib/site";
 
 type TopicPageProps = {
-  params: Promise<{ slug: string }>;
+  params: Promise<{ locale: string; slug: string }>;
 };
 
 export function generateStaticParams() {
-  return LEARN_TOPICS.map((topic) => ({ slug: topic.slug }));
+  return LOCALES.flatMap((locale) =>
+    TOPIC_SLUGS.map((slug) => ({ locale, slug })),
+  );
 }
 
-export async function generateMetadata({
-  params,
-}: TopicPageProps): Promise<Metadata> {
-  const { slug } = await params;
-  const topic = TOPIC_BY_SLUG[slug];
+export async function generateMetadata(
+  props: TopicPageProps,
+): Promise<Metadata> {
+  const locale = await resolveLocale(props);
+  const { slug } = await props.params;
+  const topic = getTopic(locale, slug);
 
   if (!topic) return {};
 
-  return {
+  return pageMetadata({
+    locale,
+    path: `/learn/${topic.slug}`,
     title: topic.title,
     description: topic.description,
-    alternates: { canonical: `/learn/${topic.slug}` },
-    openGraph: {
-      title: `${topic.title} · Milanković Cycles`,
-      description: topic.description,
-      type: "article",
-      url: `/learn/${topic.slug}`,
-    },
-  };
+    type: "article",
+  });
 }
 
-export default async function TopicPage({ params }: TopicPageProps) {
-  const { slug } = await params;
-  const topic = TOPIC_BY_SLUG[slug];
+export default async function TopicPage(props: TopicPageProps) {
+  const locale = await resolveLocale(props);
+  const { slug } = await props.params;
+  const topic = getTopic(locale, slug);
 
   if (!topic) notFound();
 
-  const relatedTopics = LEARN_TOPICS.filter((item) => item.slug !== topic.slug);
+  const { topicPage: text, learn, site } = getContent(locale);
+  const path = (href: string) => localePath(locale, href);
+  const relatedTopics = getTopics(locale).filter(
+    (item) => item.slug !== topic.slug,
+  );
   const articleSchema = {
     "@context": "https://schema.org",
     "@type": "Article",
     headline: topic.title,
     description: topic.description,
-    mainEntityOfPage: `${SITE_URL}/learn/${topic.slug}`,
+    inLanguage: locale === "sr" ? "sr-Latn" : locale,
+    mainEntityOfPage: `${SITE_URL}${path(`/learn/${topic.slug}`)}`,
     author: {
       "@type": "Person",
       name: "Filip van Harreveld",
-      url: `${SITE_URL}/about`,
+      url: `${SITE_URL}${path("/about")}`,
     },
     publisher: {
       "@type": "Organization",
-      name: "Milanković Cycles",
+      name: site.name,
       url: SITE_URL,
     },
   };
@@ -64,10 +73,10 @@ export default async function TopicPage({ params }: TopicPageProps) {
     <>
       <SiteHeader />
       <main id="main-content" className="editorial-page topic-page">
-        <nav className="breadcrumbs" aria-label="Breadcrumb">
-          <Link href="/">Home</Link>
+        <nav className="breadcrumbs" aria-label={text.breadcrumb}>
+          <Link href={path("/")}>{text.home}</Link>
           <span aria-hidden="true">/</span>
-          <Link href="/learn">Learn</Link>
+          <Link href={path("/learn")}>{text.learn}</Link>
           <span aria-hidden="true">/</span>
           <span aria-current="page">{topic.shortTitle}</span>
         </nav>
@@ -80,7 +89,7 @@ export default async function TopicPage({ params }: TopicPageProps) {
             <p className="topic-period">{topic.period}</p>
           </header>
 
-          <section className="topic-facts" aria-label="Key facts">
+          <section className="topic-facts" aria-label={text.factsLabel}>
             {topic.facts.map((fact) => (
               <div key={fact.title}>
                 <span>{fact.label}</span>
@@ -103,21 +112,18 @@ export default async function TopicPage({ params }: TopicPageProps) {
 
           <section className="topic-action">
             <div>
-              <p className="eyebrow">Try it yourself</p>
-              <h2>Change the orbit</h2>
-              <p>
-                Move all three motions and watch midsummer sunlight at 65°N
-                change.
-              </p>
+              <p className="eyebrow">{text.actionEyebrow}</p>
+              <h2>{text.actionTitle}</h2>
+              <p>{text.actionBody}</p>
             </div>
-            <Link className="button button--primary" href="/lab">
-              Open the lab
+            <Link className="button button--primary" href={path("/lab")}>
+              {text.actionButton}
             </Link>
           </section>
 
           <section className="topic-faq" aria-labelledby="topic-faq-title">
-            <p className="eyebrow">Questions</p>
-            <h2 id="topic-faq-title">Quick answers</h2>
+            <p className="eyebrow">{text.faqEyebrow}</p>
+            <h2 id="topic-faq-title">{text.faqTitle}</h2>
             {topic.questions.map((item) => (
               <details key={item.question}>
                 <summary>
@@ -129,21 +135,25 @@ export default async function TopicPage({ params }: TopicPageProps) {
             ))}
           </section>
 
-          <aside className="article-author" aria-label="About the author">
+          <aside className="article-author" aria-label={text.authorLabel}>
             <p>
-              By <Link href="/about">Filip van Harreveld</Link>, great-grandson
-              of Milutin Milanković.
+              <Slots
+                text={learn.authorLine}
+                slots={{
+                  link: <Link href={path("/about")}>{learn.authorName}</Link>,
+                }}
+              />
             </p>
-            <Link href="/sources">Sources and method →</Link>
+            <Link href={path("/sources")}>{text.sourcesLink}</Link>
           </aside>
         </article>
 
         <section className="related-topics" aria-labelledby="related-title">
-          <p className="eyebrow">Read next</p>
-          <h2 id="related-title">More guides</h2>
+          <p className="eyebrow">{text.relatedEyebrow}</p>
+          <h2 id="related-title">{text.relatedTitle}</h2>
           <div>
             {relatedTopics.map((item) => (
-              <Link href={`/learn/${item.slug}`} key={item.slug}>
+              <Link href={path(`/learn/${item.slug}`)} key={item.slug}>
                 {item.shortTitle}
                 <span aria-hidden="true">→</span>
               </Link>

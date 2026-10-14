@@ -10,6 +10,7 @@ import type {
   OrbitalParameters,
   OrbitalVisualFocus,
 } from "@/lib/orbital/types";
+import type { Ui } from "@/i18n/ui";
 import type { SceneLive } from "./sceneLive";
 import { CameraRig } from "./space/CameraRig";
 import { ClimateInset, type InsetRect } from "./space/ClimateInset";
@@ -44,6 +45,8 @@ export type SceneClientProps = {
   iceFollowsClock?: boolean;
   /** A second, small view of Earth from above the pole; null for none. */
   inset?: InsetRect | null;
+  /** The words and numbers drawn beside the orbit. */
+  labels: Ui["scene"];
   /** Where the picture centres, as a share of the canvas width. */
   stageShift?: number;
   stageShiftY?: number;
@@ -79,6 +82,7 @@ function SceneContents({
   targets,
   pageTime,
   inset,
+  labels,
   live,
   onAssetsReady,
   onFailure,
@@ -86,6 +90,7 @@ function SceneContents({
   targets: RefObject<SceneTargets>;
   pageTime: RefObject<number | null>;
   inset: InsetRect | null;
+  labels: Ui["scene"];
   live?: SceneLive;
   onAssetsReady: (ready: boolean) => void;
   onFailure?: () => void;
@@ -113,7 +118,7 @@ function SceneContents({
           <CameraRig live={live} />
           {textures ? (
             <World>
-              <OrbitScene textures={textures} />
+              <OrbitScene textures={textures} labels={labels} />
             </World>
           ) : null}
         </MainSceneState>
@@ -133,6 +138,7 @@ export default function SceneClient({
   clockPlaying = false,
   iceFollowsClock = false,
   inset = null,
+  labels,
   stageShift = 0,
   stageShiftY = 0,
   rate = 7,
@@ -200,11 +206,12 @@ export default function SceneClient({
           targets={targets}
           pageTime={pageTime}
           inset={inset}
+          labels={labels}
           live={live}
           onAssetsReady={setAssetsReady}
           onFailure={onFailure}
         />
       </SceneRuntime>
     </Canvas>
-  ), [quality, assetsReady, motionPaused, onReady, onFailure, activity, inset, live]);
+  ), [quality, assetsReady, motionPaused, onReady, onFailure, activity, inset, labels, live]);
 }

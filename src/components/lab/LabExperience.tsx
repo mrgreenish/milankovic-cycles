@@ -51,6 +51,8 @@ import {
   type OrbitalState,
 } from "@/lib/orbital/state";
 import { iceIndexAt } from "@/lib/orbital/timeline";
+import { fill, num } from "@/i18n/format";
+import { useLocalePath, useUi } from "@/i18n/LocaleProvider";
 import { SITE_URL } from "@/lib/site";
 import type { OrbitScale, OrbitalVisualFocus } from "@/lib/orbital/types";
 import { Stage } from "@/components/experience/Stage";
@@ -143,6 +145,8 @@ const controlIds = {
 };
 
 export function LabExperience() {
+  const ui = useUi();
+  const path = useLocalePath();
   const searchParams = useSearchParams();
   const query = searchParams.toString();
   const [state, dispatch] = useReducer(
@@ -150,7 +154,7 @@ export function LabExperience() {
     searchParams,
     (params): LabState => fromQuery(parseLabQuery(params)),
   );
-  const lastUrl = useRef(`/lab${query ? `?${query}` : ""}`);
+  const lastUrl = useRef(path(`/lab${query ? `?${query}` : ""}`));
   const lastWrite = useRef(0);
   const [announcement, setAnnouncement] = useState("");
   const [shareStatus, setShareStatus] = useState("");
@@ -186,10 +190,8 @@ export function LabExperience() {
       const incoming = parseLabQuery(
         new URLSearchParams(window.location.search),
       );
-      const canonical = labPath(
-        incoming.parameters,
-        incoming.scale,
-        incoming.timeKyr,
+      const canonical = path(
+        labPath(incoming.parameters, incoming.scale, incoming.timeKyr),
       );
       lastUrl.current = canonical;
       dispatch({ type: "hydrate", value: incoming });
@@ -197,7 +199,7 @@ export function LabExperience() {
         window.history.replaceState(window.history.state, "", canonical);
       return;
     }
-    const target = labPath(state.parameters, state.scale, state.timeKyr);
+    const target = path(labPath(state.parameters, state.scale, state.timeKyr));
     if (current === target) return;
     const write = () => {
       lastUrl.current = target;
@@ -211,18 +213,18 @@ export function LabExperience() {
     if (wait <= 0) return write();
     const timer = window.setTimeout(write, wait);
     return () => window.clearTimeout(timer);
-  }, [query, state.parameters, state.scale, state.timeKyr, playing]);
+  }, [query, path, state.parameters, state.scale, state.timeKyr, playing]);
 
   const shareSetup = async () => {
-    const url = `${SITE_URL}${labPath(state.parameters, state.scale, state.timeKyr)}`;
+    const url = `${SITE_URL}${path(labPath(state.parameters, state.scale, state.timeKyr))}`;
     try {
       await navigator.clipboard.writeText(url);
       track("lab_share", { method: "clipboard" });
-      setShareStatus("Link copied. It includes your current settings.");
+      setShareStatus(ui.lab.shareCopied);
       setManualLink("");
     } catch {
       track("lab_share", { method: "manual" });
-      setShareStatus("Select and copy the link below.");
+      setShareStatus(ui.lab.shareManual);
       setManualLink(url);
     }
   };
@@ -249,14 +251,18 @@ export function LabExperience() {
     dispatch({ type: "timeNudge", delta });
   }, []);
   const drag = useMemo(
-    () => stageDragFor(state.visualFocus, { nudgeParameter, nudgeTime }),
-    [state.visualFocus, nudgeParameter, nudgeTime],
+    () => stageDragFor(state.visualFocus, ui, { nudgeParameter, nudgeTime }),
+    [state.visualFocus, ui, nudgeParameter, nudgeTime],
   );
   const climate = useMemo(
     () => climateAt(state.timeKyr, state.parameters),
     [state.timeKyr, state.parameters],
   );
   const clockPlaying = playing?.kind === "time";
+  const averageC = averageTemperatureC(climate.deltaTempC);
+  const averageTemperature = Number.isInteger(averageC)
+    ? String(averageC)
+    : num(ui, averageC, 1);
   // The gauge runs from a little past the last ice age to a little past the warmest estimate.
   const gaugeMin = -(LGM_COOLING_C + 0.4);
   const gaugeSpan = 1.6 - gaugeMin;
@@ -268,12 +274,12 @@ export function LabExperience() {
     <div className="lab-layout">
       <header className="lab-header">
         <div>
-          <p className="eyebrow">Try it yourself</p>
-          <h1>Orbital lab</h1>
+          <p className="eyebrow">{ui.lab.eyebrow}</p>
+          <h1>{ui.lab.title}</h1>
         </div>
-        <p>Change the orbit and watch midsummer sunlight at 65°N respond.</p>
+        <p>{ui.lab.intro}</p>
       </header>
-      <aside className="lab-stage" aria-label="Orbital visualization">
+      <aside className="lab-stage" aria-label={ui.lab.stageLabel}>
         <Stage
           variant="lab"
           focus={state.visualFocus}
@@ -294,15 +300,15 @@ export function LabExperience() {
         <section className="lab-result" aria-labelledby="lab-result-title">
           <div className="lab-reading">
             <h2 id="lab-result-title">
-              Midsummer sunlight <span>at 65°N</span>
+              {ui.lab.sunlightTitle} <span>{ui.lab.at65}</span>
             </h2>
             <p className="lab-result__reading">
               <strong>{Math.round(reading.dailyMeanTopOfAtmosphereWm2)}</strong>
               <span>W/m²</span>
             </p>
             <p className="lab-reading__note">
-              {formatSunlightDelta(reading.deltaFromPresentWm2)}{" "}
-              <small>· J2000</small>
+              {formatSunlightDelta(reading.deltaFromPresentWm2, ui)}{" "}
+              <small>{ui.lab.j2000}</small>
             </p>
           </div>
           <div
@@ -316,26 +322,24 @@ export function LabExperience() {
             }
           >
             <h2>
-              Global temperature <span>estimate</span>
+              {ui.lab.tempTitle} <span>{ui.lab.estimate}</span>
             </h2>
             <p className="lab-result__temperature" data-source={climate.source}>
-              <strong>{formatTemperatureDelta(climate.deltaTempC)}</strong>
+              <strong>{formatTemperatureDelta(climate.deltaTempC, ui)}</strong>
             </p>
             <p className="lab-reading__note">
-              about {averageTemperatureC(climate.deltaTempC)} °C average
+              {fill(ui.lab.average, { n: averageTemperature })}
             </p>
           </div>
         </section>
         {state.invalidFields.length > 0 ? (
           <div className="inline-notice" role="status">
-            <p>
-              Some shared values were invalid and reset to today’s reference.
-            </p>
+            <p>{ui.lab.invalid}</p>
             <button
               type="button"
               onClick={() => dispatch({ type: "dismiss-invalid" })}
             >
-              Dismiss
+              {ui.lab.dismiss}
             </button>
           </div>
         ) : null}
@@ -344,7 +348,7 @@ export function LabExperience() {
           aria-labelledby="controls-heading"
         >
           <div className="lab-section__heading">
-            <h2 id="controls-heading">The three motions</h2>
+            <h2 id="controls-heading">{ui.lab.controlsHeading}</h2>
             <button
               className="text-button"
               type="button"
@@ -352,13 +356,12 @@ export function LabExperience() {
                 setPlaying(null);
                 dispatch({ type: "reset" });
                 setAnnouncement(
-                  "All settings reset to today. " +
-                    sunlightAnnouncement(PRESENT_PARAMETERS),
+                  `${ui.lab.resetAnnounce} ${sunlightAnnouncement(PRESENT_PARAMETERS, ui)}`,
                 );
                 clearShare();
               }}
             >
-              Reset all
+              {ui.lab.resetAll}
             </button>
           </div>
           {PARAMETER_KEYS.map((parameter) => {
@@ -387,9 +390,9 @@ export function LabExperience() {
           })}
         </section>
         <section className="lab-section lab-climate" aria-labelledby="climate-heading">
-          <h2 id="climate-heading">What it does to the climate</h2>
+          <h2 id="climate-heading">{ui.lab.climateHeading}</h2>
           <p className="lab-climate__estimate" aria-live="polite">
-            {describeClimate(climate, state.timeKyr)}
+            {describeClimate(climate, state.timeKyr, ui)}
           </p>
           <div
             className="temp-gauge"
@@ -404,25 +407,25 @@ export function LabExperience() {
             <span className="temp-gauge__marker" />
             <span className="temp-gauge__today" />
             <div className="temp-gauge__labels">
-              <span>Last ice age −{LGM_COOLING_C} °C</span>
-              <span>Before industry, about {PREINDUSTRIAL_GLOBAL_C} °C</span>
+              <span>
+                {fill(ui.lab.gaugeIceAge, { n: num(ui, LGM_COOLING_C, 1) })}
+              </span>
+              <span>
+                {fill(ui.lab.gaugePreindustrial, { n: PREINDUSTRIAL_GLOBAL_C })}
+              </span>
             </div>
           </div>
-          <p className="lab-interpretation">{getMeltPressureCopy(pressure)}</p>
+          <p className="lab-interpretation">
+            {getMeltPressureCopy(pressure, ui)}
+          </p>
           <p className="lab-caveat">
-            A rough, orbit-only estimate, not a forecast. Ice and temperature
-            move together in the sea-floor record, and a world at the last ice
-            age was about {LGM_COOLING_C} °C colder (Tierney et al., 2020). For
-            a hand-set orbit it assumes the orbit lasts about 15,000 years.
-            Real ice also depends on carbon dioxide, oceans and the ice already
-            there, and today’s actual temperature is about 1.2 °C above this
-            baseline because of greenhouse gases.
+            {fill(ui.lab.caveat, { lgm: num(ui, LGM_COOLING_C, 1) })}
           </p>
         </section>
         <section className="lab-section lab-time" aria-labelledby="preset-heading">
           <div className="lab-section__heading">
-            <h2 id="preset-heading">Travel in time</h2>
-            <Link href="/sources">La2004 data ↗</Link>
+            <h2 id="preset-heading">{ui.lab.timeHeading}</h2>
+            <Link href={path("/sources")}>{ui.lab.dataLink}</Link>
           </div>
           <Timeline
             variant="inline"
@@ -446,58 +449,51 @@ export function LabExperience() {
                   track("lab_preset", { preset: milestone.id });
                   goToTime(milestone.kyrFromJ2000);
                   setAnnouncement(
-                    `${milestone.label}. ${sunlightAnnouncement(milestone.parameters)}`,
+                    `${ui.milestones[milestone.id].label}. ${sunlightAnnouncement(milestone.parameters, ui)}`,
                   );
                 }}
               >
-                <span>{milestone.shortLabel}</span>
-                <strong>{milestone.label}</strong>
+                <span>{ui.milestones[milestone.id].shortLabel}</span>
+                <strong>{ui.milestones[milestone.id].label}</strong>
                 <small>
-                  {Math.round(
-                    milestone.expectedReading.dailyMeanTopOfAtmosphereWm2,
-                  )}{" "}
-                  W/m² at 65°N
+                  {fill(ui.lab.presetReading, {
+                    value: Math.round(
+                      milestone.expectedReading.dailyMeanTopOfAtmosphereWm2,
+                    ),
+                  })}
                 </small>
               </button>
             ))}
           </div>
           <p className="preset-description">
-            {selectedPreset?.description ??
-              "Your own combination. Pick a date, or drag the clock, to load all three orbital values for that time."}
+            {selectedPreset
+              ? ui.milestones[selectedPreset.id].description
+              : ui.lab.presetOwn}
           </p>
         </section>
         <details className="science-detail lab-method">
-          <summary>How to read the numbers</summary>
-          <p>
-            The result is the daily average of sunlight at the top of the
-            atmosphere, at 65°N on the northern summer solstice. “Today” is
-            the J2000 astronomical reference, for the year 2000.
-          </p>
+          <summary>{ui.lab.methodSummary}</summary>
+          <p>{ui.lab.methodIntro}</p>
           <dl className="lab-result__details">
             <div>
-              <dt>Daylight</dt>
-              <dd>{reading.daylightHours.toFixed(1)} hours</dd>
+              <dt>{ui.lab.daylight}</dt>
+              <dd>{fill(ui.lab.hours, { n: num(ui, reading.daylightHours, 1) })}</dd>
             </div>
             <div>
-              <dt>Earth–Sun distance</dt>
-              <dd>{reading.earthSunDistanceAu.toFixed(3)} AU</dd>
+              <dt>{ui.lab.distance}</dt>
+              <dd>{num(ui, reading.earthSunDistanceAu, 3)} AU</dd>
             </div>
             <div>
-              <dt>Closest approach</dt>
-              <dd>{seasonOfClosestApproach(state.parameters)}</dd>
+              <dt>{ui.lab.closestApproach}</dt>
+              <dd>{seasonOfClosestApproach(state.parameters, ui)}</dd>
             </div>
           </dl>
-          <p>
-            One astronomical unit (AU) is Earth’s average distance from the
-            Sun. The drawing stretches orbit shape five times by default; the
-            calculation always uses the real value. The dashed grey outlines
-            show today’s value for the part you are changing.
-          </p>
-          <Link href="/sources">Equations, data and limits →</Link>
+          <p>{ui.lab.methodOutro}</p>
+          <Link href={path("/sources")}>{ui.lab.methodLink}</Link>
         </details>
-        <section className="lab-actions" aria-label="Lab actions">
+        <section className="lab-actions" aria-label={ui.lab.actions}>
           <div>
-            <p className="eyebrow">Orbit drawing</p>
+            <p className="eyebrow">{ui.stage.orbitDrawing}</p>
             <div className="segmented-control">
               <button
                 type="button"
@@ -507,7 +503,7 @@ export function LabExperience() {
                   clearShare();
                 }}
               >
-                Stretched ×5
+                {ui.stage.stretched}
               </button>
               <button
                 type="button"
@@ -517,18 +513,18 @@ export function LabExperience() {
                   clearShare();
                 }}
               >
-                True shape
+                {ui.stage.trueShape}
               </button>
             </div>
           </div>
           <div>
-            <p className="eyebrow">Share</p>
+            <p className="eyebrow">{ui.lab.share}</p>
             <button
               className="button button--primary"
               type="button"
               onClick={shareSetup}
             >
-              Copy link to this setup <span aria-hidden="true">↗</span>
+              {ui.lab.copyLink} <span aria-hidden="true">↗</span>
             </button>
           </div>
         </section>
@@ -537,7 +533,7 @@ export function LabExperience() {
         </p>
         {manualLink ? (
           <div className="manual-share">
-            <label htmlFor="share-url">Link to your settings</label>
+            <label htmlFor="share-url">{ui.lab.manualLabel}</label>
             <input
               id="share-url"
               name="setup-url"

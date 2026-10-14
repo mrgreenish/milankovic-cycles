@@ -2,13 +2,19 @@
 
 import type { ReactNode } from "react";
 
-export function SourceTable({ children }: { children: ReactNode }) {
+export function SourceTable({
+  children,
+  label,
+}: {
+  children: ReactNode;
+  label: string;
+}) {
   return (
     <div
       className="source-table-wrap"
       tabIndex={0}
       role="region"
-      aria-label="Orbital reference values, scroll horizontally to see all columns"
+      aria-label={label}
       onKeyDown={(event) => {
         if (event.target !== event.currentTarget) return;
         const direction =

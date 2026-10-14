@@ -1,40 +1,42 @@
 "use client";
 
+import { fill } from "@/i18n/format";
+import { useUi } from "@/i18n/LocaleProvider";
 import { calculateSummerInsolation } from "@/lib/orbital/insolation";
 import { displayedTime } from "@/lib/orbital/state";
 import { useExperience } from "./ExperienceProvider";
 
-const MOMENTS = [
-  { kyr: 0, label: "Today" },
-  { kyr: -21, label: "21,000 years ago" },
-] as const;
+const MOMENTS = [0, -21] as const;
 
 /** Chapter one's only control: flip between today and the last ice age. */
 export function IdeaToggle() {
   const { parameters, timeKyr, setTime, ice } = useExperience();
+  const ui = useUi();
   const at = displayedTime({ parameters, timeKyr });
   const reading = calculateSummerInsolation(parameters);
   const delta = Math.round(reading.deltaFromPresentWm2);
   return (
     <div className="idea-toggle">
-      <div className="segmented-control" role="group" aria-label="Choose a time">
-        {MOMENTS.map((moment) => (
+      <div className="segmented-control" role="group" aria-label={ui.idea.group}>
+        {MOMENTS.map((kyr) => (
           <button
             type="button"
-            key={moment.kyr}
-            aria-pressed={at === moment.kyr}
-            onClick={() => setTime(moment.kyr)}
+            key={kyr}
+            aria-pressed={at === kyr}
+            onClick={() => setTime(kyr)}
           >
-            {moment.label}
+            {kyr === 0 ? ui.idea.today : ui.idea.ago21}
           </button>
         ))}
       </div>
       <p className="idea-toggle__live" aria-live="polite">
         {at === -21
-          ? `Ice sheets covered Canada and northern Europe. Midsummer sunlight at 65°N was ${Math.abs(delta)} W/m² ${delta < 0 ? "weaker" : "stronger"} than today, and had been weak for thousands of years.`
+          ? fill(delta < 0 ? ui.idea.iceAgeWeaker : ui.idea.iceAgeStronger, {
+              delta: Math.abs(delta),
+            })
           : ice > 0.02
-            ? "Your own orbit, with the ice sheets of the last visit."
-            : "Ice covers Greenland and Antarctica. Northern Canada and Europe are free of it."}
+            ? ui.idea.own
+            : ui.idea.todayText}
       </p>
     </div>
   );

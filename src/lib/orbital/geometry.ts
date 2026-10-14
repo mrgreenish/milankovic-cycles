@@ -1,3 +1,4 @@
+import { en, type Ui } from "@/i18n/ui/en";
 import type { OrbitScale, OrbitalParameters } from "./types";
 
 export const degreesToRadians = (degrees: number) =>
@@ -48,12 +49,15 @@ export function geocentricSolarLongitudeAtPerihelion(
   return normalizeDegrees(parameters.earthPerihelionLongitudeDeg + 180);
 }
 
-export function seasonOfClosestApproach(parameters: OrbitalParameters) {
+export function seasonOfClosestApproach(
+  parameters: OrbitalParameters,
+  ui: Pick<Ui, "seasons"> = en,
+) {
   const longitude = geocentricSolarLongitudeAtPerihelion(parameters);
-  if (longitude >= 315 || longitude < 45) return "Northern spring";
-  if (longitude < 135) return "Northern summer";
-  if (longitude < 225) return "Northern autumn";
-  return "Northern winter";
+  if (longitude >= 315 || longitude < 45) return ui.seasons.spring;
+  if (longitude < 135) return ui.seasons.summer;
+  if (longitude < 225) return ui.seasons.autumn;
+  return ui.seasons.winter;
 }
 
 export function summerSolsticeAxisVector(

@@ -1,3 +1,5 @@
+import { fill, num } from "@/i18n/format";
+import { en, type Ui } from "@/i18n/ui/en";
 import { calculateSummerInsolation, PRESENT_SUMMER_INSOLATION_WM2 } from "./insolation";
 import { iceRawAt } from "./timeline";
 import type { OrbitalParameters } from "./types";
@@ -67,38 +69,46 @@ export function averageTemperatureC(deltaTempC: number) {
   return Math.round((PREINDUSTRIAL_GLOBAL_C + deltaTempC) * 2) / 2;
 }
 
-export function formatTemperatureDelta(deltaTempC: number) {
+export function formatTemperatureDelta(
+  deltaTempC: number,
+  ui: Pick<Ui, "decimal"> = en,
+) {
   const rounded = Math.round(deltaTempC * 10) / 10;
-  if (Math.abs(rounded) < 0.05) return "0.0 °C";
-  return `${rounded > 0 ? "+" : "−"}${Math.abs(rounded).toFixed(1)} °C`;
+  if (Math.abs(rounded) < 0.05) return `${num(ui, 0, 1)} °C`;
+  return `${rounded > 0 ? "+" : "−"}${num(ui, Math.abs(rounded), 1)} °C`;
 }
 
 /** One plain sentence on what the estimate means, matched to where it came from. */
-export function describeClimate(estimate: ClimateEstimate, timeKyr: number | null) {
+export function describeClimate(
+  estimate: ClimateEstimate,
+  timeKyr: number | null,
+  ui: Pick<Ui, "decimal" | "climate"> = en,
+) {
+  const text = ui.climate;
   const percent = Math.round(Math.max(0, estimate.iceShare) * 100);
   const delta = estimate.deltaTempC;
   const warmth =
     Math.abs(delta) < 0.15
-      ? "about as warm as before industry"
-      : `about ${Math.abs(delta).toFixed(1)} °C ${delta < 0 ? "colder" : "warmer"} than before industry`;
+      ? text.warmthEven
+      : fill(delta < 0 ? text.warmthColder : text.warmthWarmer, {
+          n: num(ui, Math.abs(delta), 1),
+        });
   if (estimate.source === "record") {
     const ice =
       estimate.iceShare < -0.02
-        ? "slightly less ice than today"
+        ? text.recordLess
         : percent === 0
-          ? "no more ice than today"
-          : `ice sheets at ${percent}% of their ice-age peak`;
-    return `Measured in sea-floor sediment: ${ice}, in a world ${warmth}.`;
+          ? text.recordNone
+          : fill(text.recordPercent, { percent });
+    return fill(text.record, { ice, warmth });
   }
   const ice =
     estimate.iceShare < -0.02
-      ? "Some of today’s ice would melt"
+      ? text.estimateLess
       : percent === 0
-        ? "Ice would stay about where it is"
-        : `Ice sheets would grow to about ${percent}% of their ice-age peak`;
+        ? text.estimateNone
+        : fill(text.estimatePercent, { percent });
   const lead =
-    timeKyr !== null && timeKyr > 0
-      ? "Orbit only, no record exists yet. If this orbit lasted about 15,000 years: "
-      : "If this orbit lasted about 15,000 years: ";
-  return `${lead}${ice[0].toLowerCase()}${ice.slice(1)}, in a world ${warmth}.`;
+    timeKyr !== null && timeKyr > 0 ? text.leadFuture : text.leadPast;
+  return fill(text.estimate, { lead, ice, warmth });
 }

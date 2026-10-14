@@ -1,21 +1,21 @@
 "use client";
 
+import { useUi } from "@/i18n/LocaleProvider";
+
 export default function ErrorPage({
   reset,
 }: {
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const ui = useUi();
   return (
     <main className="error-page">
-      <p className="eyebrow">Loading error</p>
-      <h1>This page couldn’t load</h1>
-      <p>
-        Try loading the page again. If the problem continues, refresh your
-        browser.
-      </p>
+      <p className="eyebrow">{ui.errors.errorEyebrow}</p>
+      <h1>{ui.errors.errorTitle}</h1>
+      <p>{ui.errors.errorText}</p>
       <button className="button button--primary" type="button" onClick={reset}>
-        Try again
+        {ui.errors.retry}
       </button>
     </main>
   );

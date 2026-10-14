@@ -9,6 +9,8 @@ import {
   type CSSProperties,
   type PointerEvent,
 } from "react";
+import { fill, group } from "@/i18n/format";
+import { useUi } from "@/i18n/LocaleProvider";
 import { climateAt, formatTemperatureDelta } from "@/lib/orbital/climate";
 import type { OrbitalParameters } from "@/lib/orbital/types";
 import { calculateSummerInsolation } from "@/lib/orbital/insolation";
@@ -27,12 +29,12 @@ const SPAN = TIME_END_KYR - TIME_START_KYR;
 const xOf = (kyr: number) => ((kyr - TIME_START_KYR) / SPAN) * WIDTH;
 
 type RowId = "eccentricity" | "tilt" | "summer" | "sunlight" | "ice";
-const ROWS: { id: RowId; label: string; height: number }[] = [
-  { id: "eccentricity", label: "Orbit shape", height: 24 },
-  { id: "tilt", label: "Axis tilt", height: 24 },
-  { id: "summer", label: "Summer distance", height: 28 },
-  { id: "sunlight", label: "Sunlight, 65°N", height: 64 },
-  { id: "ice", label: "Ice on land", height: 40 },
+const ROWS: { id: RowId; height: number }[] = [
+  { id: "eccentricity", height: 24 },
+  { id: "tilt", height: 24 },
+  { id: "summer", height: 28 },
+  { id: "sunlight", height: 64 },
+  { id: "ice", height: 40 },
 ];
 
 function pathFor(values: (number | null)[], min: number, max: number, height: number) {
@@ -98,6 +100,7 @@ export function Timeline({
   playing: boolean;
   onTogglePlay: () => void;
 }) {
+  const ui = useUi();
   const paths = useMemo(() => buildPaths(), []);
   const plot = useRef<HTMLDivElement>(null);
   const scrubbing = useRef(false);
@@ -127,12 +130,25 @@ export function Timeline({
     known && climate.source === "record"
       ? Math.min(1, Math.max(0, climate.iceShare))
       : null;
+  const decimal = (value: number, digits: number) =>
+    value.toFixed(digits).replace(".", ui.decimal);
+  const text = ui.timeline;
   const values: Record<RowId, string> = {
-    eccentricity: state.eccentricity.toFixed(3),
-    tilt: `${state.obliquityDeg.toFixed(1)}°`,
-    summer: precessionIndex(state) > 0.012 ? "near" : precessionIndex(state) < -0.012 ? "far" : "middle",
+    eccentricity: decimal(state.eccentricity, 3),
+    tilt: `${decimal(state.obliquityDeg, 1)}°`,
+    summer:
+      precessionIndex(state) > 0.012
+        ? text.near
+        : precessionIndex(state) < -0.012
+          ? text.far
+          : text.middle,
     sunlight: `${Math.round(sunlight)} W/m²`,
-    ice: ice === null ? (known ? "not recorded" : "—") : `${Math.round(ice * 100)}%`,
+    ice:
+      ice === null
+        ? known
+          ? text.notRecorded
+          : "—"
+        : `${Math.round(ice * 100)}%`,
   };
 
   const seek = (event: PointerEvent<HTMLDivElement>) => {
@@ -175,26 +191,26 @@ export function Timeline({
           onClick={onTogglePlay}
         >
           <span aria-hidden="true">{playing ? "Ⅱ" : "▷"}</span>
-          {playing ? "Pause" : "Play the clock"}
+          {playing ? text.pause : text.play}
         </button>
         <p className="timeline__now" aria-live="off">
-          <strong>{known ? formatYears(at) : "Your own orbit"}</strong>
+          <strong>{known ? formatYears(at, ui) : text.ownOrbit}</strong>
           <span>
-            {Math.round(sunlight)} W/m² at 65°N
+            {fill(text.reading, { value: Math.round(sunlight) })}
             {known && climate.source === "record"
-              ? ` · ${formatTemperatureDelta(climate.deltaTempC)} · ice at ${Math.round(ice! * 100)}%`
+              ? ` · ${formatTemperatureDelta(climate.deltaTempC, ui)} · ${fill(text.iceAt, { percent: Math.round(ice! * 100) })}`
               : ""}
           </span>
         </p>
-        <div className="timeline__moments" role="group" aria-label="Jump to a moment">
-          {TIMELINE_MOMENTS.map((moment) => (
+        <div className="timeline__moments" role="group" aria-label={text.jump}>
+          {TIMELINE_MOMENTS.map((moment, index) => (
             <button
               type="button"
               key={moment.kyr}
               aria-pressed={timeKyr === moment.kyr}
               onClick={() => onTime(moment.kyr)}
             >
-              {moment.label}
+              {text.moments[index]}
             </button>
           ))}
         </div>
@@ -203,7 +219,7 @@ export function Timeline({
         <div className="timeline__labels" aria-hidden="true">
           {ROWS.map((row) => (
             <p key={row.id} data-row={row.id} style={{ height: row.height }}>
-              {row.label}
+              {text.rows[row.id]}
               <b>{values[row.id]}</b>
             </p>
           ))}
@@ -237,7 +253,7 @@ export function Timeline({
             </svg>
           ))}
           <div className="timeline__future" aria-hidden="true">
-            Orbit only
+            {text.orbitOnly}
           </div>
           <div className="timeline__today" aria-hidden="true" />
           {known ? (
@@ -247,12 +263,15 @@ export function Timeline({
             className="timeline__input sr-only"
             type="range"
             name="time"
-            aria-label="Time, in thousands of years from today"
+            aria-label={text.slider}
             min={TIME_START_KYR}
             max={TIME_END_KYR}
             step={1}
             value={Math.round(at)}
-            aria-valuetext={`${formatYears(at)}, ${Math.round(sunlight)} watts per square metre`}
+            aria-valuetext={fill(text.valueText, {
+              when: formatYears(at, ui),
+              value: Math.round(sunlight),
+            })}
             onChange={(event) => onTime(Number(event.target.value))}
           />
         </div>
@@ -262,7 +281,7 @@ export function Timeline({
               key={tick}
               style={{ left: `${((tick - TIME_START_KYR) / SPAN) * 100}%` }}
             >
-              {tick === 0 ? "Today" : `${-tick}k`}
+              {tick === 0 ? text.today : fill(text.thousand, { n: group(-tick, text.groupSeparator) })}
             </span>
           ))}
         </div>

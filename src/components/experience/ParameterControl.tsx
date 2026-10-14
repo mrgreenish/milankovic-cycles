@@ -9,6 +9,8 @@ import {
   sunlightAnnouncement,
   type ParameterKey,
 } from "@/lib/orbital/controls";
+import { fill } from "@/i18n/format";
+import { useUi } from "@/i18n/LocaleProvider";
 import { PRESENT_PARAMETERS } from "@/lib/orbital/insolation";
 import type { OrbitalParameters } from "@/lib/orbital/types";
 
@@ -32,6 +34,8 @@ export function ParameterControl({
   onTogglePlay?: () => void;
 }) {
   const config = ORBITAL_CONTROLS[parameter];
+  const ui = useUi();
+  const text = ui.controls[parameter];
   const value = parameters[parameter];
   const today = PRESENT_PARAMETERS[parameter];
   const [announcement, setAnnouncement] = useState("");
@@ -43,26 +47,28 @@ export function ParameterControl({
   const commit = () => {
     if (lastCommit.current === value) return;
     lastCommit.current = value;
-    setAnnouncement(sunlightAnnouncement(parameters));
+    setAnnouncement(sunlightAnnouncement(parameters, ui));
   };
   const experiment = (next: number, label: string) => {
     onFocus?.();
     onChange(next);
     lastCommit.current = next;
-    setAnnouncement(sunlightAnnouncement({ ...parameters, [parameter]: next }));
+    setAnnouncement(
+      sunlightAnnouncement({ ...parameters, [parameter]: next }, ui),
+    );
     track("quick_experiment", { context, parameter, experiment: label });
   };
   return (
     <div className="parameter-control" style={style}>
       <div className="parameter-control__header">
         <label htmlFor={id}>
-          {config.label}
+          {text.label}
           <small aria-hidden="true">
-            {config.term} · every {config.period.replace("~", "")}
+            {fill(ui.controls.every, { term: text.term, period: text.period })}
           </small>
         </label>
         <output htmlFor={id} aria-live="off">
-          {formatParameter(parameter, value)}
+          {formatParameter(parameter, value, ui)}
         </output>
       </div>
       <input
@@ -73,7 +79,7 @@ export function ParameterControl({
         max={config.max}
         step={config.step}
         value={value}
-        aria-valuetext={parameterValueText(parameter, parameters)}
+        aria-valuetext={parameterValueText(parameter, parameters, ui)}
         onChange={(event) => onChange(Number(event.target.value))}
         onFocus={onFocus}
         onPointerDown={onFocus}
@@ -82,17 +88,17 @@ export function ParameterControl({
         onBlur={commit}
       />
       <div className="parameter-control__labels">
-        <span>{config.minLabel}</span>
-        <span className="parameter-control__today">Today</span>
-        <span>{config.maxLabel}</span>
+        <span>{text.minLabel}</span>
+        <span className="parameter-control__today">{ui.controls.today}</span>
+        <span>{text.maxLabel}</span>
       </div>
       <p className="parameter-control__live">
-        {describeParameter(parameter, parameters)}
+        {describeParameter(parameter, parameters, ui)}
       </p>
       <div
         className="quick-experiments"
         role="group"
-        aria-label={`${config.label} experiments`}
+        aria-label={fill(ui.controls.experimentsLabel, { label: text.label })}
       >
         {onTogglePlay ? (
           <button
@@ -105,17 +111,17 @@ export function ParameterControl({
             }}
           >
             <span aria-hidden="true">{playing ? "Ⅱ" : "▷"}</span>
-            {playing ? "Stop" : "Play the cycle"}
+            {playing ? ui.controls.stop : ui.controls.playCycle}
           </button>
         ) : null}
-        {config.experiments.map((item) => (
+        {config.experiments.map((item, index) => (
           <button
             type="button"
             key={item.value}
             aria-pressed={Math.abs(value - item.value) < config.step / 2}
             onClick={() => experiment(item.value, item.label)}
           >
-            {item.label}
+            {text.experiments[index]}
           </button>
         ))}
         <button
@@ -125,11 +131,11 @@ export function ParameterControl({
           onClick={() => {
             onChange(today);
             setAnnouncement(
-              sunlightAnnouncement({ ...parameters, [parameter]: today }),
+              sunlightAnnouncement({ ...parameters, [parameter]: today }, ui),
             );
           }}
         >
-          Back to today
+          {ui.controls.backToToday}
         </button>
       </div>
       <span className="sr-only" aria-live="polite" role="status">
