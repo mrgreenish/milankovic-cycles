@@ -1,3 +1,4 @@
+import { en, type Ui } from "@/i18n/ui/en";
 import { degreesToRadians } from "./geometry";
 import type {
   OrbitalMeltPressure,
@@ -101,12 +102,11 @@ export function getOrbitalMeltPressure(
   return "near-present";
 }
 
-export function getMeltPressureCopy(pressure: OrbitalMeltPressure) {
-  if (pressure === "less-summer-melt") {
-    return "Weaker summer sunlight can help winter snow survive.";
-  }
-  if (pressure === "more-summer-melt") {
-    return "Stronger summer sunlight can melt more winter snow.";
-  }
-  return "Summer sunlight is close to today’s level.";
+export function getMeltPressureCopy(
+  pressure: OrbitalMeltPressure,
+  ui: Pick<Ui, "melt"> = en,
+) {
+  if (pressure === "less-summer-melt") return ui.melt.less;
+  if (pressure === "more-summer-melt") return ui.melt.more;
+  return ui.melt.near;
 }

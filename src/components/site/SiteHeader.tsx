@@ -4,22 +4,29 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
 import { useOptionalExperience } from "@/components/experience/ExperienceProvider";
+import { stripLocale } from "@/i18n/config";
+import { useLocalePath, useUi } from "@/i18n/LocaleProvider";
 import { labPath } from "@/lib/orbital/query";
+import { LanguageMenu } from "./LanguagePicker";
 
-const links = [
-  { href: "/", label: "Tour" },
-  { href: "/learn", label: "Learn" },
-  { href: "/lab", label: "Lab" },
-  { href: "/about", label: "About" },
-  { href: "/educators", label: "Educators" },
-];
 export function SiteHeader() {
-  const pathname = usePathname();
+  const ui = useUi();
+  const path = useLocalePath();
+  const pathname = stripLocale(usePathname());
+  const links = [
+    { href: "/", label: ui.nav.tour },
+    { href: "/learn", label: ui.nav.learn },
+    { href: "/lab", label: ui.nav.lab },
+    { href: "/about", label: ui.nav.about },
+    { href: "/educators", label: ui.nav.educators },
+  ];
   const experience = useOptionalExperience();
   const destination = (href: string) =>
-    href === "/lab" && experience
-      ? labPath(experience.parameters, experience.scale, experience.timeKyr)
-      : href;
+    path(
+      href === "/lab" && experience
+        ? labPath(experience.parameters, experience.scale, experience.timeKyr)
+        : href,
+    );
   const menu = useRef<HTMLDetailsElement>(null);
   const isActive = (href: string) =>
     href === "/"
@@ -55,17 +62,14 @@ export function SiteHeader() {
   return (
     <header className="site-header">
       <a className="skip-link" href="#main-content">
-        Skip to content
+        {ui.nav.skip}
       </a>
       <div className="site-header__inner">
-        <Link className="site-brand" href="/" translate="no">
+        <Link className="site-brand" href={path("/")} translate="no">
           <span className="site-brand__mark" aria-hidden="true" />
           <span>Milanković</span>
         </Link>
-        <nav
-          className="site-nav site-nav--desktop"
-          aria-label="Primary navigation"
-        >
+        <nav className="site-nav site-nav--desktop" aria-label={ui.nav.primary}>
           {links.map((link) => (
             <Link
               key={link.href}
@@ -76,33 +80,36 @@ export function SiteHeader() {
             </Link>
           ))}
         </nav>
-        <details
-          className="site-menu"
-          ref={menu}
-          onBlur={(event) => {
-            if (
-              event.relatedTarget instanceof Node &&
-              !event.currentTarget.contains(event.relatedTarget)
-            )
-              event.currentTarget.open = false;
-          }}
-        >
-          <summary>Menu</summary>
-          <nav aria-label="Mobile navigation">
-            {links.map((link) => (
-              <Link
-                key={link.href}
-                href={destination(link.href)}
-                aria-current={isActive(link.href) ? "page" : undefined}
-                onClick={() => {
-                  if (menu.current) menu.current.open = false;
-                }}
-              >
-                {link.label}
-              </Link>
-            ))}
-          </nav>
-        </details>
+        <div className="site-header__tools">
+          <LanguageMenu />
+          <details
+            className="site-menu"
+            ref={menu}
+            onBlur={(event) => {
+              if (
+                event.relatedTarget instanceof Node &&
+                !event.currentTarget.contains(event.relatedTarget)
+              )
+                event.currentTarget.open = false;
+            }}
+          >
+            <summary>{ui.nav.menu}</summary>
+            <nav aria-label={ui.nav.mobile}>
+              {links.map((link) => (
+                <Link
+                  key={link.href}
+                  href={destination(link.href)}
+                  aria-current={isActive(link.href) ? "page" : undefined}
+                  onClick={() => {
+                    if (menu.current) menu.current.open = false;
+                  }}
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </nav>
+          </details>
+        </div>
       </div>
     </header>
   );

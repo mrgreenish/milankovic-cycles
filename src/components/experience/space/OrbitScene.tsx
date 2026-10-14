@@ -14,6 +14,7 @@ import { PRESENT_PARAMETERS } from "@/lib/orbital/insolation";
 import type { OrbitalVisualFocus } from "@/lib/orbital/types";
 import { Earth } from "./Earth";
 import { createLabelProjection } from "./labelProjection";
+import type { Ui } from "@/i18n/ui";
 import { bodyOrientation } from "./orientation";
 import { ParamLine } from "./ParamLine";
 import {
@@ -318,13 +319,19 @@ function EarthSystem({ textures }: { textures: SpaceTextures }) {
 }
 
 const SEASONS = [
-  { label: "Spring", longitude: 0 },
-  { label: "Summer", longitude: 90 },
-  { label: "Autumn", longitude: 180 },
-  { label: "Winter", longitude: 270 },
+  { key: "spring", longitude: 0 },
+  { key: "summer", longitude: 90 },
+  { key: "autumn", longitude: 180 },
+  { key: "winter", longitude: 270 },
 ] as const;
 
-export function OrbitScene({ textures }: { textures: SpaceTextures }) {
+export function OrbitScene({
+  textures,
+  labels,
+}: {
+  textures: SpaceTextures;
+  labels: Ui["scene"];
+}) {
   const a = SEMI_MAJOR_AXIS;
   const todayAnomaly =
     (3 * Math.PI) / 2 - degreesToRadians(PRESENT_PARAMETERS.earthPerihelionLongitudeDeg);
@@ -338,10 +345,13 @@ export function OrbitScene({ textures }: { textures: SpaceTextures }) {
     // follows the eased frame. Updating text here avoids rebuilding every guide
     // and Html root for each clock tick or slider input.
     const trueE = frame.targets.trueEccentricity;
-    writeReadout(live.current, `${orbitRadius(frame.anomaly, trueE).toFixed(3)} AU`);
-    writeReadout(closest.current, `${perihelionDistanceAu(trueE).toFixed(3)} AU`);
-    writeReadout(farthest.current, `${aphelionDistanceAu(trueE).toFixed(3)} AU`);
-    writeReadout(tilt.current, `${frame.targets.obliquityDeg.toFixed(2)}°`);
+    const decimal = labels.decimal;
+    const write = (value: number, digits: number) =>
+      value.toFixed(digits).replace(".", decimal);
+    writeReadout(live.current, `${write(orbitRadius(frame.anomaly, trueE), 3)} AU`);
+    writeReadout(closest.current, `${write(perihelionDistanceAu(trueE), 3)} AU`);
+    writeReadout(farthest.current, `${write(aphelionDistanceAu(trueE), 3)} AU`);
+    writeReadout(tilt.current, `${write(frame.targets.obliquityDeg, 2)}°`);
   });
 
   return (
@@ -419,7 +429,7 @@ export function OrbitScene({ textures }: { textures: SpaceTextures }) {
         fade={(f) => awayFrom(f, a * (1 - f.e), 0)}
         place={(f, out) => out.set(a * (1 - f.e), 0, 0.75)}
       >
-        Closest
+        {labels.closest}
         <small ref={closest} />
       </Label>
       <Label
@@ -428,7 +438,7 @@ export function OrbitScene({ textures }: { textures: SpaceTextures }) {
         className="space-label--ice"
         place={(f, out) => out.set(-a * (1 + f.e), 0, 0.75)}
       >
-        Farthest
+        {labels.farthest}
         <small ref={farthest} />
       </Label>
 
@@ -467,18 +477,18 @@ export function OrbitScene({ textures }: { textures: SpaceTextures }) {
           orbitPoint(orbitRadius(todayAnomaly, f.e) * a * 1.12 + 0.35, todayAnomaly, out)
         }
       >
-        Summer today
+        {labels.summerToday}
       </Label>
-      {SEASONS.map(({ label, longitude }) => (
+      {SEASONS.map(({ key, longitude }) => (
         <Label
-          key={label}
-          weight={{ direction: label === "Summer" ? 0 : 0.85 }}
+          key={key}
+          weight={{ direction: key === "summer" ? 0 : 0.85 }}
           place={(f, out) => {
             const anomaly = degreesToRadians(longitude + 180) - f.peri;
             return orbitPoint(orbitRadius(anomaly, f.e) * a + 0.65, anomaly, out);
           }}
         >
-          {label}
+          {labels[key]}
         </Label>
       ))}
 
@@ -493,7 +503,7 @@ export function OrbitScene({ textures }: { textures: SpaceTextures }) {
           out.y += f.radius * 2.6 + 0.55;
         }}
       >
-        Northern summer
+        {labels.northernSummer}
       </Label>
       <Label
         weight={{ shape: 1 }}

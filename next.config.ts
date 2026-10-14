@@ -14,6 +14,24 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ["@react-three/drei"],
   },
+  // English lives at the root and the other languages under /nl and /sr. All
+  // pages sit in the [locale] folder, so root addresses are served from /en,
+  // and a visitor who types /en/... is sent to the same page without it.
+  async redirects() {
+    return [
+      { source: "/en", destination: "/", permanent: true },
+      { source: "/en/:path*", destination: "/:path*", permanent: true },
+    ];
+  },
+  async rewrites() {
+    return [
+      { source: "/", destination: "/en" },
+      {
+        source: "/:path((?!nl$|nl/|sr$|sr/|en$|en/).+)",
+        destination: "/en/:path",
+      },
+    ];
+  },
   async headers() {
     // Large, rarely changing files: textures, the texture decoder and the
     // loading globe. A week of caching makes repeat visits start at once.

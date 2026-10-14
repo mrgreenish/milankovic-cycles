@@ -13,6 +13,9 @@ import {
   type ReactNode,
 } from "react";
 import { track } from "@vercel/analytics";
+import { fill, num } from "@/i18n/format";
+import { useUi } from "@/i18n/LocaleProvider";
+import type { Ui } from "@/i18n/ui";
 import { formatTemperatureDelta } from "@/lib/orbital/climate";
 import { formatSunlightDelta } from "@/lib/orbital/controls";
 import { seasonOfClosestApproach } from "@/lib/orbital/geometry";
@@ -99,10 +102,12 @@ function temperatureColor(deltaTempC: number) {
   return `rgb(${mix.join(" ")})`;
 }
 
-function iceCaption(iceShare: number) {
-  if (iceShare < -0.02) return "less ice than today";
+function iceCaption(iceShare: number, ui: Ui) {
+  if (iceShare < -0.02) return ui.stage.iceLess;
   const percent = Math.round(iceShare * 100);
-  return percent === 0 ? "no ice beyond today’s" : `ice at ${percent}% of its peak`;
+  return percent === 0
+    ? ui.stage.iceNone
+    : fill(ui.stage.icePercent, { percent });
 }
 
 /** Size and place of the climate globe for the stage it sits in, or null if there is no room. */
@@ -134,9 +139,11 @@ const gaugePosition = (wm2: number) =>
 function SunlightHud({
   parameters,
   focus,
+  ui,
 }: {
   parameters: OrbitalParameters;
   focus: OrbitalVisualFocus;
+  ui: Ui;
 }) {
   const reading = calculateSummerInsolation(parameters);
   const today = calculateSummerInsolation({
@@ -157,19 +164,19 @@ function SunlightHud({
       style={style}
       aria-hidden="true"
     >
-      <p className="scene-guide__label">Midsummer sun · 65°N</p>
+      <p className="scene-guide__label">{ui.stage.hudLabel}</p>
       <p className="scene-guide__value">
         <strong>{Math.round(reading.dailyMeanTopOfAtmosphereWm2)}</strong>
         <span>W/m²</span>
-        <em>{formatSunlightDelta(reading.deltaFromPresentWm2)}</em>
+        <em>{formatSunlightDelta(reading.deltaFromPresentWm2, ui)}</em>
       </p>
       <div className="scene-guide__track">
         <span className="scene-guide__today-marker" />
         <span className="scene-guide__current-marker" />
       </div>
       <div className="scene-guide__labels">
-        <span>Weaker</span>
-        <span>Stronger</span>
+        <span>{ui.stage.weaker}</span>
+        <span>{ui.stage.stronger}</span>
       </div>
     </div>
   );
@@ -179,18 +186,26 @@ function describeView(
   focus: OrbitalVisualFocus,
   parameters: OrbitalParameters,
   wm2: number,
+  ui: Ui,
 ) {
+  const text = ui.stage;
   switch (focus) {
     case "shape":
-      return `Orbit shape. Eccentricity ${parameters.eccentricity.toFixed(4)}; the grey dashed outline is today's orbit.`;
+      return fill(text.viewShape, {
+        value: num(ui, parameters.eccentricity, 4),
+      });
     case "tilt":
-      return `Earth's axis tilted ${parameters.obliquityDeg.toFixed(2)} degrees; the grey dashed line is today's 23.44 degrees.`;
+      return fill(text.viewTilt, {
+        value: num(ui, parameters.obliquityDeg, 2),
+      });
     case "direction":
-      return `Earth at northern midsummer. Closest approach to the Sun falls in ${seasonOfClosestApproach(parameters).toLowerCase()}; the grey line marks where summer falls today.`;
+      return fill(text.viewDirection, {
+        season: seasonOfClosestApproach(parameters, ui).toLowerCase(),
+      });
     case "idea":
-      return `Earth seen from above the north pole with the 65 degree north line marked.`;
+      return text.viewIdea;
     default:
-      return `Earth and Sun producing ${Math.round(wm2)} watts per square metre at 65 degrees north in midsummer.`;
+      return fill(text.viewCombined, { value: Math.round(wm2) });
   }
 }
 
@@ -257,6 +272,7 @@ export function Stage({
   globe?: ClimateGlobe;
   children?: ReactNode;
 }) {
+  const ui = useUi();
   const stageRef = useRef<HTMLDivElement>(null);
   const pointerBounds = useRef<DOMRect | null>(null);
   const [box, setBox] = useState({ width: 0, height: 0 });
@@ -319,7 +335,13 @@ export function Stage({
 
   const reading = calculateSummerInsolation(parameters);
   const poster = (
-    <OrbitalPoster parameters={parameters} scale={scale} focus={focus} />
+    <OrbitalPoster
+      parameters={parameters}
+      scale={scale}
+      focus={focus}
+      labels={ui.scene}
+      decimal={ui.decimal}
+    />
   );
   const handleFailure = useCallback(() => {
     setFailed(true);
@@ -356,7 +378,12 @@ export function Stage({
       <div
         className="scene-viewport"
         role="img"
-        aria-label={describeView(focus, parameters, reading.dailyMeanTopOfAtmosphereWm2)}
+        aria-label={describeView(
+          focus,
+          parameters,
+          reading.dailyMeanTopOfAtmosphereWm2,
+          ui,
+        )}
         data-ready={ready && !failed && !reducedMotion ? "true" : "false"}
       >
         {variant === "tour" && (focus === "hero" || focus === "idea") ? (
@@ -376,6 +403,7 @@ export function Stage({
                 clockPlaying={clockPlaying}
                 iceFollowsClock={iceFollowsClock}
                 inset={inset}
+                labels={ui.scene}
                 stageShift={shift}
                 stageShiftY={shiftY}
                 rate={rate}
@@ -411,7 +439,7 @@ export function Stage({
           touchLive(live);
         }}
       />
-      <SunlightHud parameters={parameters} focus={focus} />
+      <SunlightHud parameters={parameters} focus={focus} ui={ui} />
       {inset && globe && ready && !failed && !reducedMotion ? (
         <div
           className="climate-globe"
@@ -430,8 +458,8 @@ export function Stage({
             style={{ height: inset.size }}
           />
           <p className="climate-globe__caption">
-            <strong>{formatTemperatureDelta(globe.deltaTempC)}</strong>
-            <span>{iceCaption(globe.iceShare)}</span>
+            <strong>{formatTemperatureDelta(globe.deltaTempC, ui)}</strong>
+            <span>{iceCaption(globe.iceShare, ui)}</span>
           </p>
         </div>
       ) : null}
@@ -442,20 +470,20 @@ export function Stage({
           </span>
         ) : null}
         {onScale && focus === "shape" ? (
-          <div className="segmented-control" role="group" aria-label="Orbit drawing">
+          <div className="segmented-control" role="group" aria-label={ui.stage.orbitDrawing}>
             <button
               type="button"
               aria-pressed={scale === "5x"}
               onClick={() => onScale("5x")}
             >
-              Stretched ×5
+              {ui.stage.stretched}
             </button>
             <button
               type="button"
               aria-pressed={scale === "actual"}
               onClick={() => onScale("actual")}
             >
-              True shape
+              {ui.stage.trueShape}
             </button>
           </div>
         ) : null}
@@ -470,12 +498,12 @@ export function Stage({
             {motionPaused || reducedMotion ? "▷" : "Ⅱ"}
           </span>
           {reducedMotion
-            ? "Reduced motion"
+            ? ui.stage.reducedMotion
             : failed
-              ? "Static diagram"
+              ? ui.stage.staticDiagram
               : motionPaused
-                ? "Resume motion"
-                : "Pause motion"}
+                ? ui.stage.resume
+                : ui.stage.pause}
         </button>
       </div>
       {children}

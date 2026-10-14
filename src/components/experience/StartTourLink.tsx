@@ -1,5 +1,6 @@
 "use client";
 
+import { useUi } from "@/i18n/LocaleProvider";
 import { isPlainLinkClick } from "@/lib/navigation";
 
 import { useExperience } from "./ExperienceProvider";
@@ -7,6 +8,7 @@ import { track } from "@vercel/analytics";
 
 export function StartTourLink() {
   const { goToChapter } = useExperience();
+  const ui = useUi();
 
   return (
     <a
@@ -19,7 +21,7 @@ export function StartTourLink() {
         goToChapter("big-idea");
       }}
     >
-      Start the tour <span aria-hidden="true">↓</span>
+      {ui.tour.start} <span aria-hidden="true">↓</span>
     </a>
   );
 }

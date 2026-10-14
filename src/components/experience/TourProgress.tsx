@@ -1,5 +1,7 @@
 "use client";
 
+import { fill } from "@/i18n/format";
+import { useUi } from "@/i18n/LocaleProvider";
 import { isPlainLinkClick } from "@/lib/navigation";
 
 import {
@@ -10,6 +12,7 @@ import {
 
 export function TourProgress() {
   const { activeChapter, goToChapter, inHero } = useExperience();
+  const ui = useUi();
   const activeIndex = TOUR_CHAPTERS.findIndex(
     (chapter) => chapter.id === activeChapter,
   );
@@ -17,15 +20,18 @@ export function TourProgress() {
   return (
     <nav
       className="tour-progress"
-      aria-label="Tour progress"
+      aria-label={ui.tour.progress}
       data-hidden={inHero ? "true" : "false"}
     >
       <div className="tour-progress__mobile">
         <span>
-          Step {activeIndex + 1} of {TOUR_CHAPTERS.length}
+          {fill(ui.tour.step, {
+            n: activeIndex + 1,
+            total: TOUR_CHAPTERS.length,
+          })}
         </span>
         <label className="sr-only" htmlFor="chapter-select">
-          Jump to chapter
+          {ui.tour.jump}
         </label>
         <select
           id="chapter-select"
@@ -35,7 +41,7 @@ export function TourProgress() {
         >
           {TOUR_CHAPTERS.map((chapter) => (
             <option key={chapter.id} value={chapter.id}>
-              {chapter.label}
+              {ui.chapters[chapter.id]}
             </option>
           ))}
         </select>
@@ -60,7 +66,7 @@ export function TourProgress() {
               }}
             >
               <span>{index + 1}</span>
-              <em>{chapter.label}</em>
+              <em>{ui.chapters[chapter.id]}</em>
             </a>
           </li>
         ))}

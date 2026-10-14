@@ -1,10 +1,12 @@
 import type { ParameterKey } from "@/lib/orbital/controls";
 import type { OrbitalVisualFocus } from "@/lib/orbital/types";
+import type { Ui } from "@/i18n/ui";
 import type { StageDrag } from "./Stage";
 
 /** What dragging across the stage changes in each view. */
 export function stageDragFor(
   focus: OrbitalVisualFocus,
+  ui: Pick<Ui, "stage">,
   actions: {
     nudgeParameter: (key: ParameterKey, delta: number) => void;
     nudgeTime: (delta: number) => void;
@@ -13,23 +15,23 @@ export function stageDragFor(
   switch (focus) {
     case "shape":
       return {
-        hint: "Drag to stretch the orbit",
+        hint: ui.stage.dragShape,
         onDelta: (f) => actions.nudgeParameter("eccentricity", f * 0.12),
       };
     case "tilt":
       return {
-        hint: "Drag to lean the axis",
+        hint: ui.stage.dragTilt,
         onDelta: (f) => actions.nudgeParameter("obliquityDeg", f * 5),
       };
     case "direction":
       return {
-        hint: "Drag to turn the axis",
+        hint: ui.stage.dragDirection,
         onDelta: (f) =>
           actions.nudgeParameter("earthPerihelionLongitudeDeg", f * 720),
       };
     case "timeline":
       return {
-        hint: "Drag to move through time",
+        hint: ui.stage.dragTime,
         onDelta: (f) => actions.nudgeTime(f * 600),
       };
     default:

@@ -23,6 +23,15 @@ Node 20.9 or newer.
 | `npm run textures:build -- <dir>` | Rebuild the Earth textures (see `public/textures/space/README.md`) |
 | `npm run graphics:profile` | Frame-rate and asset report against a production server |
 
+## Languages
+
+The site is available in English (the default, served at the root), Dutch (`/nl`) and Serbian in Latin script (`/sr`). A quiet language code in the header and a row of links in the footer switch language and keep the page, the lab's settings and the hash.
+
+- **Routing.** Every page lives in `src/app/[locale]/`. English has no prefix: `next.config.ts` rewrites root addresses to the `/en` tree and redirects `/en/...` back to the root, so there is one address per page and language.
+- **Text.** `src/i18n/ui/` holds interface text (controls, readouts, scene labels) and is shared with client components through `LocaleProvider`. `src/i18n/content/` holds page copy (`en.ts`, `nl.ts`, `sr.ts`) and the learn guides (`topics-*.ts`). The English files are the template: other languages must match their shape, which TypeScript and `src/i18n/i18n.test.ts` check, including that `{placeholders}` stay the same.
+- **Numbers.** Helpers in `src/lib/orbital` take an optional `ui` argument (English by default) so the decimal mark, years and sentences follow the language.
+- **Adding a language.** Add the code to `LOCALES` and its names in `src/i18n/config.ts`, then add `ui/<code>.ts`, `content/<code>.ts` and `content/topics-<code>.ts` and register them in the two `index.ts` files.
+
 ## How it is built
 
 - **Next.js (App Router), React, TypeScript.** The tour is `src/app/page.tsx`; the lab is `src/components/lab/LabExperience.tsx`.

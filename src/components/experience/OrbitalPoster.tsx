@@ -1,6 +1,7 @@
 "use client";
 
 import { useId } from "react";
+import type { Ui } from "@/i18n/ui";
 import {
   degreesToRadians,
   displayEccentricity,
@@ -41,10 +42,14 @@ export function OrbitalPoster({
   parameters,
   scale,
   focus,
+  labels,
+  decimal = ".",
 }: {
   parameters: OrbitalParameters;
   scale: OrbitScale;
   focus: OrbitalVisualFocus;
+  labels: Ui["scene"];
+  decimal?: string;
 }) {
   const gradientId = useId();
   // The still diagram has three close-ups; every other view uses the overview.
@@ -141,7 +146,7 @@ export function OrbitalPoster({
         />
         <circle cx={currentAxis.x2} cy={currentAxis.y2} r="6" fill="#ffd97a" />
         <text x="405" y="110" className="poster-label">
-          {parameters.obliquityDeg.toFixed(2)}°
+          {parameters.obliquityDeg.toFixed(2).replace(".", decimal)}°
         </text>
         <text x="405" y="161" className="poster-label poster-label--ice">
           65°N
@@ -264,7 +269,7 @@ export function OrbitalPoster({
             textAnchor="middle"
             className="poster-label"
           >
-            Closest
+            {labels.closest}
           </text>
           <text
             x={CENTER_X - SEMI_MAJOR_AXIS * (1 + eccentricity)}
@@ -272,30 +277,30 @@ export function OrbitalPoster({
             textAnchor="middle"
             className="poster-label poster-label--ice"
           >
-            Farthest
+            {labels.farthest}
           </text>
         </>
       ) : null}
       {focus === "direction"
         ? [
-            { label: "Spring", longitude: 0 },
-            { label: "Summer", longitude: 90 },
-            { label: "Autumn", longitude: 180 },
-            { label: "Winter", longitude: 270 },
-          ].map(({ label, longitude }) => {
+            { key: "spring", longitude: 0 },
+            { key: "summer", longitude: 90 },
+            { key: "autumn", longitude: 180 },
+            { key: "winter", longitude: 270 },
+          ].map(({ key, longitude }) => {
             const point = summerPosition(
               eccentricity,
               parameters.earthPerihelionLongitudeDeg + 90 - longitude,
             );
             return (
               <text
-                key={label}
+                key={key}
                 x={point.x}
                 y={point.y + (point.y > CENTER_Y ? 30 : -28)}
                 textAnchor="middle"
-                className={`poster-label${label === "Summer" ? " poster-label--summer" : ""}`}
+                className={`poster-label${key === "summer" ? " poster-label--summer" : ""}`}
               >
-                {label}
+                {labels[key as "spring" | "summer" | "autumn" | "winter"]}
               </text>
             );
           })
