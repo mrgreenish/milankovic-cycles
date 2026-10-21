@@ -35,6 +35,8 @@ const nextConfig: NextConfig = {
   async headers() {
     // Large, rarely changing files: textures, the texture decoder and the
     // loading globe. A week of caching makes repeat visits start at once.
+    // Small root files like the icon and manifest have no hashed name, so
+    // without a lifetime the browser asks the edge again on every page load.
     const cached = (source: string, seconds: number) => ({
       source,
       headers: [
@@ -48,6 +50,9 @@ const nextConfig: NextConfig = {
       cached("/textures/space/:file*", 604800),
       cached("/decoders/basis/:file*", 604800),
       cached("/images/:file*", 86400),
+      cached("/favicon.ico", 86400),
+      cached("/manifest.json", 86400),
+      cached("/miltin-milankovic.jpg", 86400),
       {
         // Vercel deployment aliases (including the production
         // <project>.vercel.app alias) serve the same content as the custom

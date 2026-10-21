@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { QuietLink } from "@/components/site/QuietLink";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { localePath } from "@/i18n/config";
@@ -35,12 +35,12 @@ export default async function EducatorsPage(props: LocaleParams) {
           <h1>{text.title}</h1>
           <p className="page-lede">{text.lede}</p>
           <div className="button-row">
-            <Link className="button button--primary" href={path("/")}>
+            <QuietLink className="button button--primary" href={path("/")}>
               {text.startTour}
-            </Link>
-            <Link className="button button--secondary" href={path("/sources")}>
+            </QuietLink>
+            <QuietLink className="button button--secondary" href={path("/sources")}>
               {text.reviewSources}
-            </Link>
+            </QuietLink>
           </div>
         </header>
 
@@ -67,7 +67,7 @@ export default async function EducatorsPage(props: LocaleParams) {
                 <span>0{index + 1}</span>
                 <h3>{item.title}</h3>
                 <p>{item.body}</p>
-                <Link href={path(useLinks[index])}>{item.link}</Link>
+                <QuietLink href={path(useLinks[index])}>{item.link}</QuietLink>
               </article>
             ))}
           </div>

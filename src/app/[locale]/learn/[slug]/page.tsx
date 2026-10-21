@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { QuietLink } from "@/components/site/QuietLink";
 import { notFound } from "next/navigation";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import { SiteHeader } from "@/components/site/SiteHeader";
@@ -74,9 +74,9 @@ export default async function TopicPage(props: TopicPageProps) {
       <SiteHeader />
       <main id="main-content" className="editorial-page topic-page">
         <nav className="breadcrumbs" aria-label={text.breadcrumb}>
-          <Link href={path("/")}>{text.home}</Link>
+          <QuietLink href={path("/")}>{text.home}</QuietLink>
           <span aria-hidden="true">/</span>
-          <Link href={path("/learn")}>{text.learn}</Link>
+          <QuietLink href={path("/learn")}>{text.learn}</QuietLink>
           <span aria-hidden="true">/</span>
           <span aria-current="page">{topic.shortTitle}</span>
         </nav>
@@ -116,9 +116,9 @@ export default async function TopicPage(props: TopicPageProps) {
               <h2>{text.actionTitle}</h2>
               <p>{text.actionBody}</p>
             </div>
-            <Link className="button button--primary" href={path("/lab")}>
+            <QuietLink className="button button--primary" href={path("/lab")}>
               {text.actionButton}
-            </Link>
+            </QuietLink>
           </section>
 
           <section className="topic-faq" aria-labelledby="topic-faq-title">
@@ -140,11 +140,11 @@ export default async function TopicPage(props: TopicPageProps) {
               <Slots
                 text={learn.authorLine}
                 slots={{
-                  link: <Link href={path("/about")}>{learn.authorName}</Link>,
+                  link: <QuietLink href={path("/about")}>{learn.authorName}</QuietLink>,
                 }}
               />
             </p>
-            <Link href={path("/sources")}>{text.sourcesLink}</Link>
+            <QuietLink href={path("/sources")}>{text.sourcesLink}</QuietLink>
           </aside>
         </article>
 
@@ -153,10 +153,10 @@ export default async function TopicPage(props: TopicPageProps) {
           <h2 id="related-title">{text.relatedTitle}</h2>
           <div>
             {relatedTopics.map((item) => (
-              <Link href={path(`/learn/${item.slug}`)} key={item.slug}>
+              <QuietLink href={path(`/learn/${item.slug}`)} key={item.slug}>
                 {item.shortTitle}
                 <span aria-hidden="true">→</span>
-              </Link>
+              </QuietLink>
             ))}
           </div>
         </section>

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { QuietLink } from "@/components/site/QuietLink";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import { SourceTable } from "@/components/site/SourceTable";
@@ -198,9 +198,9 @@ export default async function SourcesPage(props: LocaleParams) {
 
         <div className="page-end-cta">
           <p>{text.endText}</p>
-          <Link className="button button--primary" href={localePath(locale, "/lab")}>
+          <QuietLink className="button button--primary" href={localePath(locale, "/lab")}>
             {text.endButton}
-          </Link>
+          </QuietLink>
         </div>
       </main>
       <SiteFooter />

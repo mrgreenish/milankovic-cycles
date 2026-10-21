@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { QuietLink } from "@/components/site/QuietLink";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { localePath } from "@/i18n/config";
@@ -40,7 +40,7 @@ export default async function LearnPage(props: LocaleParams) {
           </div>
           <div className="topic-grid__items">
             {getTopics(locale).map((topic, index) => (
-              <Link
+              <QuietLink
                 className="topic-card"
                 href={path(`/learn/${topic.slug}`)}
                 key={topic.slug}
@@ -51,7 +51,7 @@ export default async function LearnPage(props: LocaleParams) {
                   <p>{topic.description}</p>
                 </div>
                 <b aria-hidden="true">→</b>
-              </Link>
+              </QuietLink>
             ))}
           </div>
         </section>
@@ -61,11 +61,11 @@ export default async function LearnPage(props: LocaleParams) {
             <Slots
               text={text.authorLine}
               slots={{
-                link: <Link href={path("/about")}>{text.authorName}</Link>,
+                link: <QuietLink href={path("/about")}>{text.authorName}</QuietLink>,
               }}
             />
           </p>
-          <Link href={path("/educators")}>{text.educatorsLink}</Link>
+          <QuietLink href={path("/educators")}>{text.educatorsLink}</QuietLink>
         </aside>
       </main>
       <SiteFooter />
