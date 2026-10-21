@@ -10,7 +10,7 @@ import {
   type CSSProperties,
 } from "react";
 import dynamic from "next/dynamic";
-import Link from "next/link";
+import { QuietLink } from "@/components/site/QuietLink";
 import { useSearchParams } from "next/navigation";
 import { track } from "@vercel/analytics";
 import {
@@ -425,7 +425,7 @@ export function LabExperience() {
         <section className="lab-section lab-time" aria-labelledby="preset-heading">
           <div className="lab-section__heading">
             <h2 id="preset-heading">{ui.lab.timeHeading}</h2>
-            <Link href={path("/sources")}>{ui.lab.dataLink}</Link>
+            <QuietLink href={path("/sources")}>{ui.lab.dataLink}</QuietLink>
           </div>
           <Timeline
             variant="inline"
@@ -489,7 +489,7 @@ export function LabExperience() {
             </div>
           </dl>
           <p>{ui.lab.methodOutro}</p>
-          <Link href={path("/sources")}>{ui.lab.methodLink}</Link>
+          <QuietLink href={path("/sources")}>{ui.lab.methodLink}</QuietLink>
         </details>
         <section className="lab-actions" aria-label={ui.lab.actions}>
           <div>

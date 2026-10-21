@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { QuietLink } from "@/components/site/QuietLink";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import { ExperienceProvider } from "@/components/experience/ExperienceProvider";
@@ -54,10 +54,10 @@ export default async function HomePage(props: LocaleParams) {
                 </div>
                 <HeroCycles />
                 <p className="hero__signature">
-                  <Link href={path("/about")}>
+                  <QuietLink href={path("/about")}>
                     {text.hero.signatureName}
                     <span>{text.hero.signatureNote}</span>
-                  </Link>
+                  </QuietLink>
                 </p>
               </div>
             </section>
@@ -182,9 +182,9 @@ export default async function HomePage(props: LocaleParams) {
                 <div className="modern-warming-note">
                   <h3>{text.recap.warmingTitle}</h3>
                   <p>{text.recap.warmingBody}</p>
-                  <Link href={path("/learn/modern-climate-change")}>
+                  <QuietLink href={path("/learn/modern-climate-change")}>
                     {text.recap.warmingLink}
-                  </Link>
+                  </QuietLink>
                 </div>
                 <div className="recap-cta">
                   <div>
@@ -208,10 +208,10 @@ export default async function HomePage(props: LocaleParams) {
           </div>
           <nav aria-label={text.topics.nav}>
             {topics.map((topic) => (
-              <Link key={topic.slug} href={path(`/learn/${topic.slug}`)}>
+              <QuietLink key={topic.slug} href={path(`/learn/${topic.slug}`)}>
                 {topic.shortTitle}
                 <span aria-hidden="true">→</span>
-              </Link>
+              </QuietLink>
             ))}
           </nav>
         </section>

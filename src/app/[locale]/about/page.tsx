@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import Link from "next/link";
+import { QuietLink } from "@/components/site/QuietLink";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import { localePath } from "@/i18n/config";
@@ -62,12 +62,12 @@ export default async function AboutPage(props: LocaleParams) {
               <p key={paragraph}>{paragraph}</p>
             ))}
             <div className="button-row">
-              <Link className="button button--primary" href={path("/")}>
+              <QuietLink className="button button--primary" href={path("/")}>
                 {text.startTour}
-              </Link>
-              <Link className="button button--secondary" href={path("/sources")}>
+              </QuietLink>
+              <QuietLink className="button button--secondary" href={path("/sources")}>
                 {text.readMethod}
-              </Link>
+              </QuietLink>
             </div>
           </div>
         </section>

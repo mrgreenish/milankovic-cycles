@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { QuietLink } from "@/components/site/QuietLink";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import { localePath } from "@/i18n/config";
@@ -43,9 +43,9 @@ export default async function FaqPage(props: LocaleParams) {
         </section>
         <div className="page-end-cta">
           <p>{text.endText}</p>
-          <Link className="button button--primary" href={localePath(locale, "/")}>
+          <QuietLink className="button button--primary" href={localePath(locale, "/")}>
             {text.endButton}
-          </Link>
+          </QuietLink>
         </div>
       </main>
       <SiteFooter />

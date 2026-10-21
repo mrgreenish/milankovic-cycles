@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { QuietLink } from "@/components/site/QuietLink";
 import { useLocalePath, useUi } from "@/i18n/LocaleProvider";
 
 export default function NotFound() {
@@ -11,9 +11,9 @@ export default function NotFound() {
       <p className="eyebrow">404</p>
       <h1>{ui.errors.notFoundTitle}</h1>
       <p>{ui.errors.notFoundText}</p>
-      <Link className="button button--primary" href={path("/")}>
+      <QuietLink className="button button--primary" href={path("/")}>
         {ui.errors.notFoundBack}
-      </Link>
+      </QuietLink>
     </main>
   );
 }
