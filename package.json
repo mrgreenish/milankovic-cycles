@@ -4,7 +4,7 @@
   "description": "A guided, interactive explanation of the Milankovic cycles",
   "private": true,
   "engines": {
-    "node": ">=20.9.0"
+    "node": "^22.23.4 || ^24.22.1"
   },
   "scripts": {
     "dev": "next dev",
