@@ -7,11 +7,13 @@ The tour introduces three slow changes in Earth's orbit — its shape (eccentric
 ## Run it
 
 ```bash
+nvm install
+nvm use
 npm install
 npm run dev        # http://localhost:3000
 ```
 
-Node 20.9 or newer.
+Use Node 24.22.1 or newer in the 24.x line (`.nvmrc` selects 24.22.1). Node 22.23.4 or newer in the 22.x line is also supported. These minimum versions include the October 2026 Node.js security fixes.
 
 | Command | What it does |
 | --- | --- |
