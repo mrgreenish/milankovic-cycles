@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useThree } from "@react-three/fiber";
 import {
   ClampToEdgeWrapping,
@@ -14,8 +14,10 @@ import {
 } from "three";
 import { KTX2Loader } from "three/examples/jsm/loaders/KTX2Loader.js";
 import { textureResolution, type GraphicsQuality } from "./quality";
+import { TEXTURE_URLS } from "./textureUrls";
 
-const ROOT = "/textures/space/";
+type TextureName = keyof typeof TEXTURE_URLS;
+
 type TextureEntry = {
   promise: Promise<Texture>;
   refs: number;
@@ -58,7 +60,7 @@ class TextureStore {
   image = new TextureLoader();
   constructor(readonly gl: WebGLRenderer) {}
 
-  acquire(name: string) {
+  acquire(name: TextureName) {
     let entry = this.entries.get(name);
     if (!entry) {
       entry = { refs: 0, promise: this.load(name) };
@@ -97,32 +99,27 @@ class TextureStore {
     };
   }
 
-  async load(name: string): Promise<Texture> {
+  async load(name: TextureName): Promise<Texture> {
+    const { ktx2, image } = TEXTURE_URLS[name];
     let texture: Texture;
-    const compressed = [
+    const compressed = ktx2 && [
       "WEBGL_compressed_texture_astc",
       "WEBGL_compressed_texture_s3tc",
       "WEBGL_compressed_texture_etc",
       "EXT_texture_compression_bptc",
     ].some((ext) => this.gl.extensions.has(ext));
-    if (name === "flow-noise") {
-      texture = await withDeadline(this.image.loadAsync(`${ROOT}${name}.png`));
-    } else if (compressed) {
+    if (compressed) {
+      // Three bundles the transcoder at content-hashed URLs by default.
       this.decoder ??= new KTX2Loader()
-        .setTranscoderPath("/decoders/basis/")
         .setWorkerLimit(2)
         .detectSupport(this.gl);
       try {
-        texture = await withDeadline(
-          this.decoder.loadAsync(`${ROOT}${name}.ktx2`),
-        );
+        texture = await withDeadline(this.decoder.loadAsync(ktx2));
       } catch {
-        texture = await withDeadline(
-          this.image.loadAsync(`${ROOT}${name}.webp`),
-        );
+        texture = await withDeadline(this.image.loadAsync(image));
       }
     } else {
-      texture = await withDeadline(this.image.loadAsync(`${ROOT}${name}.webp`));
+      texture = await withDeadline(this.image.loadAsync(image));
     }
     texture.name = name;
     texture.flipY = false;
@@ -152,9 +149,8 @@ function storeFor(gl: WebGLRenderer) {
 type Bundle = { textures: SpaceTextures; release: () => void };
 
 /**
- * Loads the Earth maps for the current tier. The set never changes with the
- * view: the first frame uses 2K maps, and once it is on screen and the page is
- * quiet, the sharper 4K day map is fetched and swapped in once.
+ * Loads the baseline Earth maps for the current tier. The camera can request
+ * the sharper day map once the globe is large enough to show the difference.
  */
 export function useSpaceTextures(
   quality: GraphicsQuality,
@@ -165,11 +161,11 @@ export function useSpaceTextures(
   const [bundle, setBundle] = useState<Bundle | null>(null);
   const [error, setError] = useState(false);
   const [full, setFull] = useState(false);
-  const { day, detail } = textureResolution(
-    quality,
-    gl.capabilities.maxTextureSize,
-    full,
-  );
+  const requestFull = useCallback(() => setFull(true), []);
+  const maxTextureSize = gl.capabilities.maxTextureSize;
+  const { day, detail } = textureResolution(quality, maxTextureSize, full);
+  const canUpgrade =
+    bundle && !full && textureResolution(quality, maxTextureSize, true).day === 4096;
 
   useEffect(() => {
     let cancelled = false;
@@ -202,20 +198,6 @@ export function useSpaceTextures(
 
   // Old maps remain valid until the new bundle is committed to the materials.
   useEffect(() => () => bundle?.release(), [bundle]);
-  // Fetch the 4K map when the browser is idle, not while the visitor scrolls.
-  const shown = Boolean(bundle);
-  useEffect(() => {
-    if (!shown || full) return;
-    const start = () => setFull(true);
-    // Safari has no requestIdleCallback.
-    const idle = window as Partial<Window>;
-    if (idle.requestIdleCallback && idle.cancelIdleCallback) {
-      const id = idle.requestIdleCallback(start, { timeout: 5000 });
-      return () => idle.cancelIdleCallback?.(id);
-    }
-    const id = window.setTimeout(start, 2500);
-    return () => window.clearTimeout(id);
-  }, [shown, full]);
   useEffect(() => {
     if (error && !bundle) onFailure?.();
   }, [error, bundle, onFailure]);
@@ -223,5 +205,8 @@ export function useSpaceTextures(
     if (bundle)
       gl.domElement.setAttribute("data-texture-tier", bundle.textures.day.name);
   }, [bundle, gl]);
-  return bundle?.textures ?? null;
+  return {
+    textures: bundle?.textures ?? null,
+    onLargeGlobe: canUpgrade ? requestFull : undefined,
+  };
 }

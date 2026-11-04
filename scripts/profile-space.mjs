@@ -75,10 +75,6 @@ for (const viewport of [
     });
     await focus(view);
     await page.waitForTimeout(1800);
-    if (view === "tilt")
-      await page
-        .locator('canvas[data-texture-tier="day-4096"]')
-        .waitFor({ timeout: 20000 });
     await page.screenshot({ path: `${out}/${viewport.width}-${view}.png` });
   }
 }

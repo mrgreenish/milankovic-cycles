@@ -53,6 +53,14 @@ const nextConfig: NextConfig = {
       cached("/favicon.ico", 86400),
       cached("/manifest.json", 86400),
       cached("/miltin-milankovic.jpg", 86400),
+      cached("/miltin-milankovic.png", 86400),
+      {
+        // Manifest icons are named by content hash.
+        source: "/images/icons/:file",
+        headers: [
+          { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
+        ],
+      },
       {
         // Vercel deployment aliases (including the production
         // <project>.vercel.app alias) serve the same content as the custom

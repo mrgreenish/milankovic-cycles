@@ -1,5 +1,10 @@
 import { expect, test } from "@playwright/test";
 
+const textureRequest =
+  /\/_next\/static\/media\/(?:day-|detail-|night-|clouds-|flow-noise\.)/;
+const noiseRequest = /\/flow-noise\.[\w-]+\.png$/;
+const highResDayRequest = /\/day-4096\.[\w-]+\.(?:ktx2|webp)$/;
+
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
     window.__ORBITAL_SCENE_TEST__ = { time: 12, quality: "medium" };
@@ -67,7 +72,7 @@ test("all scene focuses render and share the unchanged orbital controls", async 
 test("compressed texture failure uses local image fallback", async ({
   page,
 }) => {
-  await page.route("**/textures/space/*.ktx2", (route) => route.abort());
+  await page.route(/\/_next\/static\/media\/[^/]+\.ktx2$/, (route) => route.abort());
   await page.goto("/lab");
   await expect(page.locator(".scene-viewport")).toHaveAttribute(
     "data-ready",
@@ -77,7 +82,7 @@ test("compressed texture failure uses local image fallback", async ({
   const fetchedFallback = await page.evaluate(() =>
     performance
       .getEntriesByType("resource")
-      .some((entry) => /day-2048\.webp/.test(entry.name)),
+      .some((entry) => /\/day-2048\.[\w-]+\.webp$/.test(entry.name)),
   );
   expect(fetchedFallback).toBe(true);
 });
@@ -85,8 +90,8 @@ test("compressed texture failure uses local image fallback", async ({
 test("unrecoverable asset failure leaves a working poster and controls", async ({
   page,
 }) => {
-  await page.route("**/textures/space/**", (route) => route.abort());
-  const assetAttempt = page.waitForRequest("**/textures/space/flow-noise.png");
+  await page.route(textureRequest, (route) => route.abort());
+  const assetAttempt = page.waitForRequest(noiseRequest);
   await page.goto("/lab");
   await assetAttempt;
   await expect(page.locator(".scene-viewport canvas")).toHaveCount(0, {
@@ -115,11 +120,11 @@ test("the poster stays visible until the baseline textures have rendered", async
   const gate = new Promise<void>((resolve) => {
     releaseAssets = resolve;
   });
-  await page.route("**/textures/space/**", async (route) => {
+  await page.route(textureRequest, async (route) => {
     await gate;
     await route.continue();
   });
-  const assetAttempt = page.waitForRequest("**/textures/space/flow-noise.png");
+  const assetAttempt = page.waitForRequest(noiseRequest);
   await page.goto("/lab", { waitUntil: "domcontentloaded" });
   await assetAttempt;
   await expect(page.locator(".scene-viewport")).toHaveAttribute(
@@ -209,6 +214,35 @@ test("offscreen rendering pauses and resumes", async ({ page }) => {
   await expect(canvas).toHaveAttribute("data-animation", "running");
 });
 
+test("only a large globe requests the 4K day map", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "Uses a large desktop drawing buffer");
+  await page.setViewportSize({ width: 1440, height: 900 });
+  const upgrades: string[] = [];
+  page.on("request", (request) => {
+    if (highResDayRequest.test(request.url())) upgrades.push(request.url());
+  });
+  await page.goto("/");
+  const canvas = page.locator(".scene-viewport canvas");
+  await page.evaluate(() => {
+    window.__ORBITAL_SCENE_TEST__ = { time: 12, quality: "high" };
+  });
+  await expect(canvas).toHaveAttribute("data-quality", "high");
+  await expect(canvas).toHaveAttribute("data-texture-tier", "day-2048", {
+    timeout: 20000,
+  });
+  // The previous idle upgrade could run as late as five seconds after load.
+  await page.waitForTimeout(5100);
+  expect(upgrades).toHaveLength(0);
+
+  await page.setViewportSize({ width: 2560, height: 1800 });
+  await expect(canvas).toHaveAttribute("data-texture-tier", "day-4096", {
+    timeout: 20000,
+  });
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await expect(canvas).toHaveAttribute("data-texture-tier", "day-4096");
+  expect(upgrades).toHaveLength(1);
+});
+
 test("quality changes replace textures without retaining old GPU maps", async ({
   page,
 }) => {
@@ -225,9 +259,8 @@ test("quality changes replace textures without retaining old GPU maps", async ({
   await page.evaluate(() => {
     window.__ORBITAL_SCENE_TEST__ = { time: 12, quality: "high" };
   });
-  await expect(canvas).toHaveAttribute("data-texture-tier", "day-4096", {
-    timeout: 20000,
-  });
+  await expect(canvas).toHaveAttribute("data-quality", "high");
+  await expect(canvas).toHaveAttribute("data-texture-tier", "day-2048");
   await page.evaluate(() => {
     window.__ORBITAL_SCENE_TEST__ = { time: 12, quality: "low" };
   });
@@ -324,7 +357,7 @@ test("a rendered globe holds the place of the scene while it loads", async ({
   const gate = new Promise<void>((resolve) => {
     release = resolve;
   });
-  await page.route("**/textures/space/**", async (route) => {
+  await page.route(textureRequest, async (route) => {
     await gate;
     await route.continue();
   });
@@ -339,7 +372,7 @@ test("a rendered globe holds the place of the scene while it loads", async ({
           img.complete && img.naturalWidth > 0 && img.currentSrc,
       ),
     )
-    .toMatch(/globe-poster-\d+\.webp$/);
+    .toMatch(/globe-poster-\d+\.[\w-]+\.webp$/);
   // It sits where the live Earth will: centred vertically in the stage.
   const box = (await globe.boundingBox())!;
   const stage = (await page.locator(".scene-viewport").boundingBox())!;
