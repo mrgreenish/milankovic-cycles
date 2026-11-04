@@ -8,15 +8,16 @@
   "theme_color": "#070A12",
   "icons": [
     {
-      "src": "/miltin-milankovic.png",
+      "src": "/images/icons/milankovic-192.fb23e6a6ca60.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
-      "src": "/miltin-milankovic.png",
+      "src": "/images/icons/milankovic-512.97395fff79ce.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }

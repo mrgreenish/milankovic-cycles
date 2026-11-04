@@ -96,7 +96,7 @@ function SceneContents({
   onFailure?: () => void;
 }) {
   const quality = useGraphicsQuality();
-  const textures = useSpaceTextures(quality, onFailure);
+  const { textures, onLargeGlobe } = useSpaceTextures(quality, onFailure);
   useEffect(() => {
     if (textures) onAssetsReady(true);
   }, [textures, onAssetsReady]);
@@ -115,7 +115,7 @@ function SceneContents({
       <StarField />
       <EarthGeometryProvider>
         <MainSceneState>
-          <CameraRig live={live} />
+          <CameraRig live={live} onLargeGlobe={onLargeGlobe} />
           {textures ? (
             <World>
               <OrbitScene textures={textures} labels={labels} />

@@ -92,8 +92,8 @@ export function assessQuality(
 }
 
 /**
- * Texture sizes follow the tier, never the view. `full` turns true once the
- * first frame is on screen, which is when the sharper 4K day map is fetched.
+ * The quality tier sets the baseline map sizes. A large on-screen globe can
+ * request the sharper 4K day map on a capable GPU.
  */
 export function textureResolution(
   quality: GraphicsQuality,
@@ -105,7 +105,7 @@ export function textureResolution(
     (quality === "high" || quality === "balanced") &&
     full &&
     maxTextureSize >= 4096;
-  return { detail, day: sharp ? 4096 : detail };
+  return { detail, day: sharp ? 4096 : detail } as const;
 }
 
 export function animationDelta(seconds: number) {

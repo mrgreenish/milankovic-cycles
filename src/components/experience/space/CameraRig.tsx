@@ -20,6 +20,8 @@ import {
 const UP = new Vector3(0, 1, 0);
 const FOV = 40;
 const TAN_HALF_FOV = Math.tan((FOV * Math.PI) / 360);
+// The visible hemisphere spans half of the 2048-pixel day map.
+const FULL_DAY_MIN_PIXELS = 1024;
 
 type Pose = { position: Vector3; look: Vector3 };
 
@@ -93,8 +95,10 @@ function computePoses(
 
 export function CameraRig({
   live,
+  onLargeGlobe,
 }: {
   live: { current: { x: number; y: number } } | undefined;
+  onLargeGlobe?: () => void;
 }) {
   const frame = useSceneFrame();
   const ambient = useAmbientTime();
@@ -187,6 +191,16 @@ export function CameraRig({
         size.width,
         size.height,
       );
+    }
+
+    const focus = frame.targets.focus;
+    if (onLargeGlobe && (focus === "hero" || focus === "idea" || focus === "tilt")) {
+      // Estimate the projected diameter from the sphere's angular radius.
+      const distanceSq = camera.position.distanceToSquared(frame.earth);
+      const diameter =
+        (state.gl.domElement.height * camera.projectionMatrix.elements[5] * frame.radius) /
+        Math.sqrt(distanceSq - frame.radius ** 2);
+      if (diameter >= FULL_DAY_MIN_PIXELS) onLargeGlobe();
     }
   }, -2);
 
