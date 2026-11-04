@@ -1,6 +1,6 @@
 "use client";
-import Link from "next/link";
 import type { ReactNode } from "react";
+import { QuietLink } from "@/components/site/QuietLink";
 import { useLocalePath } from "@/i18n/LocaleProvider";
 import { labPath } from "@/lib/orbital/query";
 import { useOptionalExperience } from "./ExperienceProvider";
@@ -15,7 +15,7 @@ export function LabLink({
   const experience = useOptionalExperience();
   const path = useLocalePath();
   return (
-    <Link
+    <QuietLink
       className={className}
       href={path(
         experience
@@ -24,6 +24,6 @@ export function LabLink({
       )}
     >
       {children}
-    </Link>
+    </QuietLink>
   );
 }

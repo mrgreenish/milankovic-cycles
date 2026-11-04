@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
 import { useOptionalExperience } from "@/components/experience/ExperienceProvider";
@@ -8,6 +7,7 @@ import { stripLocale } from "@/i18n/config";
 import { useLocalePath, useUi } from "@/i18n/LocaleProvider";
 import { labPath } from "@/lib/orbital/query";
 import { LanguageMenu } from "./LanguagePicker";
+import { QuietLink } from "./QuietLink";
 
 export function SiteHeader() {
   const ui = useUi();
@@ -65,19 +65,19 @@ export function SiteHeader() {
         {ui.nav.skip}
       </a>
       <div className="site-header__inner">
-        <Link className="site-brand" href={path("/")} translate="no">
+        <QuietLink className="site-brand" href={path("/")} translate="no">
           <span className="site-brand__mark" aria-hidden="true" />
           <span>Milanković</span>
-        </Link>
+        </QuietLink>
         <nav className="site-nav site-nav--desktop" aria-label={ui.nav.primary}>
           {links.map((link) => (
-            <Link
+            <QuietLink
               key={link.href}
               href={destination(link.href)}
               aria-current={isActive(link.href) ? "page" : undefined}
             >
               {link.label}
-            </Link>
+            </QuietLink>
           ))}
         </nav>
         <div className="site-header__tools">
@@ -96,7 +96,7 @@ export function SiteHeader() {
             <summary>{ui.nav.menu}</summary>
             <nav aria-label={ui.nav.mobile}>
               {links.map((link) => (
-                <Link
+                <QuietLink
                   key={link.href}
                   href={destination(link.href)}
                   aria-current={isActive(link.href) ? "page" : undefined}
@@ -105,7 +105,7 @@ export function SiteHeader() {
                   }}
                 >
                   {link.label}
-                </Link>
+                </QuietLink>
               ))}
             </nav>
           </details>
