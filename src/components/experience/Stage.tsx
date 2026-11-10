@@ -16,7 +16,7 @@ import { track } from "@vercel/analytics";
 import { fill, num } from "@/i18n/format";
 import { useUi } from "@/i18n/LocaleProvider";
 import type { Ui } from "@/i18n/ui";
-import { formatTemperatureDelta } from "@/lib/orbital/climate";
+import { formatTemperatureDelta, iceCaption } from "@/lib/orbital/climate";
 import { formatSunlightDelta } from "@/lib/orbital/controls";
 import { seasonOfClosestApproach } from "@/lib/orbital/geometry";
 import { calculateSummerInsolation } from "@/lib/orbital/insolation";
@@ -100,14 +100,6 @@ function temperatureColor(deltaTempC: number) {
     Math.round(value + (target[index] - value) * share),
   );
   return `rgb(${mix.join(" ")})`;
-}
-
-function iceCaption(iceShare: number, ui: Ui) {
-  if (iceShare < -0.02) return ui.stage.iceLess;
-  const percent = Math.round(iceShare * 100);
-  return percent === 0
-    ? ui.stage.iceNone
-    : fill(ui.stage.icePercent, { percent });
 }
 
 /** Size and place of the climate globe for the stage it sits in, or null if there is no room. */

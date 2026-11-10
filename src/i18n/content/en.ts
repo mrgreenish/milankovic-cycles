@@ -15,6 +15,8 @@ export const en = {
     ogDescription:
       "Stretch the orbit, lean the axis, wobble it, and watch midsummer sunlight at 65°N change.",
     portraitAlt: "Portrait of Milutin Milanković",
+    globeAlt: "Earth seen from space",
+    cardAlt: "{picture}, with the words “{title}”",
   },
   home: {
     hero: {

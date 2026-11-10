@@ -64,6 +64,15 @@ export function climateAt(
   };
 }
 
+/** Ice against its ice-age peak in a few words, for a label beside the globe or on a card. */
+export function iceCaption(iceShare: number, ui: Pick<Ui, "stage"> = en) {
+  if (iceShare < -0.02) return ui.stage.iceLess;
+  const percent = Math.round(iceShare * 100);
+  return percent === 0
+    ? ui.stage.iceNone
+    : fill(ui.stage.icePercent, { percent });
+}
+
 /** Average global temperature in °C for display, rounded to the nearest half degree. */
 export function averageTemperatureC(deltaTempC: number) {
   return Math.round((PREINDUSTRIAL_GLOBAL_C + deltaTempC) * 2) / 2;

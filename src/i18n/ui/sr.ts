@@ -301,6 +301,7 @@ export const sr: Ui = {
     shareCopied: "Veza je kopirana. Sadrži tvoja trenutna podešavanja.",
     shareManual: "Izaberi i kopiraj vezu ispod.",
     manualLabel: "Veza do tvojih podešavanja",
+    sharedOwn: "Ručno podešena orbita",
   },
   errors: {
     notFoundTitle: "Stranica nije pronađena",

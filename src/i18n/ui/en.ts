@@ -301,6 +301,7 @@ export const en = {
     shareCopied: "Link copied. It includes your current settings.",
     shareManual: "Select and copy the link below.",
     manualLabel: "Link to your settings",
+    sharedOwn: "A hand-set orbit",
   },
   errors: {
     notFoundTitle: "Page not found",

@@ -10,6 +10,8 @@ export const sr: Content = {
     ogDescription:
       "Izduži orbitu, nagni osu, zanjihaj je i gledaj kako se menja sunčeva svetlost usred leta na 65°N.",
     portraitAlt: "Portret Milutina Milankovića",
+    globeAlt: "Zemlja viđena iz svemira",
+    cardAlt: "{picture}, uz reči „{title}“",
   },
   home: {
     hero: {
