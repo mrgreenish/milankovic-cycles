@@ -386,6 +386,49 @@ test("the tour clock plays and stops with the chapter", async ({ page }) => {
   await expect(play).toBeVisible();
 });
 
+test("a cycle cut off by scrolling on goes back to today's orbit", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  const labLink = page.locator(".site-footer a[href^='/lab']");
+  const now = page.locator(".timeline__now strong");
+  // Jump rather than glide, so a click never lands on a page that is still moving.
+  const leaveFor = async (chapter: string) => {
+    await page
+      .locator(chapter)
+      .evaluate((section) => section.scrollIntoView({ behavior: "instant" }));
+    await expect(page).toHaveURL(new RegExp(`${chapter}$`));
+  };
+
+  // The chapter plays its cycle once on a first visit.
+  await page.goto("/#orbit-shape");
+  await expect(labLink).toHaveAttribute("href", /e=/, { timeout: 15_000 });
+  await leaveFor("#together");
+  await expect(now).toHaveText("Today");
+  await expect(labLink).toHaveAttribute("href", "/lab");
+
+  // The same holds for a cycle the reader started and left running.
+  const shape = page.locator("#orbit-shape");
+  await leaveFor("#orbit-shape");
+  await shape
+    .getByRole("button", { name: "Play the cycle", exact: true })
+    .click();
+  await expect(labLink).toHaveAttribute("href", /e=/);
+  await leaveFor("#together");
+  await expect(now).toHaveText("Today");
+  await expect(labLink).toHaveAttribute("href", "/lab");
+
+  // A value the reader set by hand stays.
+  await leaveFor("#orbit-shape");
+  await shape
+    .getByRole("button", { name: "Most stretched", exact: true })
+    .click();
+  await expect(labLink).toHaveAttribute("href", /e=0\.058000/);
+  await leaveFor("#together");
+  await expect(now).toHaveText("Your own orbit");
+  await expect(labLink).toHaveAttribute("href", /e=0\.058000/);
+});
+
 test("dragging across the stage changes the active slider", async ({
   page,
 }, testInfo) => {

@@ -234,11 +234,22 @@ export function ExperienceProvider({ children }: { children: ReactNode }) {
     };
   }, [navigate, offset]);
 
-  // Leaving the chapter that owns a playing clock or cycle stops it.
+  // Leaving the chapter that owns a playing clock or cycle stops it. A cycle
+  // that is cut off this way also goes back to today's value: the sweep was
+  // something to watch, and the point it had reached is not a setting anyone
+  // chose. Without this the clock chapter opens on "Your own orbit".
   const activeChapter = state.activeChapter;
   const inHero = state.inHero;
+  const cutOff = useRef<ParameterKey | null>(null);
   useEffect(() => {
-    if (!playing) return;
+    if (!playing) {
+      // The player has stopped by now, so no later tick can undo this.
+      const key = cutOff.current;
+      cutOff.current = null;
+      if (key)
+        dispatch({ type: "parameter", key, value: PRESENT_PARAMETERS[key] });
+      return;
+    }
     const owner: TourChapterId =
       playing.kind === "time"
         ? "together"
@@ -247,8 +258,10 @@ export function ExperienceProvider({ children }: { children: ReactNode }) {
           : playing.key === "obliquityDeg"
             ? "axis-tilt"
             : "axis-direction";
+    if (!inHero && activeChapter === owner) return;
+    if (playing.kind === "cycle") cutOff.current = playing.key;
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (inHero || activeChapter !== owner) setPlaying(null);
+    setPlaying(null);
   }, [playing, activeChapter, inHero]);
 
   // Each cycle chapter plays itself once on the first visit, so the motion
