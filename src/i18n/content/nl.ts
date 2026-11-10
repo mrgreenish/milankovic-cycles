@@ -285,6 +285,12 @@ export const nl: Content = {
     citationTitleOfWork: "Milanković Cycles: Why Ice Ages Come and Go.",
     citationNote:
       "Links naar één enkele gids zijn welkom als die beter bij je les, artikel, nieuwsbrief of leeslijst past.",
+    supportTitle: "Steun dit project",
+    supportBody:
+      "De rondleiding en het lab zijn gratis te gebruiken in de klas. Heeft je school of organisatie budget voor lesmateriaal? Met een vrijwillige bijdrage help je me de site te onderhouden en te verbeteren.",
+    supportFeedback:
+      "Ik hoor graag wat je in de les hebt geprobeerd en hoe het ging. Je kunt ook contact opnemen als je wilt bijdragen.",
+    supportLink: "Vertel me hoe je de site gebruikt",
     contactEyebrow: "Contact",
     contactTitle: "Vragen of feedback?",
     contactBody:
