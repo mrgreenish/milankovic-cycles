@@ -288,6 +288,12 @@ export const en = {
     citationTitleOfWork: "Milanković Cycles: Why Ice Ages Come and Go.",
     citationNote:
       "Links to a single guide are welcome when it fits your lesson, article, newsletter or reading list better.",
+    supportTitle: "Support this project",
+    supportBody:
+      "The Tour and Lab are free to use in class. If your school or organisation has a budget for teaching resources, an optional contribution helps me maintain and improve the site.",
+    supportFeedback:
+      "I’d love to hear what you tried in class and how it went. You can also get in touch about contributing.",
+    supportLink: "Tell me how you use it",
     contactEyebrow: "Contact",
     contactTitle: "Questions or feedback?",
     contactBody:

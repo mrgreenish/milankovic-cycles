@@ -284,6 +284,12 @@ export const sr: Content = {
     citationTitleOfWork: "Milanković Cycles: Why Ice Ages Come and Go.",
     citationNote:
       "Veze do pojedinačnog vodiča su dobrodošle kada bolje odgovara tvom času, članku, biltenu ili spisku za čitanje.",
+    supportTitle: "Podrži projekat",
+    supportBody:
+      "Obilazak i laboratorija su besplatni za korišćenje u nastavi. Ako tvoja škola ili organizacija ima budžet za nastavne materijale, dobrovoljni prilog pomaže mi da održavam i unapređujem sajt.",
+    supportFeedback:
+      "Voleo bih da čujem šta si probao na času i kako je prošlo. Možeš mi se javiti i ako želiš da doprineseš projektu.",
+    supportLink: "Reci mi kako koristiš sajt",
     contactEyebrow: "Kontakt",
     contactTitle: "Pitanja ili povratne informacije?",
     contactBody:

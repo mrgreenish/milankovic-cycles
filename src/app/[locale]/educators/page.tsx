@@ -83,6 +83,17 @@ export default async function EducatorsPage(props: LocaleParams) {
           <p className="citation-panel__note">{text.citationNote}</p>
         </section>
 
+        <section className="editorial-section editorial-grid" aria-labelledby="support-title">
+          <h2 id="support-title">{text.supportTitle}</h2>
+          <div>
+            <p>{text.supportBody}</p>
+            <p>{text.supportFeedback}</p>
+            <QuietLink href="https://www.linkedin.com/in/fvanharreveld/">
+              {text.supportLink}
+            </QuietLink>
+          </div>
+        </section>
+
         <section className="contact-card">
           <div>
             <p className="eyebrow">{text.contactEyebrow}</p>
