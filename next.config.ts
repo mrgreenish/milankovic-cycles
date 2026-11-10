@@ -24,13 +24,47 @@ const nextConfig: NextConfig = {
     ];
   },
   async rewrites() {
-    return [
-      { source: "/", destination: "/en" },
+    // A shared lab link carries its setup in the query: `/lab?t=-21` for a
+    // date, `/lab?e=…&o=…&p=…` for an orbit set by hand. `/lab` is one static
+    // page for all of them, so on its own it cannot preview a setup. These
+    // rules serve such a link from src/app/[locale]/lab/setup instead, a copy
+    // of the lab page built once per setup with its own preview card. Only
+    // whole page loads are sent there. Moves inside the site (marked by the
+    // `rsc` header) never show a preview and keep using the static page.
+    const number = "\\d{1,3}(?:\\.\\d{1,6})?";
+    const query = (key: string, value: string) => ({
+      type: "query" as const,
+      key,
+      value: `(?<${key}>${value})`,
+    });
+    const setups = [
+      // Dates are written to one decimal at most; a valid date wins over e, o and p.
+      { has: [query("t", "-?\\d{1,3}(?:\\.\\d)?")], path: "t/:t" },
       {
-        source: "/:path((?!nl$|nl/|sr$|sr/|en$|en/).+)",
-        destination: "/en/:path",
+        has: [query("e", number), query("o", number), query("p", number)],
+        path: "o/:e/:o/:p",
       },
     ];
+    const missing = [{ type: "header" as const, key: "rsc" }];
+    return {
+      beforeFiles: setups.flatMap(({ has, path }) => [
+        { source: "/lab", has, missing, destination: `/en/lab/setup/${path}` },
+        {
+          source: "/:locale(nl|sr)/lab",
+          has,
+          missing,
+          destination: `/:locale/lab/setup/${path}`,
+        },
+      ]),
+      afterFiles: [
+        { source: "/", destination: "/en" },
+        {
+          source: "/:path((?!nl$|nl/|sr$|sr/|en$|en/).+)",
+          destination: "/en/:path",
+        },
+      ],
+      fallback: [],
+    };
   },
   async headers() {
     // Large, rarely changing files: textures, the texture decoder and the

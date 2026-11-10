@@ -6,15 +6,16 @@ import { Analytics } from "@vercel/analytics/next";
 import {
   HTML_LANG,
   LOCALES,
-  OG_LOCALE,
   isLocale,
   languageAlternates,
   localePath,
 } from "@/i18n/config";
 import { getContent } from "@/i18n/content";
 import { LocaleProvider } from "@/i18n/LocaleProvider";
+import { previewMetadata } from "@/i18n/page";
 import { getUi } from "@/i18n/ui";
 import { SITE_URL } from "@/lib/site";
+import { pageCard } from "@/lib/social/cards";
 import "../globals.css";
 import "../experience.css";
 
@@ -60,21 +61,15 @@ export async function generateMetadata({
       canonical: localePath(locale, "/"),
       languages: languageAlternates("/"),
     },
-    openGraph: {
+    // The tour's preview, and the one any page without its own falls back to.
+    ...previewMetadata({
+      locale,
+      url: localePath(locale, "/"),
       title: site.title,
       description: site.ogDescription,
-      type: "website",
-      url: localePath(locale, "/"),
-      locale: OG_LOCALE[locale],
-      images: [
-        {
-          url: "/miltin-milankovic.jpg",
-          width: 537,
-          height: 776,
-          alt: site.portraitAlt,
-        },
-      ],
-    },
+      card: "home",
+      alt: pageCard(locale, "home")?.alt ?? site.title,
+    }),
   };
 }
 

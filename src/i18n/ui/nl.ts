@@ -304,6 +304,7 @@ export const nl: Ui = {
     shareCopied: "Link gekopieerd. Hij bevat je huidige instellingen.",
     shareManual: "Selecteer en kopieer de link hieronder.",
     manualLabel: "Link naar je instellingen",
+    sharedOwn: "Een met de hand ingestelde baan",
   },
   errors: {
     notFoundTitle: "Pagina niet gevonden",

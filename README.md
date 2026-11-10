@@ -50,6 +50,14 @@ The site is available in English (the default, served at the root), Dutch (`/nl`
 
   Only the first ~110 KB of the past file and ~27 KB of the future file are needed.
 
+## Link previews
+
+Every page has a 1200×630 preview card for chat apps, school platforms and social sites, in its own language: the page title beside the title globe, and the portrait on About only.
+
+- **What a card shows** is decided in `src/lib/social/cards.ts`; `pageMetadata()` in `src/i18n/page.ts` writes the `og:` and `twitter:` tags that point at it. A page added to the sitemap needs a card there, which `src/lib/social/cards.test.ts` checks.
+- **Drawing.** `src/app/[locale]/card/[card]/route.tsx` draws the cards with `next/og` (`src/lib/social/cardArt.tsx`) at `/card/home.jpg`, `/nl/card/learn-precession.jpg` and so on. The page cards are drawn during the build and served as static files. They use the globe from `npm run poster:build`, so they follow it when it is re-rendered.
+- **Shared lab links.** `/lab?t=-21` and `/lab?e=…&o=…&p=…` preview with the date or “a hand-set orbit”, the midsummer sunlight and, for a date, the measured ice (`src/lib/social/labShare.ts`). `/lab` itself is one static page, so rewrites in `next.config.ts` serve a full page load of such a link from `src/app/[locale]/lab/setup/`, a copy of the page with that preview. Each setup's page and card are made on the first request and then kept until the next deployment: one function run each, and static after that. A date has its own card; hand-set orbits share one card per W/m² reading.
+
 ## Sources
 
 Laskar et al. (2004), La2004 orbital solution. Lisiecki and Raymo (2005), LR04 stack. Hays, Imbrie and Shackleton (1976). Earth imagery from NASA Earth Observatory. The full list, with equations and limits, is on the site's [Sources page](https://milankovitchcycles.com/sources).

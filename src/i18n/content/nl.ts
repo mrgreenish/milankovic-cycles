@@ -10,6 +10,8 @@ export const nl: Content = {
     ogDescription:
       "Rek de baan uit, kantel de as, laat hem wiebelen en zie hoe het zonlicht in hoogzomer op 65°N verandert.",
     portraitAlt: "Portret van Milutin Milanković",
+    globeAlt: "De aarde gezien vanuit de ruimte",
+    cardAlt: "{picture}, met de woorden “{title}”",
   },
   home: {
     hero: {

@@ -2,7 +2,8 @@ import { PRESENT_PARAMETERS } from "./insolation";
 import { TIME_END_KYR, TIME_START_KYR, orbitalStateAt } from "./timeline";
 import type { OrbitScale, OrbitalParameters } from "./types";
 
-const bounds = {
+/** The widest values a lab link may carry. */
+export const LAB_BOUNDS = {
   eccentricity: { min: 0, max: 0.058 },
   obliquityDeg: { min: 22, max: 24.6 },
   earthPerihelionLongitudeDeg: { min: 0, max: 359.999 },
@@ -27,7 +28,7 @@ function parseField(
   const raw = source.get(queryKey);
   if (raw === null) return PRESENT_PARAMETERS[parameterKey];
   const value = Number(raw);
-  const range = bounds[parameterKey];
+  const range = LAB_BOUNDS[parameterKey];
   if (
     !raw.trim() ||
     !Number.isFinite(value) ||
