@@ -92,6 +92,8 @@ export type SceneTargets = {
   scale: OrbitScale;
   /** Take ice from the measured record at the clock's time instead of `ice`. */
   iceFollowsClock: boolean;
+  /** Paint the globe with the day's sunlight per latitude. */
+  sunlight: boolean;
   heroProgress: number;
   /** Horizontal shift of the picture centre, as a share of the canvas width. */
   stageShift: number;
@@ -107,9 +109,13 @@ export type SceneFrame = {
   ready: boolean;
   e: number;
   presentE: number;
+  /** The real eccentricity, eased like the drawn one, for the true Earth–Sun distance. */
+  trueE: number;
   tilt: number;
   peri: number;
   ice: number;
+  /** How far the sunlight map has faded in, 0 to 1. */
+  sunMap: number;
   /** The scene's own clock, in thousands of years from J2000, and its speed. */
   time: number;
   timeVelocity: number;
@@ -122,7 +128,7 @@ export type SceneFrame = {
   /** 0 follows the orbit values, 1 follows the clock. */
   timeBlend: number;
   /** Eased copies of the orbit values, used while the clock is not in charge. */
-  manual: { e: number; tilt: number; peri: number };
+  manual: { e: number; trueE: number; tilt: number; peri: number };
   weight: Record<OrbitalVisualFocus, number>;
   travel: number;
   anomaly: number;
@@ -149,6 +155,7 @@ export const defaultTargets: SceneTargets = {
   clockPlaying: false,
   scale: "5x",
   iceFollowsClock: false,
+  sunlight: false,
   heroProgress: 0,
   stageShift: 0,
   stageShiftY: 0,
@@ -180,9 +187,11 @@ function createFrame(): SceneFrame {
     ready: false,
     e: 0,
     presentE: 0,
+    trueE: 0,
     tilt: 0,
     peri: 0,
     ice: 0,
+    sunMap: 0,
     time: 0,
     timeVelocity: 0,
     clockTarget: 0,
@@ -190,7 +199,7 @@ function createFrame(): SceneFrame {
     skipped: false,
     spin: 0,
     timeBlend: 0,
-    manual: { e: 0, tilt: 0, peri: 0 },
+    manual: { e: 0, trueE: 0, tilt: 0, peri: 0 },
     weight: Object.fromEntries(FOCUSES.map((f) => [f, 0])) as Record<
       OrbitalVisualFocus,
       number
@@ -226,6 +235,7 @@ function advance(frame: SceneFrame, targets: SceneTargets, delta: number, time: 
   };
   const manual = frame.manual;
   manual.e = approach(manual.e, targets.eccentricity, rate);
+  manual.trueE = approach(manual.trueE, targets.trueEccentricity, rate);
   frame.presentE = approach(frame.presentE, targets.presentEccentricity, rate);
   manual.tilt = approach(manual.tilt, tilt, rate);
   const periStep = wrapPi(peri - manual.peri) * rate;
@@ -289,6 +299,7 @@ function advance(frame: SceneFrame, targets: SceneTargets, delta: number, time: 
     const blend = frame.timeBlend;
     const clockE = displayEccentricity(at.eccentricity, targets.scale);
     frame.e = manual.e + (clockE - manual.e) * blend;
+    frame.trueE = manual.trueE + (at.eccentricity - manual.trueE) * blend;
     frame.tilt =
       manual.tilt + (degreesToRadians(at.obliquityDeg) - manual.tilt) * blend;
     frame.peri =
@@ -297,6 +308,7 @@ function advance(frame: SceneFrame, targets: SceneTargets, delta: number, time: 
         blend;
   } else {
     frame.e = manual.e;
+    frame.trueE = manual.trueE;
     frame.tilt = manual.tilt;
     frame.peri = manual.peri;
   }
@@ -307,6 +319,13 @@ function advance(frame: SceneFrame, targets: SceneTargets, delta: number, time: 
     frame.ice,
     recorded ?? targets.ice,
     ease(clock !== null ? 9 : 2.2),
+  );
+  // The sunlight map comes in quickly with the first move of a control and
+  // lingers a little on the way out.
+  frame.sunMap = approach(
+    frame.sunMap,
+    targets.sunlight ? 1 : 0,
+    ease(targets.sunlight ? 8 : 3.5),
   );
   frame.shift = approach(frame.shift, targets.stageShift, ease(4));
   frame.shiftY = approach(frame.shiftY, targets.stageShiftY, ease(3));

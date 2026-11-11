@@ -1,3 +1,6 @@
+import { SOLAR_CONSTANT_WM2 } from "@/lib/orbital/insolation";
+import { SUNLIGHT_RAMP_GLSL } from "@/lib/orbital/sunlightMap";
+
 // Small, bounded shader programs. All light vectors and normals use world space.
 export const sphereVertex = /* glsl */ `
   varying vec2 vUv;
@@ -46,6 +49,22 @@ export const earthFragment = /* glsl */ `
   uniform float uRing;
   uniform float uArctic;
   uniform float uTiltDeg;
+  uniform float uSunMap;
+  uniform float uSunDecl;
+  uniform float uSunDist;
+  ${SUNLIGHT_RAMP_GLSL}
+  // Daily mean sunlight at the top of the atmosphere for a latitude, in W/m².
+  // Mirrors dailySunlightWm2 in lib/orbital/sunlightMap.ts, which is tested
+  // against the site's own calculation.
+  float dailySunlight(float sinLat) {
+    float cosLat = sqrt(max(0.0, 1.0 - sinLat * sinLat));
+    float cosDecl = sqrt(max(0.0, 1.0 - uSunDecl * uSunDecl));
+    float cosSunset = clamp(-sinLat * uSunDecl / max(cosLat * cosDecl, 0.00001), -1.0, 1.0);
+    float sunset = acos(cosSunset);
+    float sinSunset = sqrt(max(0.0, 1.0 - cosSunset * cosSunset));
+    return ${SOLAR_CONSTANT_WM2}.0 / (3.14159265 * uSunDist * uSunDist) *
+      max(0.0, sunset * sinLat * uSunDecl + cosLat * cosDecl * sinSunset);
+  }
 
   // Southern edge of the ice sheets at full glaciation, by longitude.
   // An illustration shaped after the last glacial maximum, not a reconstruction.
@@ -128,6 +147,8 @@ export const earthFragment = /* glsl */ `
     float rim = pow(1.0 - max(dot(normal, view), 0.0), 3.5);
     vec3 atmosphere = mix(vec3(0.52, 0.16, 0.035), vec3(0.12, 0.4, 0.95), smoothstep(-0.08, 0.35, sunHeight));
     color = mix(color, atmosphere, rim * smoothstep(-0.2, 0.22, sunHeight) * 0.52);
+    // How much of this pixel belongs to a guide line, which the sunlight map leaves alone.
+    float guide = 0.0;
     // The 65°N guide: gold where the Sun is up, ice blue where it is not.
     if (uRing > 0.003) {
       float d = abs(lat - 65.0);
@@ -136,7 +157,10 @@ export const earthFragment = /* glsl */ `
       float halo = exp(-d / (w * 5.0)) * 0.2;
       float lit = smoothstep(-0.12, 0.2, sunHeight);
       vec3 ringColor = mix(vec3(0.42, 0.74, 1.0), vec3(3.0, 1.9, 0.55), lit);
+      // Over the sunlight map the line turns white, so it stands clear of the colours.
+      ringColor = mix(ringColor, vec3(2.6), uSunMap);
       color = mix(color, ringColor, clamp((line + halo) * uRing, 0.0, 1.0));
+      guide = line * uRing;
     }
     if (uArctic > 0.003) {
       float d = abs(lat - (90.0 - uTiltDeg));
@@ -144,10 +168,21 @@ export const earthFragment = /* glsl */ `
       float dashes = step(0.5, fract(lon / 9.0));
       float line = (1.0 - smoothstep(w * 0.3, w * 1.2, d)) * dashes;
       color = mix(color, vec3(0.9, 0.96, 1.0) * 1.6, line * uArctic * 0.8);
+      guide = max(guide, line * uArctic);
     }
     gl_FragColor = vec4(color, 1.0);
     #include <tonemapping_fragment>
     #include <colorspace_fragment>
+    // The sunlight map goes on after tone mapping, in display colour, so the
+    // globe shows exactly the colours of the legend. One colour per latitude:
+    // it is the average over a full day, so the night side is painted too.
+    if (uSunMap > 0.003) {
+      vec3 map = sunlightRamp(dailySunlight(normalize(vLocal).y));
+      // A little shading keeps the ball round and the coastlines readable. It
+      // is broad on purpose: a sharp day and night line would read as data.
+      map *= mix(0.74, 1.0, smoothstep(-0.7, 0.75, sunHeight)) * mix(1.0, 0.86, surface.b);
+      gl_FragColor.rgb = mix(gl_FragColor.rgb, map, uSunMap * 0.94 * (1.0 - clamp(guide, 0.0, 1.0)));
+    }
   }
 `;
 
@@ -155,6 +190,7 @@ export const cloudsFragment = /* glsl */ `
   ${common}
   uniform sampler2D uClouds;
   uniform float uClear;
+  uniform float uSunMap;
   void main() {
     vec3 normal = normalize(vNormal);
     vec3 sun = normalize(-vWorld);
@@ -166,7 +202,8 @@ export const cloudsFragment = /* glsl */ `
     if (uDetail > 1.5) {
       cirrus = texture2D(uClouds, uv + vec2(-uTime * 0.00018, 0.002)).r * 0.08;
     }
-    float alpha = smoothstep(0.08, 0.88, density + cirrus) * 0.94 * (1.0 - 0.72 * uClear);
+    // Clouds step aside for the sunlight map.
+    float alpha = smoothstep(0.08, 0.88, density + cirrus) * 0.94 * (1.0 - 0.72 * uClear) * (1.0 - 0.92 * uSunMap);
     float daylight = smoothstep(-0.13, 0.24, sunHeight);
     vec3 twilight = mix(vec3(0.017, 0.028, 0.055), vec3(0.68, 0.26, 0.09), smoothstep(-0.15, 0.0, sunHeight));
     vec3 color = mix(twilight, vec3(1.25, 1.3, 1.37) * (0.25 + max(sunHeight, 0.0)), daylight);

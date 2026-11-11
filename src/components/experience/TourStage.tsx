@@ -92,6 +92,7 @@ export function TourStage() {
       timeKyr={clock ? displayedTime(ex) : null}
       clockPlaying={ex.playing?.kind === "time"}
       iceFollowsClock={clock}
+      sunlight={ex.adjusting}
       globe={globe}
       reducedMotion={ex.reducedMotion}
       live={ex.live}

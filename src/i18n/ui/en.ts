@@ -169,6 +169,8 @@ export const en = {
     dragTilt: "Drag to lean the axis",
     dragDirection: "Drag to turn the axis",
     dragTime: "Drag to move through time",
+    sunlightMap: "Sunlight map",
+    sunlightLegend: "Average sunlight over 24 hours",
   },
   scene: {
     decimal: ".",

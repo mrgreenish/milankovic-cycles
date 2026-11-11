@@ -20,6 +20,13 @@ import { formatTemperatureDelta, iceCaption } from "@/lib/orbital/climate";
 import { formatSunlightDelta } from "@/lib/orbital/controls";
 import { seasonOfClosestApproach } from "@/lib/orbital/geometry";
 import { calculateSummerInsolation } from "@/lib/orbital/insolation";
+import {
+  SUNLIGHT_GAUGE_MAX_WM2,
+  SUNLIGHT_GAUGE_MIN_WM2,
+  SUNLIGHT_GRADIENT_CSS,
+  SUNLIGHT_MAP_MAX_WM2,
+  sunlightLegendPosition,
+} from "@/lib/orbital/sunlightMap";
 import type {
   OrbitScale,
   OrbitalParameters,
@@ -122,11 +129,68 @@ export type StageDrag = {
   onDelta: (fraction: number) => void;
 } | null;
 
-/** Summer sunlight at 65°N over the last 800,000 years runs from 431 to 552 W/m². */
-const GAUGE_MIN = 425;
-const GAUGE_MAX = 558;
 const gaugePosition = (wm2: number) =>
-  Math.min(100, Math.max(0, ((wm2 - GAUGE_MIN) / (GAUGE_MAX - GAUGE_MIN)) * 100));
+  Math.min(
+    100,
+    Math.max(
+      0,
+      ((wm2 - SUNLIGHT_GAUGE_MIN_WM2) /
+        (SUNLIGHT_GAUGE_MAX_WM2 - SUNLIGHT_GAUGE_MIN_WM2)) *
+        100,
+    ),
+  );
+
+/** The views where the orbit is set by hand, and the sunlight map can show. */
+const SUNLIGHT_FOCUSES: readonly OrbitalVisualFocus[] = [
+  "shape",
+  "tilt",
+  "direction",
+  "combined",
+];
+const LEGEND_TICKS = [0, SUNLIGHT_MAP_MAX_WM2 / 2, SUNLIGHT_MAP_MAX_WM2];
+
+/** What the globe's colours mean while the sunlight map is on. */
+function SunlightLegend({
+  visible,
+  wm2,
+  ui,
+}: {
+  visible: boolean;
+  /** Midsummer sunlight at 65°N, marked on the scale; null where Earth is not held at midsummer. */
+  wm2: number | null;
+  ui: Ui;
+}) {
+  return (
+    <div
+      className="sunlight-legend"
+      data-visible={visible ? "true" : "false"}
+      aria-hidden="true"
+    >
+      <p className="sunlight-legend__title">{ui.stage.sunlightLegend}</p>
+      <div
+        className="sunlight-legend__bar"
+        style={{ background: SUNLIGHT_GRADIENT_CSS }}
+      >
+        {wm2 === null ? null : (
+          <span
+            className="sunlight-legend__mark"
+            style={{ left: `${sunlightLegendPosition(wm2)}%` }}
+          >
+            <b>65°N</b>
+          </span>
+        )}
+      </div>
+      <div className="sunlight-legend__scale">
+        {LEGEND_TICKS.map((tick, index) => (
+          <span key={tick}>
+            {tick}
+            {index === LEGEND_TICKS.length - 1 ? " W/m²" : ""}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 function SunlightHud({
   parameters,
@@ -243,6 +307,7 @@ export function Stage({
   timeKyr = null,
   clockPlaying = false,
   iceFollowsClock = false,
+  sunlight = false,
   globe = null,
   children,
 }: {
@@ -260,6 +325,8 @@ export function Stage({
   timeKyr?: number | null;
   clockPlaying?: boolean;
   iceFollowsClock?: boolean;
+  /** True while the visitor moves an orbit control: the globe shows the sunlight map. */
+  sunlight?: boolean;
   /** When set, a second small view of Earth from above the pole shows ice and temperature. */
   globe?: ClimateGlobe;
   children?: ReactNode;
@@ -303,6 +370,8 @@ export function Stage({
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
   const [motionPaused, setMotionPaused] = useState(false);
+  // The sunlight map shows while a control moves. This keeps it on.
+  const [sunlightPinned, setSunlightPinned] = useState(false);
   const [dragging, setDragging] = useState(false);
   const dragFrom = useRef<number | null>(null);
   const shift = useStageShift(variant === "tour");
@@ -326,6 +395,9 @@ export function Stage({
   }, [reducedMotion]);
 
   const reading = calculateSummerInsolation(parameters);
+  const sceneLive = ready && !failed && !reducedMotion;
+  const sunlightView = SUNLIGHT_FOCUSES.includes(focus);
+  const sunlightOn = sunlight || sunlightPinned;
   const poster = (
     <OrbitalPoster
       parameters={parameters}
@@ -394,6 +466,7 @@ export function Stage({
                 timeKyr={timeKyr}
                 clockPlaying={clockPlaying}
                 iceFollowsClock={iceFollowsClock}
+                sunlight={sunlightOn}
                 inset={inset}
                 labels={ui.scene}
                 stageShift={shift}
@@ -432,6 +505,12 @@ export function Stage({
         }}
       />
       <SunlightHud parameters={parameters} focus={focus} ui={ui} />
+      <SunlightLegend
+        visible={sceneLive && sunlightView && sunlightOn}
+        // In the shape view Earth travels round the year, so no single value holds.
+        wm2={focus === "shape" ? null : reading.dailyMeanTopOfAtmosphereWm2}
+        ui={ui}
+      />
       {inset && globe && ready && !failed && !reducedMotion ? (
         <div
           className="climate-globe"
@@ -478,6 +557,20 @@ export function Stage({
               {ui.stage.trueShape}
             </button>
           </div>
+        ) : null}
+        {sceneLive && sunlightView ? (
+          <button
+            type="button"
+            className="motion-button sunlight-button"
+            aria-pressed={sunlightPinned}
+            onClick={() => {
+              setSunlightPinned((pinned) => !pinned);
+              touchLive(live);
+            }}
+          >
+            <span aria-hidden="true">☼</span>
+            <span className="sunlight-button__label">{ui.stage.sunlightMap}</span>
+          </button>
         ) : null}
         <button
           type="button"

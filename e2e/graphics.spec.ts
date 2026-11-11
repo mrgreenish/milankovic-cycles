@@ -404,3 +404,71 @@ test("the scene idles at a lower frame rate and wakes when the pointer moves", a
   await expect(canvas).toHaveAttribute("data-pace", "full");
   await expect(canvas).toHaveAttribute("data-pace", "idle", { timeout: 10000 });
 });
+
+test("the sunlight map shows while a control moves and can be kept on", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    const hook = window.__ORBITAL_SCENE_TEST__!;
+    hook.mainProbe = (frame) => {
+      (window as unknown as { sunMap: number }).sunMap = (
+        frame as { sunMap: number }
+      ).sunMap;
+    };
+  });
+  const sunMap = () =>
+    page.evaluate(() => (window as unknown as { sunMap: number }).sunMap);
+  await page.goto("/lab");
+  const viewport = page.locator(".scene-viewport");
+  await expect(viewport).toHaveAttribute("data-ready", "true", {
+    timeout: 20000,
+  });
+  const legend = page.locator(".sunlight-legend");
+  const keep = page.getByRole("button", { name: "Sunlight map", exact: true });
+  await expect(legend).toHaveAttribute("data-visible", "false");
+  await expect(keep).toHaveAttribute("aria-pressed", "false");
+  expect(await sunMap()).toBe(0);
+
+  // A hand on a control brings the map, in the scene and in the legend.
+  const tilt = page.getByRole("slider", { name: "Axis tilt" });
+  await tilt.press("ArrowRight");
+  await expect(legend).toHaveAttribute("data-visible", "true");
+  await expect.poll(sunMap).toBeGreaterThan(0.9);
+  // Letting go lets it fade back to the natural globe.
+  await expect(legend).toHaveAttribute("data-visible", "false", {
+    timeout: 6000,
+  });
+  await expect.poll(sunMap).toBeLessThan(0.02);
+
+  // A cycle that plays by itself is not a hand on a control.
+  await page
+    .locator(".parameter-control", { has: tilt })
+    .getByRole("button", { name: "Play the cycle", exact: true })
+    .click();
+  await expect(tilt).not.toHaveValue("23.44");
+  await expect(legend).toHaveAttribute("data-visible", "false");
+  expect(await sunMap()).toBeLessThan(0.02);
+
+  // The button keeps the map on, and the 65°N mark sits at the reading.
+  await keep.click();
+  await expect(keep).toHaveAttribute("aria-pressed", "true");
+  await expect(legend).toHaveAttribute("data-visible", "true");
+  await expect.poll(sunMap).toBeGreaterThan(0.98);
+  await page
+    .getByRole("button", { name: "Most tilt · 24.5°", exact: true })
+    .click();
+  // 496 W/m² on a scale that ends at 640.
+  await expect(legend.locator(".sunlight-legend__mark")).toHaveAttribute(
+    "style",
+    /left: 77\.\d+%/,
+  );
+
+  // Views that show ice keep the natural globe, even with the map kept on.
+  await page
+    .getByRole("button", { name: "Peak of the last ice age", exact: true })
+    .click();
+  await expect(page.locator(".stage")).toHaveAttribute("data-focus", "timeline");
+  await expect(legend).toHaveAttribute("data-visible", "false");
+  await expect(keep).toHaveCount(0);
+  await expect(viewport).toHaveAttribute("data-ready", "true");
+});

@@ -25,6 +25,7 @@ import { initialLive, touchLive, type SceneLive } from "./sceneLive";
 import { useReducedMotion } from "./useReducedMotion";
 import { useStickyLayout } from "./useStickyLayout";
 import { usePlayer, type Playing } from "./usePlayer";
+import { useRecentChange } from "./useRecentChange";
 
 export const TOUR_CHAPTERS = [
   { id: "big-idea" },
@@ -82,6 +83,8 @@ type ExperienceContextValue = State & {
   reducedMotion: boolean;
   live: RefObject<LiveInputs>;
   playing: Playing;
+  /** True while the visitor moves an orbit control, and for a moment after. */
+  adjusting: boolean;
   /** A view the title buttons are previewing while the pointer rests on them. */
   preview: OrbitalVisualFocus | null;
   setPreview: (focus: OrbitalVisualFocus | null) => void;
@@ -103,6 +106,7 @@ export function ExperienceProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(reducer, initialState);
   const [playing, setPlaying] = useState<Playing>(null);
   const [preview, setPreview] = useState<OrbitalVisualFocus | null>(null);
+  const [adjusting, markAdjusting] = useRecentChange();
   const reducedMotion = useReducedMotion();
   const offset = useStickyLayout("tour");
   const live = useRef<LiveInputs>({ ...initialLive });
@@ -280,26 +284,39 @@ export function ExperienceProvider({ children }: { children: ReactNode }) {
     return () => window.clearTimeout(timer);
   }, [activeChapter, inHero, reducedMotion]);
 
-  const setParameter = useCallback((key: ParameterKey, value: number) => {
-    touched.current = true;
-    setPlaying(null);
-    dispatch({ type: "parameter", key, value });
-  }, []);
-  const resetParameter = useCallback((key: ParameterKey) => {
-    touched.current = true;
-    setPlaying(null);
-    dispatch({ type: "parameter", key, value: PRESENT_PARAMETERS[key] });
-  }, []);
+  const setParameter = useCallback(
+    (key: ParameterKey, value: number) => {
+      touched.current = true;
+      setPlaying(null);
+      markAdjusting();
+      dispatch({ type: "parameter", key, value });
+    },
+    [markAdjusting],
+  );
+  const resetParameter = useCallback(
+    (key: ParameterKey) => {
+      touched.current = true;
+      setPlaying(null);
+      markAdjusting();
+      dispatch({ type: "parameter", key, value: PRESENT_PARAMETERS[key] });
+    },
+    [markAdjusting],
+  );
   const resetAll = useCallback(() => {
     touched.current = true;
     setPlaying(null);
+    markAdjusting();
     dispatch({ type: "reset" });
-  }, []);
-  const nudgeParameter = useCallback((key: ParameterKey, delta: number) => {
-    touched.current = true;
-    setPlaying(null);
-    dispatch({ type: "nudge", key, delta });
-  }, []);
+  }, [markAdjusting]);
+  const nudgeParameter = useCallback(
+    (key: ParameterKey, delta: number) => {
+      touched.current = true;
+      setPlaying(null);
+      markAdjusting();
+      dispatch({ type: "nudge", key, delta });
+    },
+    [markAdjusting],
+  );
   const nudgeTime = useCallback((delta: number) => {
     touched.current = true;
     setPlaying(null);
@@ -336,6 +353,7 @@ export function ExperienceProvider({ children }: { children: ReactNode }) {
       reducedMotion,
       live,
       playing,
+      adjusting,
       preview,
       setPreview,
       setParameter,
@@ -354,6 +372,7 @@ export function ExperienceProvider({ children }: { children: ReactNode }) {
       state,
       reducedMotion,
       playing,
+      adjusting,
       preview,
       setParameter,
       resetParameter,

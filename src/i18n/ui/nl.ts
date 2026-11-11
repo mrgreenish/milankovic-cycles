@@ -170,6 +170,8 @@ export const nl: Ui = {
     dragTilt: "Sleep om de as te kantelen",
     dragDirection: "Sleep om de as te draaien",
     dragTime: "Sleep om door de tijd te gaan",
+    sunlightMap: "Zonlichtkaart",
+    sunlightLegend: "Gemiddeld zonlicht over 24 uur",
   },
   scene: {
     decimal: ",",

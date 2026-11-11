@@ -40,3 +40,40 @@ it("keeps the climate frame identical to an unmodified clock throughout a large 
   expect(tookShortRoute).toBe(true);
   expect(frames.main.earth.distanceTo(frames.climate.earth)).toBeLessThan(0.001);
 });
+
+it("fades the sunlight map in and out and eases the real eccentricity", () => {
+  let frame: SceneFrame | undefined;
+  function Capture() {
+    frame = useSceneFrame();
+    return null;
+  }
+  vi.mocked(useFrame).mockClear();
+  const targets = { current: { ...defaultTargets, focus: "tilt" as const } };
+  render(<SceneStateProvider targets={targets}><Capture /></SceneStateProvider>);
+  const tick = (count: number) => {
+    for (let i = 0; i < count; i++)
+      vi.mocked(useFrame).mock.calls.forEach(([callback]) => callback({} as RootState, 1 / 60));
+  };
+  tick(1);
+  expect(frame!.sunMap).toBe(0);
+  expect(frame!.trueE).toBeCloseTo(defaultTargets.trueEccentricity, 9);
+
+  targets.current.sunlight = true;
+  targets.current.trueEccentricity = 0.058;
+  tick(3);
+  // Part of the way there: neither value jumps.
+  expect(frame!.sunMap).toBeGreaterThan(0.1);
+  expect(frame!.sunMap).toBeLessThan(0.6);
+  expect(frame!.trueE).toBeGreaterThan(defaultTargets.trueEccentricity);
+  expect(frame!.trueE).toBeLessThan(0.058);
+  tick(60);
+  expect(frame!.sunMap).toBeGreaterThan(0.99);
+  expect(frame!.trueE).toBeCloseTo(0.058, 4);
+
+  // Out is slower than in, so the colours linger after the hand lets go.
+  targets.current.sunlight = false;
+  tick(3);
+  expect(frame!.sunMap).toBeGreaterThan(0.8);
+  tick(120);
+  expect(frame!.sunMap).toBeLessThan(0.01);
+});

@@ -354,6 +354,7 @@ export const en = {
     calcParagraphs: [
       "The number is the daily mean of incoming solar radiation at 65°N on the northern summer solstice, at the top of the atmosphere. It is not sunlight at the ground, a temperature, or an ice-sheet size. The lab’s temperature and ice estimates are a separate, rougher step, described below.",
       "The calculation uses a total solar irradiance of 1361 W/m² and the standard daily insolation geometry from Berger's astronomical formulation. Daylight hours count from when the centre of the Sun crosses a flat horizon, without the bending of light in the air, so real daylight at 65°N is about an hour longer.",
+      "The sunlight map on the globe uses the same calculation at every latitude, for the day Earth is at in the scene. Its colours show the average over 24 hours, so a place where the Sun does not set can receive more than the equator.",
     ],
     equationsEyebrow: "Calculation",
     equationsTitle: "From orbit to daily insolation",
