@@ -133,7 +133,7 @@ export const topicsEn: LearnTopic[] = [
     eyebrow: "Axis direction · Wobble",
     title: "How precession shifts the seasons",
     description:
-      "How the turning of Earth’s axis and of its orbit moves the seasons around the orbit every 23,000 years or so.",
+      "How the turning of Earth’s axis and of its orbit moves the seasons around the orbit about every 21,000 years.",
     answer:
       "Precession changes where on the orbit each season falls. Earth’s axis slowly turns like the axis of a spinning top, and the orbit’s long axis turns too. Together they shift the seasons relative to Earth’s closest and farthest points.",
     period: "Climate rhythms near 19,000 and 23,000 years",

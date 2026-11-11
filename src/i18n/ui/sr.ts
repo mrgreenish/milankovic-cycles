@@ -59,8 +59,8 @@ export const sr: Ui = {
       },
       "axis-direction": {
         label: "Njihanje",
-        detail: "Osa se okreće kao čigra",
-        period: "23.000 godina",
+        detail: "Godišnja doba klize duž orbite",
+        period: "21.000 godina",
       },
     },
   },
@@ -96,7 +96,7 @@ export const sr: Ui = {
     earthPerihelionLongitudeDeg: {
       label: "Smer ose",
       term: "Precesija",
-      period: "23.000 godina",
+      period: "21.000 godina",
       minLabel: "0°",
       maxLabel: "360°",
       experiments: ["Leto najbliže Suncu", "Leto najdalje od Sunca"],
@@ -185,7 +185,7 @@ export const sr: Ui = {
       tilt: "Nagib ose",
       summer: "Letnja udaljenost",
       sunlight: "Sunčeva svetlost, 65°N",
-      ice: "Led na kopnu",
+      ice: "Led na kopnu, manje ↑",
     },
     near: "blizu",
     far: "daleko",
@@ -246,14 +246,14 @@ export const sr: Ui = {
     recordLess: "nešto manje leda nego danas",
     recordNone: "ne više leda nego danas",
     recordPercent: "ledeni pokrivači na {percent}% svog ledenodobnog maksimuma",
-    record: "Izmereno u sedimentu morskog dna: {ice}, u svetu {warmth}.",
+    record: "Prema zapisu sa morskog dna: {ice}, u svetu {warmth}.",
     estimateLess: "deo današnjeg leda bi se otopio",
     estimateNone: "led bi ostao otprilike gde jeste",
     estimatePercent:
       "ledeni pokrivači bi narasli na otprilike {percent}% svog ledenodobnog maksimuma",
-    leadPast: "Ako bi ova orbita trajala oko 15.000 godina: ",
+    leadPast: "Ako bi ova orbita trajala desetinama hiljada godina: ",
     leadFuture:
-      "Samo orbita, zapisa još nema. Ako bi ova orbita trajala oko 15.000 godina: ",
+      "Samo orbita, zapisa još nema. Ako bi ova orbita trajala desetinama hiljada godina: ",
     estimate: "{lead}{ice}, u svetu {warmth}.",
   },
   lab: {
@@ -279,7 +279,7 @@ export const sr: Ui = {
     gaugeIceAge: "Poslednje ledeno doba −{n} °C",
     gaugePreindustrial: "Pre industrije, oko {n} °C",
     caveat:
-      "Gruba procena samo na osnovu orbite, a ne prognoza. Led i temperatura kreću se zajedno u zapisu sa morskog dna, a svet u poslednjem ledenom dobu bio je oko {lgm} °C hladniji (Tierney i saradnici, 2020). Za ručno podešenu orbitu pretpostavlja se da ona traje oko 15.000 godina. Pravi led zavisi i od ugljen-dioksida, okeana i leda koji već postoji, a stvarna današnja temperatura je zbog gasova staklene bašte oko 1,2 °C iznad ove osnove.",
+      "Gruba procena samo na osnovu orbite, a ne prognoza. Led i temperatura kreću se zajedno u zapisu sa morskog dna, a svet u poslednjem ledenom dobu bio je oko {lgm} °C hladniji (Tierney i saradnici, 2020). Za ručno podešenu orbitu pretpostavlja se da ona traje desetinama hiljada godina. Pravi led zavisi i od ugljen-dioksida, okeana i leda koji već postoji, a stvarna današnja temperatura je zbog gasova staklene bašte oko 1,3 °C iznad ove osnove.",
     timeHeading: "Putuj kroz vreme",
     dataLink: "Podaci La2004 ↗",
     presetReading: "{value} W/m² na 65°N",

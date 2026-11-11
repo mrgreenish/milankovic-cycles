@@ -133,7 +133,7 @@ export const topicsNl: LearnTopic[] = [
     eyebrow: "Asrichting · Wiebelen",
     title: "Hoe precessie de seizoenen verschuift",
     description:
-      "Hoe het draaien van de aardas en van haar baan de seizoenen ongeveer elke 23.000 jaar langs de baan verplaatst.",
+      "Hoe het draaien van de aardas en van haar baan de seizoenen ongeveer elke 21.000 jaar langs de baan verplaatst.",
     answer:
       "Precessie verandert waar op de baan elk seizoen valt. De aardas draait langzaam rond, zoals de as van een tol, en de lange as van de baan draait ook. Samen verschuiven ze de seizoenen ten opzichte van het dichtste en het verste punt van de aarde.",
     period: "Klimaatritmes rond 19.000 en 23.000 jaar",

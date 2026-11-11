@@ -133,7 +133,7 @@ export const topicsSr: LearnTopic[] = [
     eyebrow: "Smer ose · Njihanje",
     title: "Kako precesija pomera godišnja doba",
     description:
-      "Kako okretanje Zemljine ose i njene orbite pomera godišnja doba duž orbite otprilike svakih 23.000 godina.",
+      "Kako okretanje Zemljine ose i njene orbite pomera godišnja doba duž orbite otprilike svakih 21.000 godina.",
     answer:
       "Precesija menja gde na orbiti pada svako godišnje doba. Zemljina osa se polako okreće kao osa čigre, a okreće se i duža osa orbite. Zajedno pomeraju godišnja doba u odnosu na Zemljinu najbližu i najdalju tačku.",
     period: "Klimatski ritmovi oko 19.000 i 23.000 godina",

@@ -87,8 +87,8 @@ describe("climate wording", () => {
   });
 
   it("says where the numbers come from", () => {
-    expect(describeClimate(climateAt(-21, orbitalStateAt(-21)), -21)).toMatch(/^Measured in sea-floor sediment: ice sheets at \d+% of their ice-age peak/);
-    expect(describeClimate(climateAt(null, { ...PRESENT_PARAMETERS, obliquityDeg: 22 }), null)).toMatch(/^If this orbit lasted about 15,000 years: ice sheets would grow/);
+    expect(describeClimate(climateAt(-21, orbitalStateAt(-21)), -21)).toMatch(/^From the sea-floor record: ice sheets at \d+% of their ice-age peak/);
+    expect(describeClimate(climateAt(null, { ...PRESENT_PARAMETERS, obliquityDeg: 22 }), null)).toMatch(/^If this orbit held for tens of thousands of years: ice sheets would grow/);
     expect(describeClimate(climateAt(null, PRESENT_PARAMETERS), null)).toContain("about as warm as before industry");
     expect(describeClimate(climateAt(30, orbitalStateAt(30)), 30)).toContain("no record exists yet");
   });

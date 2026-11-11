@@ -80,6 +80,7 @@ export function Earth({
       uTime: { value: 0 },
       uDetail: { value: config.detail },
       uIce: { value: 0 },
+      uLights: { value: 1 },
       uRing: { value: 0 },
       uArctic: { value: 0 },
       uTiltDeg: { value: 23.4 },
@@ -110,6 +111,9 @@ export function Earth({
     const live = surfaceMaterial.current?.uniforms;
     if (live) {
       live.uIce.value = frame.ice;
+      // Night lights are modern: dim them once the clock is a few thousand years from today.
+      const away = Math.min(1, Math.max(0, (Math.abs(frame.time) - 0.5) / 2.5));
+      live.uLights.value = 1 - frame.timeBlend * away;
       live.uRing.value = Math.min(
         1,
         Math.max(weight.idea, weight.tilt, 0.7 * weight.timeline),

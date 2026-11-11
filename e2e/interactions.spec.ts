@@ -460,7 +460,7 @@ test("temperature and ice follow the orbit, and a date shows the measured record
   await tilt.press("Home");
   await expect(temperature).toHaveText(/^−\d\.\d °C$/);
   await expect(page.locator(".lab-climate__estimate")).toContainText(
-    "If this orbit lasted about 15,000 years: ice sheets would grow",
+    "If this orbit held for tens of thousands of years: ice sheets would grow",
   );
   // More tilt, stronger summers: a little warmer, a little ice lost.
   await tilt.press("End");
@@ -469,7 +469,7 @@ test("temperature and ice follow the orbit, and a date shows the measured record
   // A past date reports the sea-floor record instead.
   await page.getByRole("button", { name: "Peak of the last ice age", exact: true }).click();
   await expect(temperature).toHaveText("−5.7 °C");
-  await expect(page.locator(".lab-climate__estimate")).toContainText("Measured in sea-floor sediment");
+  await expect(page.locator(".lab-climate__estimate")).toContainText("From the sea-floor record");
 });
 
 test("the climate globe shows ice and temperature beside the orbit", async ({

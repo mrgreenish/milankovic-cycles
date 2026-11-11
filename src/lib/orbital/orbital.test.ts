@@ -7,6 +7,7 @@ import {
   ellipseSemiMinorAxis,
   latitudeCircleGeometry,
   perihelionDistanceAu,
+  seasonOfClosestApproach,
   summerSolsticeAxisVector,
 } from "./geometry";
 import {
@@ -106,5 +107,24 @@ describe("ellipse geometry", () => {
     expect(ring.axisOffset).toBeCloseTo(Math.sin(degreesToRadians(65)), 10);
     expect(ring.circleRadius).toBeCloseTo(Math.cos(degreesToRadians(65)), 10);
     expect(ring.axisOffset ** 2 + ring.circleRadius ** 2).toBeCloseTo(1, 10);
+  });
+});
+
+describe("season of closest approach", () => {
+  // The Sun's longitude at perihelion is the slider value plus 180°.
+  const at = (sunLongitude: number) =>
+    seasonOfClosestApproach({
+      eccentricity: 0.0167,
+      obliquityDeg: 23.44,
+      earthPerihelionLongitudeDeg: sunLongitude - 180,
+    });
+
+  it("follows the astronomical seasons", () => {
+    expect(at(282.9)).toBe("Northern winter"); // early January, today
+    expect(at(320)).toBe("Northern winter"); // early February
+    expect(at(30)).toBe("Northern spring");
+    expect(at(50)).toBe("Northern spring"); // early May
+    expect(at(100)).toBe("Northern summer");
+    expect(at(200)).toBe("Northern autumn");
   });
 });

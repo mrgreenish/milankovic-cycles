@@ -123,7 +123,7 @@ describe("localized formatting", () => {
       describeParameter("obliquityDeg", PRESENT_PARAMETERS, nl),
     ).toContain("uur");
     expect(describeClimate(climateAt(-21, PRESENT_PARAMETERS), -21, getUi("sr"))).toMatch(
-      /^Izmereno u sedimentu morskog dna: /,
+      /^Prema zapisu sa morskog dna: /,
     );
   });
 });

@@ -54,9 +54,10 @@ export function seasonOfClosestApproach(
   ui: Pick<Ui, "seasons"> = en,
 ) {
   const longitude = geocentricSolarLongitudeAtPerihelion(parameters);
-  if (longitude >= 315 || longitude < 45) return ui.seasons.spring;
-  if (longitude < 135) return ui.seasons.summer;
-  if (longitude < 225) return ui.seasons.autumn;
+  // Astronomical seasons: each runs from an equinox or solstice to the next.
+  if (longitude < 90) return ui.seasons.spring;
+  if (longitude < 180) return ui.seasons.summer;
+  if (longitude < 270) return ui.seasons.autumn;
   return ui.seasons.winter;
 }
 
