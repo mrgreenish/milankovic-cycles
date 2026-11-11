@@ -61,6 +61,7 @@ import { usePlayer, type Playing } from "@/components/experience/usePlayer";
 import { useReducedMotion } from "@/components/experience/useReducedMotion";
 import { useStickyLayout } from "@/components/experience/useStickyLayout";
 import { stageDragFor } from "@/components/experience/stageDrag";
+import { useRecentChange } from "@/components/experience/useRecentChange";
 import {
   initialLive,
   touchLive,
@@ -160,6 +161,7 @@ export function LabExperience() {
   const [shareStatus, setShareStatus] = useState("");
   const [manualLink, setManualLink] = useState("");
   const [playing, setPlaying] = useState<Playing>(null);
+  const [adjusting, markAdjusting] = useRecentChange();
   const live = useRef({ ...initialLive });
   const reducedMotion = useReducedMotion();
   useStickyLayout("lab");
@@ -234,6 +236,7 @@ export function LabExperience() {
   };
   const change = (key: ParameterKey, value: number) => {
     setPlaying(null);
+    markAdjusting();
     dispatch({ type: "parameter", key, value });
     clearShare();
   };
@@ -242,10 +245,14 @@ export function LabExperience() {
     dispatch({ type: "time", kyr });
     clearShare();
   };
-  const nudgeParameter = useCallback((key: ParameterKey, delta: number) => {
-    setPlaying(null);
-    dispatch({ type: "nudge", key, delta });
-  }, []);
+  const nudgeParameter = useCallback(
+    (key: ParameterKey, delta: number) => {
+      setPlaying(null);
+      markAdjusting();
+      dispatch({ type: "nudge", key, delta });
+    },
+    [markAdjusting],
+  );
   const nudgeTime = useCallback((delta: number) => {
     setPlaying(null);
     dispatch({ type: "timeNudge", delta });
@@ -289,6 +296,7 @@ export function LabExperience() {
           timeKyr={state.timeKyr}
           clockPlaying={clockPlaying}
           iceFollowsClock
+          sunlight={adjusting}
           globe={{ iceShare: climate.iceShare, deltaTempC: climate.deltaTempC }}
           reducedMotion={reducedMotion}
           live={live}
@@ -354,6 +362,7 @@ export function LabExperience() {
               type="button"
               onClick={() => {
                 setPlaying(null);
+                markAdjusting();
                 dispatch({ type: "reset" });
                 setAnnouncement(
                   `${ui.lab.resetAnnounce} ${sunlightAnnouncement(PRESENT_PARAMETERS, ui)}`,

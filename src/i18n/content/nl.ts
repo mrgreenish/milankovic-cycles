@@ -349,6 +349,7 @@ export const nl: Content = {
     calcParagraphs: [
       "Het getal is het daggemiddelde van de binnenkomende zonnestraling op 65°N op de noordelijke zomerzonnewende, aan de bovenkant van de atmosfeer. Het is niet het zonlicht op de grond, geen temperatuur en geen grootte van een ijskap. De temperatuur- en ijsschattingen van het lab zijn een aparte, ruwere stap, hieronder beschreven.",
       "De berekening gebruikt een totale zonne-instraling van 1361 W/m² en de standaardgeometrie voor dagelijkse instraling uit de astronomische formulering van Berger.",
+      "De zonlichtkaart op de aardbol gebruikt dezelfde berekening op elke breedtegraad, voor de dag waarop de aarde in het beeld staat. De kleuren tonen het gemiddelde over 24 uur. Daardoor kan een plek waar de zon niet ondergaat meer zonlicht krijgen dan de evenaar.",
     ],
     equationsEyebrow: "Berekening",
     equationsTitle: "Van baan naar dagelijkse instraling",

@@ -43,6 +43,8 @@ export type SceneClientProps = {
   clockPlaying?: boolean;
   /** Take ice from the measured record at the scene's clock rather than from `ice`. */
   iceFollowsClock?: boolean;
+  /** Paint the globe with the day's sunlight per latitude. */
+  sunlight?: boolean;
   /** A second, small view of Earth from above the pole; null for none. */
   inset?: InsetRect | null;
   /** The words and numbers drawn beside the orbit. */
@@ -137,6 +139,7 @@ export default function SceneClient({
   timeKyr = null,
   clockPlaying = false,
   iceFollowsClock = false,
+  sunlight = false,
   inset = null,
   labels,
   stageShift = 0,
@@ -169,6 +172,7 @@ export default function SceneClient({
       clockPlaying,
       scale,
       iceFollowsClock,
+      sunlight,
       stageShift,
       stageShiftY,
       rate,

@@ -350,6 +350,7 @@ export const sr: Content = {
     calcParagraphs: [
       "Broj je dnevna srednja vrednost dolaznog sunčevog zračenja na 65°N za severni letnji solsticijum, na vrhu atmosfere. To nije sunčeva svetlost na tlu, temperatura niti veličina ledenog pokrivača. Procene temperature i leda u laboratoriji su poseban, grublji korak, opisan u nastavku.",
       "Proračun koristi ukupno sunčevo zračenje od 1361 W/m² i standardnu geometriju dnevne insolacije iz Bergerove astronomske formulacije.",
+      "Mapa sunčeve svetlosti na globusu koristi isti proračun na svakoj geografskoj širini, za dan u kome se Zemlja nalazi u prikazu. Boje prikazuju prosek tokom 24 sata, pa mesto na kome Sunce ne zalazi može da primi više svetlosti nego ekvator.",
     ],
     equationsEyebrow: "Proračun",
     equationsTitle: "Od orbite do dnevne insolacije",

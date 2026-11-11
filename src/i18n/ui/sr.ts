@@ -167,6 +167,8 @@ export const sr: Ui = {
     dragTilt: "Prevuci da nagneš osu",
     dragDirection: "Prevuci da okreneš osu",
     dragTime: "Prevuci da putuješ kroz vreme",
+    sunlightMap: "Mapa sunčeve svetlosti",
+    sunlightLegend: "Prosečna sunčeva svetlost tokom 24 sata",
   },
   scene: {
     decimal: ",",

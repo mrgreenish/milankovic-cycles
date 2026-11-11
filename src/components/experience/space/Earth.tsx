@@ -23,6 +23,7 @@ import {
   earthFragment,
   sphereVertex,
 } from "./shaders";
+import { orbitRadius } from "@/lib/orbital/geometry";
 import { QUALITY } from "./quality";
 import {
   animationTime,
@@ -84,6 +85,9 @@ export function Earth({
       uArctic: { value: 0 },
       uTiltDeg: { value: 23.4 },
       uClear: { value: 0 },
+      uSunMap: { value: 0 },
+      uSunDecl: { value: 0.4 },
+      uSunDist: { value: 1 },
     }),
     [textures, config.detail],
   );
@@ -117,6 +121,29 @@ export function Earth({
       live.uArctic.value = weight.tilt;
       live.uTiltDeg.value = (frame.tilt * 180) / Math.PI;
       live.uClear.value = Math.max(weight.idea * 0.9, weight.tilt * 0.7);
+      // The sunlight map belongs to the views that set the orbit by hand. The
+      // climate globe and the views that show ice keep the natural surface.
+      const map =
+        layer === 1
+          ? 0
+          : frame.sunMap *
+            Math.min(
+              1,
+              weight.shape + weight.tilt + weight.direction + weight.combined,
+            );
+      live.uSunMap.value = map;
+      // Each material holds its own copy of the uniforms, so the clouds are told too.
+      if (cloudMaterial.current)
+        cloudMaterial.current.uniforms.uSunMap.value = map;
+      if (map > 0.003) {
+        // The Sun sits at the origin, so its declination is the angle between
+        // the axis and the line to it. The scene's own geometry sets it: the
+        // map always agrees with the day and night drawn on the globe.
+        const distance = Math.max(frame.earth.length(), 1e-6);
+        live.uSunDecl.value = -frame.axis.dot(frame.earth) / distance;
+        // The drawn orbit may be stretched; sunlight uses the real distance.
+        live.uSunDist.value = orbitRadius(frame.anomaly, frame.trueE);
+      }
     }
     if (body.current) body.current.scale.setScalar(frame.radius);
     if (surfaceMaterial.current)
