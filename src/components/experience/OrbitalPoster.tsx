@@ -34,7 +34,9 @@ function summerPosition(eccentricity: number, perihelionLongitudeDeg: number) {
     (1 + eccentricity * Math.cos(trueAnomaly));
   return {
     x: CENTER_X + radius * Math.cos(trueAnomaly),
-    y: CENTER_Y + radius * Y_PROJECTION * Math.sin(trueAnomaly),
+    // The far side of the orbit sits higher, so Earth runs counterclockwise
+    // as seen from above the north pole.
+    y: CENTER_Y - radius * Y_PROJECTION * Math.sin(trueAnomaly),
   };
 }
 
@@ -72,7 +74,7 @@ export function OrbitalPoster({
   const axisVector = summerSolsticeAxisVector(parameters);
   const projectedAxis = {
     x: axisVector[0],
-    y: axisVector[2] * Y_PROJECTION - axisVector[1],
+    y: -axisVector[2] * Y_PROJECTION - axisVector[1],
   };
   const projectedAxisLength = Math.hypot(projectedAxis.x, projectedAxis.y);
   const orbitAxis = {

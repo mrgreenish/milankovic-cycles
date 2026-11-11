@@ -42,6 +42,7 @@ export const earthFragment = /* glsl */ `
   uniform sampler2D uNight;
   uniform sampler2D uClouds;
   uniform float uIce;
+  uniform float uLights;
   uniform float uRing;
   uniform float uArctic;
   uniform float uTiltDeg;
@@ -59,7 +60,7 @@ export const earthFragment = /* glsl */ `
     float limit = 80.0;
     limit = min(limit, mix(80.0, 39.0, america));
     limit = min(limit, mix(80.0, 51.0, europe));
-    limit = min(limit, mix(80.0, 66.0, siberia));
+    limit = min(limit, mix(80.0, 72.0, siberia));
     return limit;
   }
 
@@ -121,7 +122,8 @@ export const earthFragment = /* glsl */ `
     color += vec3(1.0, 0.91, 0.72) * specular * ocean * (0.35 + fresnel) * daylight * (1.0 - shadow);
     // Snow keeps a faint starlit glow on the night side so the ice stays readable.
     color += vec3(0.05, 0.075, 0.12) * iceMask * (1.0 - daylight);
-    float night = texture2D(uNight, vUv).r;
+    // City lights are today's: they fade away from the present and under ice.
+    float night = texture2D(uNight, vUv).r * uLights * (1.0 - iceMask);
     color += vec3(1.0, 0.58, 0.23) * pow(night, 1.3) * (1.0 - smoothstep(-0.18, 0.04, sunHeight)) * 1.8;
     float rim = pow(1.0 - max(dot(normal, view), 0.0), 3.5);
     vec3 atmosphere = mix(vec3(0.52, 0.16, 0.035), vec3(0.12, 0.4, 0.95), smoothstep(-0.08, 0.35, sunHeight));

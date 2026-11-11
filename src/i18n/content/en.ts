@@ -38,7 +38,7 @@ export const en = {
         },
         {
           title: "Summer sunlight at 65°N changes",
-          body: "That latitude crosses northern Canada, Scandinavia and Siberia, where the big ice sheets grew.",
+          body: "That latitude crosses northern Canada, Scandinavia and Siberia. The big ice sheets grew across it in Canada and northern Europe.",
         },
         {
           title: "Ice and carbon dioxide add to it",
@@ -84,7 +84,7 @@ export const en = {
         intro:
           "Earth’s axis slowly turns, like the axis of a spinning top. The orbit turns too. Together they move the seasons around the orbit. Drag to turn the axis.",
         effect: [
-          "Today northern summer falls on the far side of the orbit. In about 11,000 years it falls on the near side, and midsummer sunlight at 65°N rises from 478 to about 510 W/m².",
+          "Today northern summer falls on the far side of the orbit. Half a cycle later it falls on the near side. With today’s orbit and tilt, that alone would lift midsummer sunlight at 65°N from 478 to about 510 W/m². The real swap comes in about 10,000 years, when the orbit is rounder and the tilt smaller, so sunlight peaks near 490 W/m².",
           "That swap matters more when the orbit is stretched. At the most stretched orbit it changes midsummer sunlight by 115 W/m².",
         ],
         deeper: [
@@ -100,7 +100,7 @@ export const en = {
       lookFor: "What to look for",
       lookForBody:
         "The ice line follows the sunlight line, but later. Ice builds slowly over tens of thousands of years and goes fast, in around ten thousand.",
-      note: "Milutin Milanković worked this out by hand over about thirty years and published it in 1941. Nobody could check it until 1976, when seabed sediment showed the same rhythms. He had died 18 years earlier.",
+      note: "Milutin Milanković worked this out by hand over about thirty years and published it in 1941. It was not convincingly confirmed until 1976, when seabed sediment showed the same rhythms. He had died 18 years earlier.",
       deeper: [
         "The strongest rhythm in the ice record is 100,000 years, yet the orbit’s direct push at that period is weak. The ice sheets, oceans and carbon dioxide must be amplifying it, and how exactly is still debated.",
         "Past 0 on the clock the orbit keeps going and the ice line stops: nothing here predicts future ice. For the next 50,000 years the orbit is unusually calm, and midsummer sunlight at 65°N stays between 475 and 503 W/m².",
@@ -215,25 +215,25 @@ export const en = {
         id: "where-does-the-history-come-from",
         question: "Where does the 800,000-year history come from?",
         answer:
-          "The orbit comes from the La2004 solution by Jacques Laskar and colleagues, sampled every 1,000 years. The ice line is the LR04 stack of 57 seabed sediment records (Lisiecki and Raymo, 2005), which tracks ice volume through the oxygen isotopes in tiny fossils.",
+          "The orbit comes from the La2004 solution by Jacques Laskar and colleagues, sampled every 1,000 years. The ice line is the LR04 stack of 57 seabed sediment records (Lisiecki and Raymo, 2005), which tracks ice volume, mixed with deep-ocean temperature, through the oxygen isotopes in tiny fossils.",
       },
       {
         id: "is-the-ice-real",
         question: "Is the ice on the globe real?",
         answer:
-          "It is an illustration. The amount of ice follows the measured record, but the outline is drawn by hand to resemble the last ice age. Use it for scale, not for geography.",
+          "It is an illustration. The amount of ice follows the measured record, but the outline is drawn by hand to resemble the last ice age. Coastlines and city lights stay as they are today, although sea level was about 120 m lower then. Use it for scale, not for geography.",
       },
       {
         id: "is-this-a-climate-prediction",
         question: "Does the lab predict temperature or future ice sheets?",
         answer:
-          "No, but it gives a rough estimate. At a past date it shows the measured ice record and the temperature that goes with it. For an orbit you set by hand it asks what would happen if that orbit lasted about 15,000 years, using the link between sunlight and ice over the last 800,000 years. It leaves out carbon dioxide, oceans and the ice already there, and it is not a forecast.",
+          "No, but it gives a rough estimate. At a past date it shows the measured ice record and the temperature that goes with it. For an orbit you set by hand it asks what would happen if that orbit held for tens of thousands of years, using the link between sunlight and ice over the last 800,000 years. It leaves out carbon dioxide, oceans and the ice already there, and it is not a forecast.",
       },
       {
         id: "how-is-temperature-estimated",
         question: "How does the lab get a temperature?",
         answer:
-          "From ice. In the sea-floor record, ice and global temperature move together, and the last ice age was about 6.1 °C colder than before industry. The lab scales the ice share to that figure. It is the orbit’s share only, and it does not include today’s warming, which is about 1.2 °C above that baseline.",
+          "From ice. In the sea-floor record, ice and global temperature move together, and the last ice age was about 6.1 °C colder than before industry. The lab scales the ice share to that figure. It is the orbit’s share only, and it does not include today’s warming, which is about 1.3 °C above that baseline.",
       },
       {
         id: "modern-warming",
@@ -353,7 +353,7 @@ export const en = {
     calcTitle: "Midsummer sunlight at 65°N",
     calcParagraphs: [
       "The number is the daily mean of incoming solar radiation at 65°N on the northern summer solstice, at the top of the atmosphere. It is not sunlight at the ground, a temperature, or an ice-sheet size. The lab’s temperature and ice estimates are a separate, rougher step, described below.",
-      "The calculation uses a total solar irradiance of 1361 W/m² and the standard daily insolation geometry from Berger's astronomical formulation.",
+      "The calculation uses a total solar irradiance of 1361 W/m² and the standard daily insolation geometry from Berger's astronomical formulation. Daylight hours count from when the centre of the Sun crosses a flat horizon, without the bending of light in the air, so real daylight at 65°N is about an hour longer.",
     ],
     equationsEyebrow: "Calculation",
     equationsTitle: "From orbit to daily insolation",
@@ -377,15 +377,15 @@ export const en = {
     clockTitle: "800,000 years of orbit and ice",
     clockParagraphs: [
       "The orbit on the clock is the nominal La2004 solution of Laskar and colleagues, read at every 1,000 years from 800,000 years ago to 100,000 years ahead, with linear steps in between. The four moments above are exact nodes of the same data.",
-      "The ice line is the LR04 stack of 57 benthic oxygen-isotope records (Lisiecki and Raymo, 2005), which follows global ice volume. The scale runs from 0% at today’s value to 100% at its highest point in the last 30,000 years. Beyond 600,000 years the stack is sampled every 2,000 years and the gaps are filled in linearly. The line stops at today because nothing here predicts future ice.",
-      "The ice drawn on the globe is an illustration. Its size follows the ice line, and its outline is drawn by hand after the last glacial maximum. Earth’s surface comes from NASA Earth Observatory imagery: Blue Marble, Black Marble and GEBCO terrain.",
+      "The ice line is the LR04 stack of 57 benthic oxygen-isotope records (Lisiecki and Raymo, 2005). It follows global ice volume, together with deep-ocean temperature, so the ice line is an index of how glacial the world was rather than a pure ice measurement. Its dates were themselves tuned to 65°N June sunlight, so part of the timing match between the two lines is built in. The scale runs from 0% at today’s value to 100% at its highest point in the last 30,000 years. Beyond 600,000 years the stack is sampled every 2,000 years and the gaps are filled in linearly. The line stops at today because nothing here predicts future ice.",
+      "The ice drawn on the globe is an illustration. Its size follows the ice line, and its outline is drawn by hand after the last glacial maximum. Coastlines, which sat about 120 m lower then, and city lights stay as they are today. Earth’s surface comes from NASA Earth Observatory imagery: Blue Marble, Black Marble and GEBCO terrain.",
     ],
     tempEyebrow: "Temperature and ice",
     tempTitle: "A rough estimate, in two parts",
     tempParagraphs: [
       "At a date on the clock, ice is the measured LR04 value. Ice and global temperature move together, and the last glacial maximum was about 6.1 °C colder than before industry (Tierney et al., 2020), so temperature is minus 6.1 °C times the ice share. A figure near 14 °C is used for the average temperature before industry.",
-      "For an orbit set by hand, the lab asks what would settle if it lasted. Fitted to the last 800,000 years, ice follows 65°N summer sunlight smoothed over about 15,000 years, at 0.018 of the ice-age peak for every W/m² of sunlight lost (correlation about −0.46). On the warm side the response flattens, because there is little ice left to melt. The fit is checked against the data in the project’s tests.",
-      "Carbon dioxide, oceans and the ice already in place are left out, so the estimate can differ a lot from a real date: with a hand-set orbit, 21,000 years ago shows far less ice than the record, because the record built up over many earlier summers. Today’s real temperature is about 1.2 °C above the baseline because of greenhouse gases.",
+      "For an orbit set by hand, the lab asks what would settle if it lasted. Fitted to the last 800,000 years, ice follows 65°N summer sunlight smoothed over about 15,000 years, at 0.018 of the ice-age peak for every W/m² of sunlight lost (correlation about −0.46, so sunlight accounts for about a fifth of the ups and downs). Ice takes several of those 15,000-year spans to settle, so the estimate is for an orbit held for tens of thousands of years. On the warm side the response flattens, because there is little ice left to melt. The fit is checked against the data in the project’s tests.",
+      "Carbon dioxide, oceans and the ice already in place are left out, so the estimate can differ a lot from a real date: with a hand-set orbit, 21,000 years ago shows far less ice than the record, because the record built up over many earlier summers. Today’s real temperature is about 1.3 °C above the baseline because of greenhouse gases.",
     ],
     limitsEyebrow: "Limits",
     limitsTitle: "Sunlight alone does not predict climate",

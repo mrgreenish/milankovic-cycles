@@ -33,7 +33,7 @@ export const nl: Content = {
         },
         {
           title: "Het zomerzonlicht op 65°N verandert",
-          body: "Die breedtegraad loopt door Noord-Canada, Scandinavië en Siberië, waar de grote ijskappen groeiden.",
+          body: "Die breedtegraad loopt door Noord-Canada, Scandinavië en Siberië. In Canada en Noord-Europa groeiden de grote ijskappen eroverheen.",
         },
         {
           title: "IJs en koolstofdioxide versterken het",
@@ -79,7 +79,7 @@ export const nl: Content = {
         intro:
           "De aardas draait langzaam rond, zoals de as van een tol. De baan draait ook. Samen verplaatsen ze de seizoenen langs de baan. Sleep om de as te draaien.",
         effect: [
-          "Nu valt de zomer op het noordelijk halfrond aan de verre kant van de baan. Over ongeveer 11.000 jaar valt hij aan de nabije kant, en het zonlicht in hoogzomer op 65°N stijgt van 478 naar ongeveer 510 W/m².",
+          "Nu valt de zomer op het noordelijk halfrond aan de verre kant van de baan. Een halve cyclus later valt hij aan de nabije kant. Met de baan en kanteling van nu zou dat alleen het zonlicht in hoogzomer op 65°N van 478 naar ongeveer 510 W/m² brengen. De echte omwisseling komt over ongeveer 10.000 jaar, als de baan ronder is en de kanteling kleiner, dus piekt het zonlicht rond 490 W/m².",
           "Die omwisseling telt zwaarder als de baan uitgerekt is. Bij de sterkst uitgerekte baan verandert ze het zonlicht in hoogzomer met 115 W/m².",
         ],
         deeper: [
@@ -95,7 +95,7 @@ export const nl: Content = {
       lookFor: "Waar je op moet letten",
       lookForBody:
         "De ijslijn volgt de zonlichtlijn, maar later. IJs bouwt zich langzaam op over tienduizenden jaren en verdwijnt snel, in ongeveer tienduizend.",
-      note: "Milutin Milanković werkte dit in ongeveer dertig jaar met de hand uit en publiceerde het in 1941. Niemand kon het controleren tot 1976, toen sediment van de zeebodem dezelfde ritmes liet zien. Hij was toen al 18 jaar overleden.",
+      note: "Milutin Milanković werkte dit in ongeveer dertig jaar met de hand uit en publiceerde het in 1941. Pas in 1976 werd het overtuigend bevestigd, toen sediment van de zeebodem dezelfde ritmes liet zien. Hij was toen al 18 jaar overleden.",
       deeper: [
         "Het sterkste ritme in de ijsgegevens is 100.000 jaar, terwijl de directe duw van de baan bij die periode zwak is. De ijskappen, oceanen en koolstofdioxide moeten dat versterken, en hoe precies wordt nog bediscussieerd.",
         "Voorbij 0 op de klok gaat de baan door en stopt de ijslijn: niets hier voorspelt toekomstig ijs. De komende 50.000 jaar is de baan ongewoon rustig, en het zonlicht in hoogzomer op 65°N blijft tussen 475 en 503 W/m².",
@@ -210,25 +210,25 @@ export const nl: Content = {
         id: "where-does-the-history-come-from",
         question: "Waar komt de geschiedenis van 800.000 jaar vandaan?",
         answer:
-          "De baan komt uit de La2004-oplossing van Jacques Laskar en collega’s, om de 1.000 jaar bemonsterd. De ijslijn is de LR04-stack van 57 sedimentreeksen van de zeebodem (Lisiecki en Raymo, 2005), die het ijsvolume volgt via de zuurstofisotopen in piepkleine fossielen.",
+          "De baan komt uit de La2004-oplossing van Jacques Laskar en collega’s, om de 1.000 jaar bemonsterd. De ijslijn is de LR04-stack van 57 sedimentreeksen van de zeebodem (Lisiecki en Raymo, 2005), die het ijsvolume volgt, vermengd met de temperatuur van de diepzee, via de zuurstofisotopen in piepkleine fossielen.",
       },
       {
         id: "is-the-ice-real",
         question: "Is het ijs op de wereldbol echt?",
         answer:
-          "Het is een illustratie. De hoeveelheid ijs volgt de gemeten gegevens, maar de omtrek is met de hand getekend naar het voorbeeld van de laatste ijstijd. Gebruik het voor de schaal, niet voor de geografie.",
+          "Het is een illustratie. De hoeveelheid ijs volgt de gemeten gegevens, maar de omtrek is met de hand getekend naar het voorbeeld van de laatste ijstijd. Kustlijnen en stadslichten blijven zoals ze nu zijn, hoewel de zeespiegel toen ongeveer 120 m lager stond. Gebruik het voor de schaal, niet voor de geografie.",
       },
       {
         id: "is-this-a-climate-prediction",
         question: "Voorspelt het lab temperatuur of toekomstige ijskappen?",
         answer:
-          "Nee, maar het geeft wel een ruwe schatting. Bij een datum in het verleden toont het de gemeten ijsgegevens en de bijbehorende temperatuur. Voor een baan die je met de hand instelt, vraagt het wat er zou gebeuren als die baan ongeveer 15.000 jaar bleef, op basis van het verband tussen zonlicht en ijs over de afgelopen 800.000 jaar. Koolstofdioxide, oceanen en het ijs dat er al ligt blijven buiten beschouwing, en het is geen voorspelling.",
+          "Nee, maar het geeft wel een ruwe schatting. Bij een datum in het verleden toont het de gemeten ijsgegevens en de bijbehorende temperatuur. Voor een baan die je met de hand instelt, vraagt het wat er zou gebeuren als die baan tienduizenden jaren bleef, op basis van het verband tussen zonlicht en ijs over de afgelopen 800.000 jaar. Koolstofdioxide, oceanen en het ijs dat er al ligt blijven buiten beschouwing, en het is geen voorspelling.",
       },
       {
         id: "how-is-temperature-estimated",
         question: "Hoe komt het lab aan een temperatuur?",
         answer:
-          "Uit ijs. In de gegevens van de zeebodem bewegen ijs en wereldtemperatuur samen, en de laatste ijstijd was ongeveer 6,1 °C kouder dan vóór de industrialisatie. Het lab schaalt het ijsaandeel naar dat getal. Het is alleen het aandeel van de baan, en het bevat niet de opwarming van nu, die ongeveer 1,2 °C boven die basislijn ligt.",
+          "Uit ijs. In de gegevens van de zeebodem bewegen ijs en wereldtemperatuur samen, en de laatste ijstijd was ongeveer 6,1 °C kouder dan vóór de industrialisatie. Het lab schaalt het ijsaandeel naar dat getal. Het is alleen het aandeel van de baan, en het bevat niet de opwarming van nu, die ongeveer 1,3 °C boven die basislijn ligt.",
       },
       {
         id: "modern-warming",
@@ -348,7 +348,7 @@ export const nl: Content = {
     calcTitle: "Zonlicht in hoogzomer op 65°N",
     calcParagraphs: [
       "Het getal is het daggemiddelde van de binnenkomende zonnestraling op 65°N op de noordelijke zomerzonnewende, aan de bovenkant van de atmosfeer. Het is niet het zonlicht op de grond, geen temperatuur en geen grootte van een ijskap. De temperatuur- en ijsschattingen van het lab zijn een aparte, ruwere stap, hieronder beschreven.",
-      "De berekening gebruikt een totale zonne-instraling van 1361 W/m² en de standaardgeometrie voor dagelijkse instraling uit de astronomische formulering van Berger.",
+      "De berekening gebruikt een totale zonne-instraling van 1361 W/m² en de standaardgeometrie voor dagelijkse instraling uit de astronomische formulering van Berger. Daglichturen tellen vanaf het moment dat het midden van de zon een vlakke horizon passeert, zonder de breking van licht in de lucht, dus echt daglicht op 65°N duurt ongeveer een uur langer.",
     ],
     equationsEyebrow: "Berekening",
     equationsTitle: "Van baan naar dagelijkse instraling",
@@ -372,15 +372,15 @@ export const nl: Content = {
     clockTitle: "800.000 jaar baan en ijs",
     clockParagraphs: [
       "De baan op de klok is de nominale La2004-oplossing van Laskar en collega’s, afgelezen elke 1.000 jaar van 800.000 jaar geleden tot 100.000 jaar vooruit, met lineaire stappen ertussen. De vier momenten hierboven zijn exacte knooppunten van dezelfde gegevens.",
-      "De ijslijn is de LR04-stack van 57 benthische zuurstofisotopenreeksen (Lisiecki en Raymo, 2005), die het wereldwijde ijsvolume volgt. De schaal loopt van 0% bij de waarde van nu tot 100% op het hoogste punt van de afgelopen 30.000 jaar. Voorbij 600.000 jaar wordt de stack elke 2.000 jaar bemonsterd en worden de gaten lineair opgevuld. De lijn stopt bij nu, omdat niets hier toekomstig ijs voorspelt.",
-      "Het ijs op de wereldbol is een illustratie. De omvang volgt de ijslijn en de omtrek is met de hand getekend naar het laatste ijstijdmaximum. Het aardoppervlak komt uit beelden van NASA Earth Observatory: Blue Marble, Black Marble en GEBCO-terrein.",
+      "De ijslijn is de LR04-stack van 57 benthische zuurstofisotopenreeksen (Lisiecki en Raymo, 2005). Die volgt het wereldwijde ijsvolume, samen met de temperatuur van de diepzee, dus de ijslijn is een maat voor hoe ijstijdachtig de wereld was en geen zuivere ijsmeting. De dateringen zijn zelf afgestemd op het junizonlicht op 65°N, dus een deel van de overeenkomst in timing tussen de twee lijnen zit er al in. De schaal loopt van 0% bij de waarde van nu tot 100% op het hoogste punt van de afgelopen 30.000 jaar. Voorbij 600.000 jaar wordt de stack elke 2.000 jaar bemonsterd en worden de gaten lineair opgevuld. De lijn stopt bij nu, omdat niets hier toekomstig ijs voorspelt.",
+      "Het ijs op de wereldbol is een illustratie. De omvang volgt de ijslijn en de omtrek is met de hand getekend naar het laatste ijstijdmaximum. Kustlijnen, die toen ongeveer 120 m lager lagen, en stadslichten blijven zoals ze nu zijn. Het aardoppervlak komt uit beelden van NASA Earth Observatory: Blue Marble, Black Marble en GEBCO-terrein.",
     ],
     tempEyebrow: "Temperatuur en ijs",
     tempTitle: "Een ruwe schatting, in twee delen",
     tempParagraphs: [
       "Bij een datum op de klok is het ijs de gemeten LR04-waarde. IJs en wereldtemperatuur bewegen samen, en het laatste ijstijdmaximum was ongeveer 6,1 °C kouder dan vóór de industrialisatie (Tierney e.a., 2020), dus de temperatuur is min 6,1 °C maal het ijsaandeel. Voor de gemiddelde temperatuur vóór de industrialisatie wordt een getal rond 14 °C gebruikt.",
-      "Voor een met de hand ingestelde baan vraagt het lab wat er uiteindelijk zou ontstaan als die baan bleef. Aangepast aan de afgelopen 800.000 jaar volgt ijs het zomerzonlicht op 65°N, gemiddeld over ongeveer 15.000 jaar, met 0,018 van het ijstijdmaximum voor elke W/m² zonlicht die verloren gaat (correlatie ongeveer −0,46). Aan de warme kant vlakt de reactie af, omdat er weinig ijs meer is om te smelten. De fit wordt in de tests van het project met de gegevens vergeleken.",
-      "Koolstofdioxide, oceanen en het ijs dat er al ligt blijven buiten beschouwing, dus de schatting kan sterk afwijken van een echte datum: met een met de hand ingestelde baan toont 21.000 jaar geleden veel minder ijs dan de gegevens, omdat die zich over veel eerdere zomers hebben opgebouwd. De echte temperatuur van nu ligt door broeikasgassen ongeveer 1,2 °C boven de basislijn.",
+      "Voor een met de hand ingestelde baan vraagt het lab wat er uiteindelijk zou ontstaan als die baan bleef. Aangepast aan de afgelopen 800.000 jaar volgt ijs het zomerzonlicht op 65°N, gemiddeld over ongeveer 15.000 jaar, met 0,018 van het ijstijdmaximum voor elke W/m² zonlicht die verloren gaat (correlatie ongeveer −0,46, dus zonlicht verklaart ongeveer een vijfde van het op en neer). IJs heeft meerdere van die perioden van 15.000 jaar nodig om tot rust te komen, dus de schatting geldt voor een baan die tienduizenden jaren blijft. Aan de warme kant vlakt de reactie af, omdat er weinig ijs meer is om te smelten. De fit wordt in de tests van het project met de gegevens vergeleken.",
+      "Koolstofdioxide, oceanen en het ijs dat er al ligt blijven buiten beschouwing, dus de schatting kan sterk afwijken van een echte datum: met een met de hand ingestelde baan toont 21.000 jaar geleden veel minder ijs dan de gegevens, omdat die zich over veel eerdere zomers hebben opgebouwd. De echte temperatuur van nu ligt door broeikasgassen ongeveer 1,3 °C boven de basislijn.",
     ],
     limitsEyebrow: "Grenzen",
     limitsTitle: "Zonlicht alleen voorspelt het klimaat niet",
