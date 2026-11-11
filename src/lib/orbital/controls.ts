@@ -51,7 +51,7 @@ export const ORBITAL_CONTROLS = {
   earthPerihelionLongitudeDeg: {
     label: "Axis direction",
     term: "Precession",
-    period: "~23,000 years",
+    period: "~21,000 years",
     focus: "direction",
     min: 0,
     max: 359.9,

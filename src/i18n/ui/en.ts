@@ -61,8 +61,8 @@ export const en = {
       },
       "axis-direction": {
         label: "Wobble",
-        detail: "The axis turns like a top",
-        period: "23,000 years",
+        detail: "The seasons drift around the orbit",
+        period: "21,000 years",
       },
     },
   },
@@ -98,7 +98,7 @@ export const en = {
     earthPerihelionLongitudeDeg: {
       label: "Axis direction",
       term: "Precession",
-      period: "23,000 years",
+      period: "21,000 years",
       minLabel: "0°",
       maxLabel: "360°",
       experiments: ["Summer nearest the Sun", "Summer farthest from the Sun"],
@@ -189,7 +189,7 @@ export const en = {
       tilt: "Axis tilt",
       summer: "Summer distance",
       sunlight: "Sunlight, 65°N",
-      ice: "Ice on land",
+      ice: "Ice on land, less ↑",
     },
     near: "near",
     far: "far",
@@ -250,14 +250,14 @@ export const en = {
     recordLess: "slightly less ice than today",
     recordNone: "no more ice than today",
     recordPercent: "ice sheets at {percent}% of their ice-age peak",
-    record: "Measured in sea-floor sediment: {ice}, in a world {warmth}.",
+    record: "From the sea-floor record: {ice}, in a world {warmth}.",
     estimateLess: "some of today’s ice would melt",
     estimateNone: "ice would stay about where it is",
     estimatePercent:
       "ice sheets would grow to about {percent}% of their ice-age peak",
-    leadPast: "If this orbit lasted about 15,000 years: ",
+    leadPast: "If this orbit held for tens of thousands of years: ",
     leadFuture:
-      "Orbit only, no record exists yet. If this orbit lasted about 15,000 years: ",
+      "Orbit only, no record exists yet. If this orbit held for tens of thousands of years: ",
     estimate: "{lead}{ice}, in a world {warmth}.",
   },
   lab: {
@@ -281,7 +281,7 @@ export const en = {
     gaugeIceAge: "Last ice age −{n} °C",
     gaugePreindustrial: "Before industry, about {n} °C",
     caveat:
-      "A rough, orbit-only estimate, not a forecast. Ice and temperature move together in the sea-floor record, and a world at the last ice age was about {lgm} °C colder (Tierney et al., 2020). For a hand-set orbit it assumes the orbit lasts about 15,000 years. Real ice also depends on carbon dioxide, oceans and the ice already there, and today’s actual temperature is about 1.2 °C above this baseline because of greenhouse gases.",
+      "A rough, orbit-only estimate, not a forecast. Ice and temperature move together in the sea-floor record, and a world at the last ice age was about {lgm} °C colder (Tierney et al., 2020). For a hand-set orbit it assumes the orbit holds for tens of thousands of years. Real ice also depends on carbon dioxide, oceans and the ice already there, and today’s actual temperature is about 1.3 °C above this baseline because of greenhouse gases.",
     timeHeading: "Travel in time",
     dataLink: "La2004 data ↗",
     presetReading: "{value} W/m² at 65°N",

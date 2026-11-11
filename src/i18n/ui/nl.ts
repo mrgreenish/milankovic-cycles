@@ -59,8 +59,8 @@ export const nl: Ui = {
       },
       "axis-direction": {
         label: "Wiebelen",
-        detail: "De as draait rond als een tol",
-        period: "23.000 jaar",
+        detail: "De seizoenen schuiven langs de baan",
+        period: "21.000 jaar",
       },
     },
   },
@@ -96,7 +96,7 @@ export const nl: Ui = {
     earthPerihelionLongitudeDeg: {
       label: "Asrichting",
       term: "Precessie",
-      period: "23.000 jaar",
+      period: "21.000 jaar",
       minLabel: "0°",
       maxLabel: "360°",
       experiments: [
@@ -190,7 +190,7 @@ export const nl: Ui = {
       tilt: "Askanteling",
       summer: "Afstand in de zomer",
       sunlight: "Zonlicht, 65°N",
-      ice: "IJs op land",
+      ice: "IJs op land, minder ↑",
     },
     near: "dichtbij",
     far: "ver",
@@ -251,14 +251,14 @@ export const nl: Ui = {
     recordLess: "iets minder ijs dan nu",
     recordNone: "niet meer ijs dan nu",
     recordPercent: "ijskappen op {percent}% van hun ijstijdmaximum",
-    record: "Gemeten in zeebodemsediment: {ice}, in een wereld die {warmth} was.",
+    record: "Volgens het zeebodemarchief: {ice}, in een wereld die {warmth} was.",
     estimateLess: "een deel van het huidige ijs zou smelten",
     estimateNone: "het ijs zou ongeveer blijven waar het is",
     estimatePercent:
       "de ijskappen zouden groeien tot ongeveer {percent}% van hun ijstijdmaximum",
-    leadPast: "Als deze baan ongeveer 15.000 jaar bleef: ",
+    leadPast: "Als deze baan tienduizenden jaren bleef: ",
     leadFuture:
-      "Alleen de baan, er is nog geen meetreeks. Als deze baan ongeveer 15.000 jaar bleef: ",
+      "Alleen de baan, er is nog geen meetreeks. Als deze baan tienduizenden jaren bleef: ",
     estimate: "{lead}{ice}, in een wereld die {warmth} is.",
   },
   lab: {
@@ -284,7 +284,7 @@ export const nl: Ui = {
     gaugeIceAge: "Laatste ijstijd −{n} °C",
     gaugePreindustrial: "Vóór de industrie, ca. {n} °C",
     caveat:
-      "Een ruwe schatting op basis van alleen de baan, geen voorspelling. IJs en temperatuur bewegen samen in het zeebodemarchief, en tijdens de laatste ijstijd was de wereld ongeveer {lgm} °C kouder (Tierney e.a., 2020). Voor een met de hand ingestelde baan wordt aangenomen dat die baan ongeveer 15.000 jaar duurt. Echt ijs hangt ook af van koolstofdioxide, oceanen en het ijs dat er al ligt, en de werkelijke temperatuur van nu ligt door broeikasgassen ongeveer 1,2 °C boven deze basislijn.",
+      "Een ruwe schatting op basis van alleen de baan, geen voorspelling. IJs en temperatuur bewegen samen in het zeebodemarchief, en tijdens de laatste ijstijd was de wereld ongeveer {lgm} °C kouder (Tierney e.a., 2020). Voor een met de hand ingestelde baan wordt aangenomen dat die baan tienduizenden jaren blijft. Echt ijs hangt ook af van koolstofdioxide, oceanen en het ijs dat er al ligt, en de werkelijke temperatuur van nu ligt door broeikasgassen ongeveer 1,3 °C boven deze basislijn.",
     timeHeading: "Reis door de tijd",
     dataLink: "La2004-gegevens ↗",
     presetReading: "{value} W/m² op 65°N",

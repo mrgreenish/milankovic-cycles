@@ -33,7 +33,7 @@ export const sr: Content = {
         },
         {
           title: "Letnja sunčeva svetlost na 65°N se menja",
-          body: "Ta geografska širina prolazi kroz severnu Kanadu, Skandinaviju i Sibir, gde su rasli veliki ledeni pokrivači.",
+          body: "Ta geografska širina prolazi kroz severnu Kanadu, Skandinaviju i Sibir. Veliki ledeni pokrivači rasli su preko nje u Kanadi i severnoj Evropi.",
         },
         {
           title: "Led i ugljen-dioksid to pojačavaju",
@@ -79,7 +79,7 @@ export const sr: Content = {
         intro:
           "Zemljina osa se polako okreće, kao osa čigre koja se vrti. Okreće se i orbita. Zajedno pomeraju godišnja doba duž orbite. Prevuci da okreneš osu.",
         effect: [
-          "Danas severno leto pada na udaljenoj strani orbite. Za oko 11.000 godina pašće na bližu stranu, a sunčeva svetlost usred leta na 65°N porašće sa 478 na oko 510 W/m².",
+          "Danas severno leto pada na udaljenoj strani orbite. Pola ciklusa kasnije pada na bližu stranu. Sa današnjom orbitom i nagibom, samo to bi podiglo sunčevu svetlost usred leta na 65°N sa 478 na oko 510 W/m². Prava zamena dolazi za oko 10.000 godina, kada je orbita okruglija, a nagib manji, pa svetlost dostiže vrh oko 490 W/m².",
           "Ta zamena više znači kada je orbita izdužena. Kod najizduženije orbite menja sunčevu svetlost usred leta za 115 W/m².",
         ],
         deeper: [
@@ -95,7 +95,7 @@ export const sr: Content = {
       lookFor: "Na šta obratiti pažnju",
       lookForBody:
         "Linija leda prati liniju sunčeve svetlosti, ali kasnije. Led se gradi sporo, tokom desetina hiljada godina, a nestaje brzo, za oko deset hiljada.",
-      note: "Milutin Milanković je ovo izračunao ručno za otprilike trideset godina i objavio 1941. Niko to nije mogao da proveri do 1976, kada je sediment sa morskog dna pokazao iste ritmove. Umro je 18 godina ranije.",
+      note: "Milutin Milanković je ovo izračunao ručno za otprilike trideset godina i objavio 1941. Uverljivo je potvrđeno tek 1976, kada je sediment sa morskog dna pokazao iste ritmove. Umro je 18 godina ranije.",
       deeper: [
         "Najjači ritam u zapisu leda je 100.000 godina, a direktan uticaj orbite na tom periodu je slab. Ledeni pokrivači, okeani i ugljen-dioksid moraju da ga pojačavaju, a kako tačno, i dalje je predmet rasprave.",
         "Iza nule na satu orbita nastavlja, a linija leda staje: ništa ovde ne predviđa budući led. Narednih 50.000 godina orbita je neobično mirna, a sunčeva svetlost usred leta na 65°N ostaje između 475 i 503 W/m².",
@@ -210,26 +210,26 @@ export const sr: Content = {
         id: "where-does-the-history-come-from",
         question: "Odakle dolazi istorija od 800.000 godina?",
         answer:
-          "Orbita dolazi iz rešenja La2004 Žaka Laskara i saradnika, uzorkovanog svakih 1.000 godina. Linija leda je LR04 skup od 57 zapisa sedimenta sa morskog dna (Lisiecki i Raymo, 2005), koji prati zapreminu leda preko izotopa kiseonika u sitnim fosilima.",
+          "Orbita dolazi iz rešenja La2004 Žaka Laskara i saradnika, uzorkovanog svakih 1.000 godina. Linija leda je LR04 skup od 57 zapisa sedimenta sa morskog dna (Lisiecki i Raymo, 2005), koji prati zapreminu leda, pomešanu sa temperaturom dubokog okeana, preko izotopa kiseonika u sitnim fosilima.",
       },
       {
         id: "is-the-ice-real",
         question: "Da li je led na globusu stvaran?",
         answer:
-          "To je ilustracija. Količina leda prati izmereni zapis, ali je obris ručno nacrtan da liči na poslednje ledeno doba. Koristi ga za razmeru, a ne za geografiju.",
+          "To je ilustracija. Količina leda prati izmereni zapis, ali je obris ručno nacrtan da liči na poslednje ledeno doba. Obale i gradska svetla ostaju kakvi su danas, iako je nivo mora tada bio oko 120 m niži. Koristi ga za razmeru, a ne za geografiju.",
       },
       {
         id: "is-this-a-climate-prediction",
         question:
           "Da li laboratorija predviđa temperaturu ili buduće ledene pokrivače?",
         answer:
-          "Ne, ali daje grubu procenu. Za datum u prošlosti pokazuje izmereni zapis leda i temperaturu koja ide uz njega. Za orbitu koju podesiš ručno pita šta bi se desilo kada bi ta orbita trajala oko 15.000 godina, koristeći vezu između sunčeve svetlosti i leda u poslednjih 800.000 godina. Izostavlja ugljen-dioksid, okeane i led koji već postoji, i nije prognoza.",
+          "Ne, ali daje grubu procenu. Za datum u prošlosti pokazuje izmereni zapis leda i temperaturu koja ide uz njega. Za orbitu koju podesiš ručno pita šta bi se desilo kada bi ta orbita trajala desetinama hiljada godina, koristeći vezu između sunčeve svetlosti i leda u poslednjih 800.000 godina. Izostavlja ugljen-dioksid, okeane i led koji već postoji, i nije prognoza.",
       },
       {
         id: "how-is-temperature-estimated",
         question: "Kako laboratorija dolazi do temperature?",
         answer:
-          "Iz leda. U zapisu sa morskog dna led i globalna temperatura kreću se zajedno, a poslednje ledeno doba bilo je oko 6,1 °C hladnije nego pre industrije. Laboratorija skalira udeo leda na tu vrednost. To je samo udeo orbite i ne uključuje današnje zagrevanje, koje je oko 1,2 °C iznad te osnove.",
+          "Iz leda. U zapisu sa morskog dna led i globalna temperatura kreću se zajedno, a poslednje ledeno doba bilo je oko 6,1 °C hladnije nego pre industrije. Laboratorija skalira udeo leda na tu vrednost. To je samo udeo orbite i ne uključuje današnje zagrevanje, koje je oko 1,3 °C iznad te osnove.",
       },
       {
         id: "modern-warming",
@@ -349,7 +349,7 @@ export const sr: Content = {
     calcTitle: "Sunčeva svetlost usred leta na 65°N",
     calcParagraphs: [
       "Broj je dnevna srednja vrednost dolaznog sunčevog zračenja na 65°N za severni letnji solsticijum, na vrhu atmosfere. To nije sunčeva svetlost na tlu, temperatura niti veličina ledenog pokrivača. Procene temperature i leda u laboratoriji su poseban, grublji korak, opisan u nastavku.",
-      "Proračun koristi ukupno sunčevo zračenje od 1361 W/m² i standardnu geometriju dnevne insolacije iz Bergerove astronomske formulacije.",
+      "Proračun koristi ukupno sunčevo zračenje od 1361 W/m² i standardnu geometriju dnevne insolacije iz Bergerove astronomske formulacije. Sati dnevne svetlosti računaju se od trenutka kada središte Sunca pređe ravan horizont, bez prelamanja svetlosti u vazduhu, pa je stvarni dan na 65°N oko sat vremena duži.",
       "Mapa sunčeve svetlosti na globusu koristi isti proračun na svakoj geografskoj širini, za dan u kome se Zemlja nalazi u prikazu. Boje prikazuju prosek tokom 24 sata, pa mesto na kome Sunce ne zalazi može da primi više svetlosti nego ekvator.",
     ],
     equationsEyebrow: "Proračun",
@@ -374,15 +374,15 @@ export const sr: Content = {
     clockTitle: "800.000 godina orbite i leda",
     clockParagraphs: [
       "Orbita na satu je nominalno rešenje La2004 Laskara i saradnika, očitano na svakih 1.000 godina od pre 800.000 godina do 100.000 godina unapred, sa linearnim koracima između. Četiri trenutka iznad su tačni čvorovi istih podataka.",
-      "Linija leda je LR04 skup od 57 bentoskih zapisa izotopa kiseonika (Lisiecki i Raymo, 2005), koji prati globalnu zapreminu leda. Skala ide od 0% na današnjoj vrednosti do 100% na najvišoj tački u poslednjih 30.000 godina. Posle 600.000 godina skup je uzorkovan svakih 2.000 godina, a praznine su popunjene linearno. Linija staje kod današnjice jer ništa ovde ne predviđa budući led.",
-      "Led nacrtan na globusu je ilustracija. Njegova veličina prati liniju leda, a obris je ručno nacrtan prema poslednjem ledeničkom maksimumu. Zemljina površina potiče iz snimaka NASA Earth Observatory: Blue Marble, Black Marble i GEBCO teren.",
+      "Linija leda je LR04 skup od 57 bentoskih zapisa izotopa kiseonika (Lisiecki i Raymo, 2005). On prati globalnu zapreminu leda zajedno sa temperaturom dubokog okeana, pa je linija leda mera koliko je svet bio leden, a ne čisto merenje leda. Njegovo datiranje je i samo usklađeno sa junskom sunčevom svetlošću na 65°N, pa je deo poklapanja u vremenu između dve linije ugrađen. Skala ide od 0% na današnjoj vrednosti do 100% na najvišoj tački u poslednjih 30.000 godina. Posle 600.000 godina skup je uzorkovan svakih 2.000 godina, a praznine su popunjene linearno. Linija staje kod današnjice jer ništa ovde ne predviđa budući led.",
+      "Led nacrtan na globusu je ilustracija. Njegova veličina prati liniju leda, a obris je ručno nacrtan prema poslednjem ledeničkom maksimumu. Obale, koje su tada bile oko 120 m niže, i gradska svetla ostaju kakvi su danas. Zemljina površina potiče iz snimaka NASA Earth Observatory: Blue Marble, Black Marble i GEBCO teren.",
     ],
     tempEyebrow: "Temperatura i led",
     tempTitle: "Gruba procena, u dva dela",
     tempParagraphs: [
       "Za datum na satu led je izmerena vrednost LR04. Led i globalna temperatura kreću se zajedno, a poslednji ledenički maksimum bio je oko 6,1 °C hladniji nego pre industrije (Tierney i saradnici, 2020), pa je temperatura minus 6,1 °C puta udeo leda. Za prosečnu temperaturu pre industrije koristi se vrednost blizu 14 °C.",
-      "Za ručno podešenu orbitu laboratorija pita šta bi se na kraju uspostavilo kada bi ona potrajala. Prilagođen poslednjih 800.000 godina, led prati letnju sunčevu svetlost na 65°N usrednjenu tokom oko 15.000 godina, sa 0,018 vrhunca ledenog doba za svaki izgubljeni W/m² sunčeve svetlosti (korelacija oko −0,46). Na toploj strani odgovor se spljošti, jer je ostalo malo leda za topljenje. Prilagođavanje se proverava prema podacima u testovima projekta.",
-      "Ugljen-dioksid, okeani i led koji već postoji su izostavljeni, pa se procena može mnogo razlikovati od stvarnog datuma: sa ručno podešenom orbitom, pre 21.000 godina prikazuje se daleko manje leda nego u zapisu, jer se zapis gradio tokom mnogih ranijih leta. Stvarna današnja temperatura je zbog gasova staklene bašte oko 1,2 °C iznad osnove.",
+      "Za ručno podešenu orbitu laboratorija pita šta bi se na kraju uspostavilo kada bi ona potrajala. Prilagođen poslednjih 800.000 godina, led prati letnju sunčevu svetlost na 65°N usrednjenu tokom oko 15.000 godina, sa 0,018 vrhunca ledenog doba za svaki izgubljeni W/m² sunčeve svetlosti (korelacija oko −0,46, pa sunčeva svetlost objašnjava oko petinu uspona i padova). Ledu treba nekoliko tih perioda od 15.000 godina da se ustali, pa procena važi za orbitu koja traje desetinama hiljada godina. Na toploj strani odgovor se spljošti, jer je ostalo malo leda za topljenje. Prilagođavanje se proverava prema podacima u testovima projekta.",
+      "Ugljen-dioksid, okeani i led koji već postoji su izostavljeni, pa se procena može mnogo razlikovati od stvarnog datuma: sa ručno podešenom orbitom, pre 21.000 godina prikazuje se daleko manje leda nego u zapisu, jer se zapis gradio tokom mnogih ranijih leta. Stvarna današnja temperatura je zbog gasova staklene bašte oko 1,3 °C iznad osnove.",
     ],
     limitsEyebrow: "Ograničenja",
     limitsTitle: "Sama sunčeva svetlost ne predviđa klimu",
