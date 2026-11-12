@@ -94,14 +94,14 @@ export const earthFragment = /* glsl */ `
     float ocean = surface.b;
     float lat = degrees(asin(clamp(vLocal.y, -1.0, 1.0)));
     float lon = vUv.x * 360.0 - 180.0;
-    // Sea level. Alpha holds today's sea and its depth (see lib/orbital/seaLevel.ts).
-    // Where the sea is shallower than the fall, the shelf lies dry.
+    // Sea level. Alpha holds how shallow today's sea is: 0 on land and in deep
+    // water, 1 at no depth (see lib/orbital/seaLevel.ts). Where the sea is
+    // shallower than the fall, the shelf lies dry.
     float exposed = 0.0;
     float grain = 0.5;
     if (uSea > 0.002) {
-      float packed = (1.0 - surface.a) * 2.0;
-      float depth = clamp(packed * 2.0 - 1.0, 0.0, 1.0);
-      exposed = min(1.0, packed * 2.0) * (1.0 - smoothstep(uSea - ${SHORE_SOFTNESS}, uSea, depth));
+      float shallow = (1.0 - surface.a) * 2.0;
+      exposed = smoothstep(1.0 - uSea, 1.0 - uSea + ${SHORE_SOFTNESS}, shallow);
       ocean *= 1.0 - exposed;
       grain = texture2D(uNoise, vUv * vec2(30.0, 15.0)).g;
     }
