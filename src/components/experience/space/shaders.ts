@@ -1,4 +1,5 @@
 import { SOLAR_CONSTANT_WM2 } from "@/lib/orbital/insolation";
+import { SHORE_SOFTNESS } from "@/lib/orbital/seaLevel";
 import { SUNLIGHT_RAMP_GLSL } from "@/lib/orbital/sunlightMap";
 
 // Small, bounded shader programs. All light vectors and normals use world space.
@@ -45,6 +46,7 @@ export const earthFragment = /* glsl */ `
   uniform sampler2D uNight;
   uniform sampler2D uClouds;
   uniform float uIce;
+  uniform float uSea;
   uniform float uLights;
   uniform float uRing;
   uniform float uArctic;
@@ -88,11 +90,25 @@ export const earthFragment = /* glsl */ `
     vec3 sun = normalize(-vWorld);
     vec3 view = normalize(cameraPosition - vWorld);
     float sunHeight = dot(normal, sun);
-    vec3 surface = texture2D(uSurface, vUv).rgb;
+    vec4 surface = texture2D(uSurface, vUv);
     float ocean = surface.b;
     float lat = degrees(asin(clamp(vLocal.y, -1.0, 1.0)));
     float lon = vUv.x * 360.0 - 180.0;
+    // Sea level. Alpha holds today's sea and its depth (see lib/orbital/seaLevel.ts).
+    // Where the sea is shallower than the fall, the shelf lies dry.
+    float exposed = 0.0;
+    float grain = 0.5;
+    if (uSea > 0.002) {
+      float packed = (1.0 - surface.a) * 2.0;
+      float depth = clamp(packed * 2.0 - 1.0, 0.0, 1.0);
+      exposed = min(1.0, packed * 2.0) * (1.0 - smoothstep(uSea - ${SHORE_SOFTNESS}, uSea, depth));
+      ocean *= 1.0 - exposed;
+      grain = texture2D(uNoise, vUv * vec2(30.0, 15.0)).g;
+    }
     float iceMask = 0.0;
+    // Height of the land ice above its edge, 0 to 1, and its slope to the east and north.
+    float iceRise = 1.0;
+    vec2 iceSlope = vec2(0.0);
     if (uIce > 0.002) {
       float jitter = (texture2D(uNoise, vUv * vec2(9.0, 4.5)).r - 0.5) * 7.0 +
         (texture2D(uNoise, vUv * vec2(26.0, 13.0)).g - 0.5) * 2.4;
@@ -101,6 +117,15 @@ export const earthFragment = /* glsl */ `
       float land = 1.0 - ocean;
       iceMask = edge * (land * 0.96 + (1.0 - land) * smoothstep(62.0, 76.0, lat) * 0.8);
       ocean *= 1.0 - iceMask;
+      if (uDetail > 0.5) {
+        // An ice sheet is a dome: steep at the margin, flat on top. The slope
+        // runs across the edge, which follows the outline as well as the latitude.
+        float inland = clamp((lat - limit) / 7.0, 0.0, 1.0);
+        iceRise = inland * inland * (3.0 - 2.0 * inland);
+        float steep = 6.0 * inland * (1.0 - inland) / 7.0 * edge * land;
+        float outline = (iceLimit(lon + 1.0) - iceLimit(lon - 1.0)) * 0.5 * uIce;
+        iceSlope = steep * vec2(outline / max(0.2, cos(radians(lat))), 1.0);
+      }
     }
     vec2 perturbation = (surface.rg * 2.0 - 1.0) * min(uDetail, 1.0);
     vec3 tangent = normalize(vTangent);
@@ -108,7 +133,18 @@ export const earthFragment = /* glsl */ `
     vec3 terrainNormal = normalize(normal * sqrt(max(0.1, 1.0 - dot(perturbation, perturbation))) + tangent * perturbation.x + bitangent * perturbation.y);
     float daylight = smoothstep(-0.08, 0.16, sunHeight);
     float diffuse = max(dot(terrainNormal, sun), 0.0);
+    if (uIce > 0.002 && uDetail > 0.5) {
+      // Light the ice by its own slope, so the sunward margin shines and the far one falls into shade.
+      vec3 iceNormal = normalize(normal - 2.4 * (tangent * iceSlope.x + bitangent * iceSlope.y));
+      diffuse = mix(diffuse, max(dot(iceNormal, sun), 0.0), iceMask);
+    }
     vec3 albedo = texture2D(uDay, vUv).rgb;
+    // Dry shelf: the day map shows shallow water there, so paint it as land.
+    // Steppe and tundra in the north, greener toward the tropics. An illustration.
+    if (uSea > 0.002) {
+      vec3 shelf = mix(vec3(0.075, 0.115, 0.05), vec3(0.17, 0.165, 0.11), smoothstep(18.0, 48.0, abs(lat)));
+      albedo = mix(albedo, shelf * (0.62 + 0.76 * grain), exposed);
+    }
     // A warmer world (ice below zero): the Arctic pack pulls back toward the pole
     // and Greenland loses its southern ice first. Only snow-white pixels change,
     // and only far north, so mountain snow elsewhere stays.
@@ -126,7 +162,9 @@ export const earthFragment = /* glsl */ `
     // With no added ice the mix is zero. Keep this branch uniform across the
     // globe so texture derivatives (and the ice edge) stay unchanged.
     if (uIce > 0.002) {
-      albedo = mix(albedo, vec3(0.86, 0.93, 1.0) * (0.94 + 0.06 * texture2D(uNoise, vUv * vec2(40.0, 20.0)).b), iceMask * 0.95);
+      // Bluer at the steep margin, white on the plateau.
+      vec3 ice = mix(vec3(0.7, 0.84, 1.0), vec3(0.86, 0.93, 1.0), iceRise);
+      albedo = mix(albedo, ice * (0.94 + 0.06 * texture2D(uNoise, vUv * vec2(40.0, 20.0)).b), iceMask * 0.95);
     }
     float shadow = 0.0;
     if (uDetail > 0.5) {

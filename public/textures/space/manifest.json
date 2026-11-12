@@ -15,13 +15,13 @@
     "file": "detail-1024.ktx2",
     "width": 1024,
     "height": 512,
-    "bytes": 230770
+    "bytes": 245488
   },
   {
     "file": "detail-1024.webp",
     "width": 1024,
     "height": 512,
-    "bytes": 218652
+    "bytes": 270664
   },
   {
     "file": "night-1024.ktx2",
@@ -63,13 +63,13 @@
     "file": "detail-2048.ktx2",
     "width": 2048,
     "height": 1024,
-    "bytes": 846732
+    "bytes": 889834
   },
   {
     "file": "detail-2048.webp",
     "width": 2048,
     "height": 1024,
-    "bytes": 885480
+    "bytes": 1044080
   },
   {
     "file": "night-2048.ktx2",

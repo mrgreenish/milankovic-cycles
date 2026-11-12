@@ -216,7 +216,7 @@ export const sr: Content = {
         id: "is-the-ice-real",
         question: "Da li je led na globusu stvaran?",
         answer:
-          "To je ilustracija. Količina leda prati izmereni zapis, ali je obris ručno nacrtan da liči na poslednje ledeno doba. Obale i gradska svetla ostaju kakvi su danas, iako je nivo mora tada bio oko 120 m niži. Koristi ga za razmeru, a ne za geografiju.",
+          "To je ilustracija. Količina leda prati izmereni zapis, ali je obris ručno nacrtan da liči na poslednje ledeno doba. Nivo mora opada zajedno sa ledom, za oko 120 m na vrhuncu. Morsko dno koje tada ostaje na suvom nacrtano je prema izmerenim dubinama; kako je to kopno izgledalo je procena. Gradska svetla ostaju kakva su danas. Koristi ga za razmeru, a ne za geografiju.",
       },
       {
         id: "is-this-a-climate-prediction",
@@ -375,7 +375,7 @@ export const sr: Content = {
     clockParagraphs: [
       "Orbita na satu je nominalno rešenje La2004 Laskara i saradnika, očitano na svakih 1.000 godina od pre 800.000 godina do 100.000 godina unapred, sa linearnim koracima između. Četiri trenutka iznad su tačni čvorovi istih podataka.",
       "Linija leda je LR04 skup od 57 bentoskih zapisa izotopa kiseonika (Lisiecki i Raymo, 2005). On prati globalnu zapreminu leda zajedno sa temperaturom dubokog okeana, pa je linija leda mera koliko je svet bio leden, a ne čisto merenje leda. Njegovo datiranje je i samo usklađeno sa junskom sunčevom svetlošću na 65°N, pa je deo poklapanja u vremenu između dve linije ugrađen. Skala ide od 0% na današnjoj vrednosti do 100% na najvišoj tački u poslednjih 30.000 godina. Posle 600.000 godina skup je uzorkovan svakih 2.000 godina, a praznine su popunjene linearno. Linija staje kod današnjice jer ništa ovde ne predviđa budući led.",
-      "Led nacrtan na globusu je ilustracija. Njegova veličina prati liniju leda, a obris je ručno nacrtan prema poslednjem ledeničkom maksimumu. Obale, koje su tada bile oko 120 m niže, i gradska svetla ostaju kakvi su danas. Zemljina površina potiče iz snimaka NASA Earth Observatory: Blue Marble, Black Marble i GEBCO teren.",
+      "Led nacrtan na globusu je ilustracija. Njegova veličina prati liniju leda, a obris je ručno nacrtan prema poslednjem ledeničkom maksimumu. Nivo mora opada zajedno sa linijom leda, za oko 120 m na vrhuncu, a obala se pomera tamo gde je današnje more pliće od toga (dubine iz NOAA skupa ETOPO1). Spuštanje i izdizanje kopna pod ledom nije uračunato, pa su obale približne. Gradska svetla ostaju kakva su danas. Zemljina površina potiče iz snimaka NASA Earth Observatory: Blue Marble, Black Marble i GEBCO teren.",
     ],
     tempEyebrow: "Temperatura i led",
     tempTitle: "Gruba procena, u dva dela",

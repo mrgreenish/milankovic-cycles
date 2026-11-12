@@ -221,7 +221,7 @@ export const en = {
         id: "is-the-ice-real",
         question: "Is the ice on the globe real?",
         answer:
-          "It is an illustration. The amount of ice follows the measured record, but the outline is drawn by hand to resemble the last ice age. Coastlines and city lights stay as they are today, although sea level was about 120 m lower then. Use it for scale, not for geography.",
+          "It is an illustration. The amount of ice follows the measured record, but the outline is drawn by hand to resemble the last ice age. The sea falls with the ice, by about 120 m at the peak. The sea floor that falls dry is drawn from measured depths; how that land looked is a guess. City lights stay as they are today. Use it for scale, not for geography.",
       },
       {
         id: "is-this-a-climate-prediction",
@@ -379,7 +379,7 @@ export const en = {
     clockParagraphs: [
       "The orbit on the clock is the nominal La2004 solution of Laskar and colleagues, read at every 1,000 years from 800,000 years ago to 100,000 years ahead, with linear steps in between. The four moments above are exact nodes of the same data.",
       "The ice line is the LR04 stack of 57 benthic oxygen-isotope records (Lisiecki and Raymo, 2005). It follows global ice volume, together with deep-ocean temperature, so the ice line is an index of how glacial the world was rather than a pure ice measurement. Its dates were themselves tuned to 65°N June sunlight, so part of the timing match between the two lines is built in. The scale runs from 0% at today’s value to 100% at its highest point in the last 30,000 years. Beyond 600,000 years the stack is sampled every 2,000 years and the gaps are filled in linearly. The line stops at today because nothing here predicts future ice.",
-      "The ice drawn on the globe is an illustration. Its size follows the ice line, and its outline is drawn by hand after the last glacial maximum. Coastlines, which sat about 120 m lower then, and city lights stay as they are today. Earth’s surface comes from NASA Earth Observatory imagery: Blue Marble, Black Marble and GEBCO terrain.",
+      "The ice drawn on the globe is an illustration. Its size follows the ice line, and its outline is drawn by hand after the last glacial maximum. The sea level falls with the ice line, by about 120 m at its peak, and the coast moves out to wherever today’s sea is shallower than that (depths from NOAA’s ETOPO1). The sinking and rising of the land under the ice is left out, so the shorelines are approximate. City lights stay as they are today. Earth’s surface comes from NASA Earth Observatory imagery: Blue Marble, Black Marble and GEBCO terrain.",
     ],
     tempEyebrow: "Temperature and ice",
     tempTitle: "A rough estimate, in two parts",
