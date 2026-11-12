@@ -24,6 +24,7 @@ import {
   sphereVertex,
 } from "./shaders";
 import { orbitRadius } from "@/lib/orbital/geometry";
+import { seaLevelUniform } from "@/lib/orbital/seaLevel";
 import { QUALITY } from "./quality";
 import {
   animationTime,
@@ -81,6 +82,7 @@ export function Earth({
       uTime: { value: 0 },
       uDetail: { value: config.detail },
       uIce: { value: 0 },
+      uSea: { value: 0 },
       uLights: { value: 1 },
       uRing: { value: 0 },
       uArctic: { value: 0 },
@@ -99,7 +101,8 @@ export function Earth({
   }, [textures, layer]);
 
   // The climate globe keeps the 65°N line and thinner clouds whatever the main
-  // view is doing. Surface and cloud layers share this globe's uniforms.
+  // view is doing. Each material holds its own copy of the uniforms, so the
+  // cloud layer is told separately.
   const forInset = (_renderer: unknown, _scene: unknown, camera: Camera) => {
     if (!camera.userData.inset) return;
     const live = surfaceMaterial.current?.uniforms;
@@ -107,6 +110,7 @@ export function Earth({
     live.uRing.value = 1;
     live.uArctic.value = 0;
     live.uClear.value = 0.8;
+    if (cloudMaterial.current) cloudMaterial.current.uniforms.uClear.value = 0.8;
   };
 
   useFrame(() => {
@@ -115,6 +119,8 @@ export function Earth({
     const live = surfaceMaterial.current?.uniforms;
     if (live) {
       live.uIce.value = frame.ice;
+      // Water locked in the ice comes out of the sea: the shoreline moves out.
+      live.uSea.value = seaLevelUniform(frame.ice);
       // Night lights are modern: dim them once the clock is a few thousand years from today.
       const away = Math.min(1, Math.max(0, (Math.abs(frame.time) - 0.5) / 2.5));
       live.uLights.value = 1 - frame.timeBlend * away;
@@ -125,6 +131,8 @@ export function Earth({
       live.uArctic.value = weight.tilt;
       live.uTiltDeg.value = (frame.tilt * 180) / Math.PI;
       live.uClear.value = Math.max(weight.idea * 0.9, weight.tilt * 0.7);
+      if (cloudMaterial.current)
+        cloudMaterial.current.uniforms.uClear.value = live.uClear.value;
       // The sunlight map belongs to the views that set the orbit by hand. The
       // climate globe and the views that show ice keep the natural surface.
       const map =

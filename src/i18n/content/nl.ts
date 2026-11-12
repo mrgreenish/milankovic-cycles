@@ -216,7 +216,7 @@ export const nl: Content = {
         id: "is-the-ice-real",
         question: "Is het ijs op de wereldbol echt?",
         answer:
-          "Het is een illustratie. De hoeveelheid ijs volgt de gemeten gegevens, maar de omtrek is met de hand getekend naar het voorbeeld van de laatste ijstijd. Kustlijnen en stadslichten blijven zoals ze nu zijn, hoewel de zeespiegel toen ongeveer 120 m lager stond. Gebruik het voor de schaal, niet voor de geografie.",
+          "Het is een illustratie. De hoeveelheid ijs volgt de gemeten gegevens, maar de omtrek is met de hand getekend naar het voorbeeld van de laatste ijstijd. De zeespiegel daalt mee met het ijs, tot ongeveer 120 m op het hoogtepunt. De zeebodem die dan droogvalt is getekend naar gemeten dieptes; hoe dat land eruitzag is een schatting. Stadslichten blijven zoals ze nu zijn. Gebruik het voor de schaal, niet voor de geografie.",
       },
       {
         id: "is-this-a-climate-prediction",
@@ -374,7 +374,7 @@ export const nl: Content = {
     clockParagraphs: [
       "De baan op de klok is de nominale La2004-oplossing van Laskar en collega’s, afgelezen elke 1.000 jaar van 800.000 jaar geleden tot 100.000 jaar vooruit, met lineaire stappen ertussen. De vier momenten hierboven zijn exacte knooppunten van dezelfde gegevens.",
       "De ijslijn is de LR04-stack van 57 benthische zuurstofisotopenreeksen (Lisiecki en Raymo, 2005). Die volgt het wereldwijde ijsvolume, samen met de temperatuur van de diepzee, dus de ijslijn is een maat voor hoe ijstijdachtig de wereld was en geen zuivere ijsmeting. De dateringen zijn zelf afgestemd op het junizonlicht op 65°N, dus een deel van de overeenkomst in timing tussen de twee lijnen zit er al in. De schaal loopt van 0% bij de waarde van nu tot 100% op het hoogste punt van de afgelopen 30.000 jaar. Voorbij 600.000 jaar wordt de stack elke 2.000 jaar bemonsterd en worden de gaten lineair opgevuld. De lijn stopt bij nu, omdat niets hier toekomstig ijs voorspelt.",
-      "Het ijs op de wereldbol is een illustratie. De omvang volgt de ijslijn en de omtrek is met de hand getekend naar het laatste ijstijdmaximum. Kustlijnen, die toen ongeveer 120 m lager lagen, en stadslichten blijven zoals ze nu zijn. Het aardoppervlak komt uit beelden van NASA Earth Observatory: Blue Marble, Black Marble en GEBCO-terrein.",
+      "Het ijs op de wereldbol is een illustratie. De omvang volgt de ijslijn en de omtrek is met de hand getekend naar het laatste ijstijdmaximum. De zeespiegel daalt mee met de ijslijn, tot ongeveer 120 m op het hoogtepunt, en de kust schuift op naar waar de zee nu ondieper is dan dat (dieptes uit ETOPO1 van NOAA). Het dalen en stijgen van het land onder het ijs is niet meegenomen, dus de kustlijnen zijn bij benadering. Stadslichten blijven zoals ze nu zijn. Het aardoppervlak komt uit beelden van NASA Earth Observatory: Blue Marble, Black Marble en GEBCO-terrein.",
     ],
     tempEyebrow: "Temperatuur en ijs",
     tempTitle: "Een ruwe schatting, in twee delen",
